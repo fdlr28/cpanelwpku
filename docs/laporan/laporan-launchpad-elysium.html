@@ -54,7 +54,7 @@
 <section class="cover">
   <div class="band">
     <h1>Laporan Riset Launchpad di Jaringan Elysium</h1>
-    <p>Launchpad, factory, pool, dan hook: analisis Kleos, BOXA, Obol, CorePad, dan Ascend, serta posisi MVP launchpad kita</p>
+    <p>Launchpad, factory, pool, dan hook: analisis Kleos, BOXA, Obol, CorePad, dan Ascend</p>
   </div>
   <div>
     <table class="meta">
@@ -81,8 +81,6 @@
   <li>CorePad — curve → HyperCore</li>
   <li>Ascend — hook PancakeSwap Infinity, quote USDC</li>
   <li>Perbandingan lintas launchpad</li>
-  <li>Launchpad kita (MVP saat ini)</li>
-  <li>Rekomendasi dan langkah berikutnya</li>
   <li>Metodologi, batasan, dan sumber</li>
 </ol>
 
@@ -100,7 +98,6 @@
   <li><b>Obol</b> memakai curve x·y=k dengan reserve virtual dan mendukung banyak aset quote (WHYPE, KNTQ, wNVDAx, dll.). Saat graduation, likuiditas pindah ke pool milik Obol sendiri yang <b>tidak punya LP token</b>, sehingga terkunci permanen.</li>
   <li><b>CorePad</b> hanya ada di testnet dan HyperEVM. Graduation ke HyperCore bergantung pada keeper EOA dan tiket HIP-1 yang mahal (≥ 500 HYPE di mainnet); jalur ini belum pernah berhasil live.</li>
   <li><b>Ascend</b> bukan Uniswap V4, melainkan <b>PancakeSwap Infinity</b>. Kurvanya bertingkat (14 band), quote-nya USDC, dan fee LP dinamis 90% → 1% dalam 5 detik, lalu 1% selamanya. Fee dibagi 50% creator / 50% protokol, ditambah "flywheel bid" untuk buyback. Saat ini baru live di testnet.</li>
-  <li><b>Launchpad kita</b> (MVP yang sudah dibangun) secara mekanisme paling dekat dengan Obol: curve virtual x·y=k dengan rumus <span class="mono">virtualToken = S²/(2S−N)</span> yang sama, lalu graduation ke pool Uniswap V2. 21 test lulus.</li>
 </ul>
 
 <!-- ============================== 2 ============================== -->
@@ -323,40 +320,8 @@ protokol 0,0031346 · burn 0,0062692 (→ 191.813 token dibakar) · holder 0,006
   <tr><td>Anti-sniper</td><td>—</td><td>—</td><td>—</td><td>Batas 1% / 60 s</td><td>Fee 90% turun dalam 5 s</td></tr>
 </table>
 
-<!-- ============================== 11 KITA ============================== -->
-<h2>11. Launchpad kita (MVP saat ini)</h2>
-<table>
-  <tr><th style="width:26%">Komponen</th><th>Isi</th></tr>
-  <tr><td>Kontrak</td><td><span class="mono">ElysiumLaunchpad.sol</span> (factory + curve + graduation) dan <span class="mono">LaunchToken.sol</span> (ERC-20 supply tetap)</td></tr>
-  <tr><td>Kurva</td><td>x·y=k virtual dalam HYPE native; 1 M supply, 800 juta di curve; <span class="mono">virtualToken = S²/(2S−N)</span> sehingga harga DEX sama dengan harga akhir curve</td></tr>
-  <tr><td>Fee</td><td>1% per trade (maks 5%), 25% ke creator (default seperti Ascend), sisanya protokol; fee graduation dan fee pembuatan opsional</td></tr>
-  <tr><td>Graduation</td><td>Otomatis ke pair Uniswap V2 (factory + Router02 di-deploy sendiri karena belum ada DEX V2 resmi); LP dikirim ke <span class="mono">0xdEaD</span>; token sisa dibakar</td></tr>
-  <tr><td>Keamanan</td><td>Transfer ke pair diblokir sebelum graduation; tahan donasi WHYPE + sync; tahan front-run createPair; slippage guard; pull-pattern fee; pause tidak memblokir sell</td></tr>
-  <tr><td>Frontend</td><td>HTML/JS statis (cocok untuk cPanel): daftar token, launch, buy/sell di curve dan DEX, klaim fee creator</td></tr>
-  <tr><td>Pengujian</td><td>21 test Hardhat dengan bytecode Uniswap V2 asli; uji E2E browser lokal (create → buy → sell → graduation → swap DEX)</td></tr>
-  <tr><td>Belum</td><td>Belum di-deploy ke testnet/mainnet; belum diaudit</td></tr>
-</table>
-
-<!-- ============================== 12 REKOMENDASI ============================== -->
-<h2>12. Rekomendasi dan langkah berikutnya</h2>
-<table>
-  <tr><th style="width:22%">Opsi</th><th>Gambaran</th><th style="width:28%">Kelebihan</th><th style="width:24%">Tantangan</th></tr>
-  <tr><td><b>A. Model Ascend / Kleos</b> (V4 atau Infinity + hook)</td><td>Pool dibuat saat launch, likuiditas satu sisi (satu rentang atau bertingkat), fee dinamis/tax 1% selamanya, dibagi creator/holder/burn/protokol</td><td>Pendapatan berkelanjutan, tanpa graduation, anti-sniper lewat fee, creator tetap dapat fee setelah listing</td><td>Perlu PoolManager sendiri, hook dengan alamat hasil mining, router; kompleksitas dan permukaan audit besar</td></tr>
-  <tr><td><b>B. Model Obol</b> (lanjutan MVP)</td><td>Curve yang sudah ada + graduation ke pool internal tanpa LP token, multi-quote, reward holder</td><td>Paling cepat (80% sudah ada), tidak bergantung DEX luar</td><td>Fee setelah graduation tetap via pool sendiri; perlu UI swap sendiri</td></tr>
-  <tr><td><b>C. Model CorePad</b> (lanjutan jangka panjang)</td><td>Graduation ke HyperCore lewat mirror bridge</td><td>Akses likuiditas order book HyperCore</td><td>Keeper terpercaya, biaya ticker ≥ 500 HYPE, menunggu <span class="mono">ElysiumCoreWriter</span></td></tr>
-</table>
-<div class="box">
-  <b>Saran urutan kerja:</b>
-  <ol>
-    <li>Ambil fitur yang mudah dan terbukti: anti-sniper (fee menurun atau batas per alamat), creator handoff, abort + reopen ala CorePad.</li>
-    <li>Pilih arah utama: <b>A</b> untuk produk yang bersaing langsung dengan Kleos/BOXA/Ascend, atau <b>B</b> untuk peluncuran cepat.</li>
-    <li>Deploy ke testnet (99801), lalu uji dengan bot dan beberapa launch nyata.</li>
-    <li>Audit eksternal sebelum mainnet; gunakan multisig untuk treasury dan kunci terpisah per peran.</li>
-  </ol>
-</div>
-
 <!-- ============================== 13 METODOLOGI ============================== -->
-<h2>13. Metodologi, batasan, dan sumber</h2>
+<h2>11. Metodologi, batasan, dan sumber</h2>
 <h4>Metodologi</h4>
 <ul>
   <li>RPC mainnet <span class="mono">rpc-live.elyspump.com</span> (ethers v6). Transaksi pembuatan setiap token dicari lewat event mint <span class="mono">Transfer(0x0 → …)</span> per 10.000 blok.</li>
