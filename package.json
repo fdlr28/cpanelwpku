@@ -9,11 +9,13 @@
     "test": "hardhat test",
     "deploy:testnet": "hardhat run scripts/deploy.js --network elysiumTestnet",
     "deploy:local": "hardhat run scripts/deploy-local.js --network localhost",
-    "node": "hardhat node"
+    "node": "hardhat node",
+    "deploy:dex:testnet": "hardhat run scripts/deploy-dex.js --network elysiumTestnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0",
     "dotenv": "^18.0.9",
     "ethers": "6.17.0",
     "hardhat": "^2.29.1",

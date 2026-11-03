@@ -3,6 +3,7 @@ const { ethers } = require("hardhat");
 const { loadFixture } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const UniswapV2Factory = require("@uniswap/v2-core/build/UniswapV2Factory.json");
 const UniswapV2Pair = require("@uniswap/v2-core/build/UniswapV2Pair.json");
+const UniswapV2Router02 = require("@uniswap/v2-periphery/build/UniswapV2Router02.json");
 
 const E = (n) => ethers.parseEther(String(n));
 const DEAD = "0x000000000000000000000000000000000000dEaD";
@@ -417,6 +418,32 @@ describe("ElysiumLaunchpad", function () {
         expect(pool.tokensSold).to.equal(0);
         expect(pool.virtualNative).to.be.gte(CURVE.virtualNative);
       }
+    });
+  });
+  describe("after graduation", function () {
+    it("trades through the canonical Uniswap V2 Router02 in both directions", async function () {
+      const ctx = await loadFixture(fixtureWithToken);
+      const { token, alice, bob, owner, factory, WHYPE } = ctx;
+      const addr = await token.getAddress();
+      const router = await new ethers.ContractFactory(UniswapV2Router02.abi, UniswapV2Router02.bytecode, owner).deploy(
+        await factory.getAddress(),
+        await WHYPE.getAddress()
+      );
+      await ctx.launchpad.connect(alice).buy(addr, 0, { value: E(500) });
+
+      const path = [await WHYPE.getAddress(), addr];
+      const deadline = (await ethers.provider.getBlock("latest")).timestamp + 600;
+      const [, out] = await router.getAmountsOut(E(1), path);
+      await router.connect(bob).swapExactETHForTokens(out, path, bob.address, deadline, { value: E(1) });
+      expect(await token.balanceOf(bob.address)).to.equal(out);
+
+      const bal = await token.balanceOf(bob.address);
+      await token.connect(bob).approve(await router.getAddress(), bal);
+      const before = await ethers.provider.getBalance(bob.address);
+      const tx = await router.connect(bob).swapExactTokensForETH(bal, 0, [addr, await WHYPE.getAddress()], bob.address, deadline);
+      const rc = await tx.wait();
+      const after = await ethers.provider.getBalance(bob.address);
+      expect(after + rc.gasUsed * rc.gasPrice - before).to.be.closeTo(E(0.994), E(0.001)); // 2 x 0.3% LP fee
     });
   });
 });

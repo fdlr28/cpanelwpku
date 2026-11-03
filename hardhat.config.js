@@ -39,13 +39,13 @@ module.exports = {
     hardhat: {},
     localhost: { url: "http://127.0.0.1:8545" },
     elysiumTestnet: {
+      // Public RPC from the docs; Alchemy (https://elysium-testnet.g.alchemy.com/v2/KEY) is recommended.
       url: process.env.ELYSIUM_TESTNET_RPC || "https://testnet-rpc.elysium.kinetiq.xyz",
       chainId: 99801,
       accounts,
     },
     elysium: {
-      // Mainnet chain ID / RPC were not published at the time of writing. Fill them in
-      // from https://elysium.kinetiq.xyz/docs before deploying.
+      // Mainnet chain ID is published at launch (https://elysium.kinetiq.xyz/docs/connecting-to-elysium).
       url: process.env.ELYSIUM_RPC || "",
       chainId: process.env.ELYSIUM_CHAIN_ID ? Number(process.env.ELYSIUM_CHAIN_ID) : undefined,
       accounts,

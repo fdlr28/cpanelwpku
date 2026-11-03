@@ -16,8 +16,10 @@ createToken ──► bonding curve (x·y=k, virtual reserve, HYPE) ──► cu
 | `contracts/LaunchToken.sol` | ERC20 supply tetap yang dibuat per launch |
 | `contracts/interfaces/IUniswapV2.sol` | Interface factory/pair Uniswap-V2 & WHYPE |
 | `contracts/test/WrappedNative.sol` | Mock WHYPE untuk test/lokal |
-| `test/` | 20 test (Hardhat + Uniswap V2 asli dari `@uniswap/v2-core`) |
-| `scripts/deploy.js` | Deploy ke Elysium testnet/mainnet |
+| `test/` | 21 test (Hardhat + Uniswap V2 asli dari `@uniswap/v2-core` / `v2-periphery`) |
+| `scripts/deploy-dex.js` | Deploy Uniswap V2 Factory + Router02 (bytecode resmi) — Elysium belum punya DEX V2 |
+| `scripts/deploy.js` | Deploy launchpad ke Elysium testnet/mainnet |
+| `scripts/addresses.js` | Alamat kontrak resmi Elysium testnet (dari docs) |
 | `scripts/deploy-local.js` | Deploy stack lengkap (WHYPE + UniV2 + launchpad) di node lokal |
 | `frontend/` | Web statis (HTML/JS, tanpa build) — bisa langsung di-upload ke cPanel |
 
@@ -41,7 +43,13 @@ graduation ±1.500 HYPE). Atur lewat `VIRTUAL_NATIVE` saat deploy.
 
 **Graduation**: buy yang menghabiskan sisa curve otomatis di-cap (kelebihan HYPE di-refund), lalu
 dalam transaksi yang sama: HYPE di-wrap ke WHYPE, HYPE + token dikirim ke pair Uniswap-V2, `mint`
-LP ke `0x…dEaD` (terkunci permanen), token sisa di-burn. Setelah itu trading pindah ke DEX.
+LP ke `0x…dEaD` (terkunci permanen), token sisa di-burn. Setelah itu trading pindah ke DEX —
+frontend otomatis beralih ke swap lewat Router02 (`config.router`).
+
+**Kompatibel dengan lifecycle Elysium → HyperCore.** `LaunchToken` adalah ERC-20 standar dengan
+metadata tetap (name/symbol/decimals immutable), tanpa fee-on-transfer/rebase — persis syarat
+*mirror bridge* Elysium → HyperEVM (`ElysiumBridgeFactory.createL2Wallet(token)`), sehingga token
+yang sukses bisa lanjut ke HyperCore spot lalu HIP-3, sesuai jalur yang dijelaskan di docs.
 
 **Keamanan yang sudah ditangani**
 - Transfer token ke pair diblokir sebelum graduation → pool tidak bisa di-seed dengan harga palsu.
@@ -79,18 +87,26 @@ dengan network `http://127.0.0.1:8545`, chainId 31337.
 
 ### Deploy ke Elysium testnet
 
-1. `cp .env.example .env`, isi `PRIVATE_KEY` (ambil HYPE testnet dari faucet Elysium).
-2. Isi `DEX_FACTORY` (factory Uniswap-V2-compatible di Elysium) dan `WRAPPED_NATIVE` (WHYPE).
-   Alamatnya **ambil dari dokumentasi resmi** — lihat catatan di bawah.
-3. Opsional: `VIRTUAL_NATIVE` (mis. `1` untuk testnet agar cepat graduate), `FEE_RECIPIENT`.
-4. Deploy:
+1. `cp .env.example .env`, isi `PRIVATE_KEY` (HYPE testnet dari faucet: elysium.kinetiq.xyz → Faucet).
+   Disarankan `ELYSIUM_TESTNET_RPC` diisi endpoint Alchemy
+   (`https://elysium-testnet.g.alchemy.com/v2/{API_KEY}`) — RPC publik dipakai bersama.
+2. Deploy DEX Uniswap V2 sendiri (karena di Elysium Uniswap masih berstatus *Announced*):
+
+```bash
+npm run deploy:dex:testnet
+```
+
+3. Deploy launchpad (otomatis memakai factory dari langkah 2 dan WHYPE resmi testnet).
+   Opsional: `VIRTUAL_NATIVE=1` agar cepat graduate saat testing, `FEE_RECIPIENT`.
 
 ```bash
 npm run deploy:testnet
 ```
 
-Alamat tersimpan di `deployments/elysiumTestnet.json`. Salin `launchpad` dan `deployBlock` ke
-`frontend/config.js`.
+4. Salin `launchpad`, `router`, `deployBlock` yang dicetak ke `frontend/config.js`.
+
+Kalau nanti ada DEX V2-compatible resmi di Elysium, cukup isi `DEX_FACTORY` dan `DEX_ROUTER` di
+`.env` dan lewati langkah 2. Verifikasi kontrak: halaman *Verify contract* di explorer Elysium.
 
 ### Hosting frontend di cPanel
 
@@ -98,38 +114,51 @@ Upload isi folder `frontend/` (`index.html`, `app.js`, `style.css`, `config.js`,
 `public_html` lewat File Manager/FTP. Tidak perlu Node.js di server — semua statis, ethers.js
 sudah dibundel di `vendor/`.
 
-## Catatan penting / yang perlu diverifikasi
+## Data jaringan (dari docs resmi Elysium)
 
-Dokumentasi `elysium.kinetiq.xyz/docs` dan `ascendlaunch.gitbook.io` **tidak bisa diakses** dari
-lingkungan tempat kode ini dibuat. Data jaringan di bawah diambil dari sumber sekunder
-(Chainstack, Alchemy, QuickNode, berita) dan **harus dicek ulang di docs resmi**:
+Sumber: [elysium.kinetiq.xyz/docs](https://elysium.kinetiq.xyz/docs) (diperbarui 20 Okt – 2 Nov 2026).
 
-| | Nilai | Status |
+| | Testnet | Mainnet |
 |---|---|---|
-| Testnet chain ID | `99801` | dikonfirmasi beberapa sumber |
-| Testnet RPC publik | `https://testnet-rpc.elysium.kinetiq.xyz` | sumber tidak resmi — lebih aman pakai endpoint Alchemy/Chainstack/QuickNode sendiri |
-| Explorer testnet | `https://explorer-elysium-testnet.t.conduit.xyz` | sumber berbeda-beda |
-| Gas token | HYPE | dikonfirmasi |
-| Mainnet | dijadwalkan 9 Nov 2026; chain ID/RPC belum dipublikasikan | isi `ELYSIUM_RPC` & `ELYSIUM_CHAIN_ID` nanti |
-| DEX | Nest (live sejak blok pertama mainnet), Uniswap V2 & V4 direncanakan | alamat factory & WHYPE belum didapat |
+| Chain ID | `99801` | diumumkan saat launch |
+| RPC publik | `https://testnet-rpc.elysium.kinetiq.xyz` | diumumkan saat launch |
+| RPC Alchemy | `https://elysium-testnet.g.alchemy.com/v2/{KEY}` | `https://elysium-mainnet.g.alchemy.com/v2/{KEY}` |
+| Explorer | `https://elysium.kinetiq.xyz/testnet-explorer` | diumumkan saat launch |
+| Settle ke | HyperEVM testnet (998) | HyperEVM (999) |
+| WHYPE | `0xCD57F65c2B0e5881CFC2E609F7CD53b746E1F234` | — |
+| USDC | `0x7D29d8047B905000459c0E80c34a26CeedcB47b2` | — |
+| Multicall3 | `0xcA11bde05977b3631167028862bE2a173976CA11` | — |
+| Bridge factory (mirror ke HyperEVM) | `0xb94A38a4aC46970559E89E566f2486a3Fc56BE5a` | — |
 
-⚠️ viem punya export `elysiumTestnet` bawaan — itu chain **lain** (Vulcan Forged, chainId 1338).
-Definisikan chain 99801 manual.
-
-Graduation di kontrak ini mengasumsikan DEX **Uniswap-V2-compatible** (`getPair`/`createPair`/`mint`).
-Kalau Nest bukan V2 (mis. V3/ve(3,3)), bagian `_graduate` perlu adaptor.
+- Stack: Arbitrum Orbit (stock ArbOS) dijalankan Conduit, blok 100 ms, target 300 Mgas/s, gas HYPE native (1:1 dari HyperEVM).
+- Standar EVM — Hardhat/Foundry/ethers/viem jalan tanpa interface khusus. Precompile data HyperCore & `ElysiumCoreWriter` baru datang ±4 minggu setelah mainnet.
+- Uniswap, 0x, KyberSwap masih *Announced*; belum ada alamat DEX resmi, makanya ada `deploy-dex.js`.
+- Urutan transaksi berdasarkan priority fee, single sequencer, tanpa jalur khusus.
+- ⚠️ viem `elysiumTestnet` bawaan adalah chain lain (Vulcan Forged, 1338) — definisikan 99801 manual.
 
 ## Perbedaan dengan Ascend & roadmap
 
-Menurut sumber publik, Ascend memakai pool **Uniswap V4 hook** yang di-quote dalam **USDC**, dengan
-fee 1% yang tetap berlaku setelah launch (25% deployer / 75% protokol) dan revenue protokol untuk
-buyback HYPE/KNTQ. Versi ini adalah MVP yang lebih sederhana:
+Dari [docs Ascend](https://ascendlaunch.gitbook.io/docs) (litepaper Sept 2026):
 
-- [ ] Graduation ke Uniswap V4 dengan hook fee → creator tetap dapat fee setelah listing
-- [ ] Opsi quote token USDC (selain HYPE native)
-- [ ] Modul buyback/treasury untuk revenue protokol
-- [ ] Indexer (subgraph/Ponder) untuk chart harga & daftar token yang cepat
-- [ ] Upload gambar ke IPFS dari frontend
+| | Ascend | Launchpad ini |
+|---|---|---|
+| Mekanisme launch | Langsung ke *closed hook pool* (Uniswap V4 hooks), **tanpa** fase bonding curve | Bonding curve → graduation ke pool Uniswap V2 |
+| Quote asset | USDC & RWA ter-tokenisasi | HYPE native |
+| Fee token | 1% selamanya: 25% deployer (default), 50% creator/operator takeover yang disetujui | 1% selama di curve, 25% creator (bisa diatur); setelah graduation hanya fee LP 0.3% |
+| Fee lain | Swap fee terpisah, 20% ke referrer (USDC) | — |
+| Revenue protokol | 50% beli HYPE (40% staking milik protokol, 30% buyback token ekosistem, 20% ops, 10% reward staker), 50% beli KNTQ (60% burn, 20% LP KNTQ/kHYPE, 20% poin) | Diklaim ke `feeRecipient` |
+| Lifecycle | Launch → Ascended → HyperCore spot → HIP-3 perps | Token kompatibel mirror bridge; alurnya belum diotomasi |
+| Ekstra | Staking HYPE→kHYPE (yield untuk beli token ekosistem), NFT boost, referral, tanpa token Ascend | — |
+
+Roadmap untuk mendekati model Ascend:
+
+- [ ] Graduation/launch ke Uniswap V4 hook pool → fee 1% tetap berjalan setelah listing (menunggu Uniswap V4 di Elysium)
+- [ ] Opsi quote USDC (`0x7D29…47b2` di testnet) selain HYPE
+- [ ] Split fee creator 25%/50% (creator terverifikasi) + takeover operator
+- [ ] Modul revenue: buyback HYPE/KNTQ, staking kHYPE
+- [ ] Referral dari swap fee, profil trader & poin
+- [ ] Otomasi mirror ke HyperEVM (`createL2Wallet`) untuk token yang lolos kriteria
+- [ ] Indexer (subgraph/Ponder) + chart harga, upload gambar ke IPFS
 - [ ] Audit keamanan sebelum mainnet
 
 **Kode ini belum diaudit.** Jangan dipakai di mainnet dengan dana nyata sebelum audit.

@@ -22,6 +22,7 @@
     "function creationFee() view returns (uint256)",
     "function tradeFeeBps() view returns (uint256)",
     "function creatorFeesAccrued(address) view returns (uint256)",
+    "function wrappedNative() view returns (address)",
     "event TokenCreated(address indexed token,address indexed creator,string name,string symbol,string metadataURI,address pair,uint256 virtualNative,uint256 virtualToken,uint256 curveSupply)",
     "event Trade(address indexed token,address indexed trader,bool isBuy,uint256 nativeAmount,uint256 tokenAmount,uint256 fee,uint256 virtualNative,uint256 virtualToken,uint256 timestamp)",
   ];
@@ -31,6 +32,13 @@
     "function metadataURI() view returns (string)",
     "function totalSupply() view returns (uint256)",
     "function balanceOf(address) view returns (uint256)",
+    "function allowance(address,address) view returns (uint256)",
+    "function approve(address,uint256) returns (bool)",
+  ];
+  const ROUTER_ABI = [
+    "function getAmountsOut(uint256 amountIn,address[] path) view returns (uint256[])",
+    "function swapExactETHForTokens(uint256 amountOutMin,address[] path,address to,uint256 deadline) payable returns (uint256[])",
+    "function swapExactTokensForETH(uint256 amountIn,uint256 amountOutMin,address[] path,address to,uint256 deadline) returns (uint256[])",
   ];
 
   const readProvider = new ethers.JsonRpcProvider(CFG.rpcUrl, CFG.chainId, { staticNetwork: true });
@@ -306,28 +314,81 @@
       </div>
       <div>
         <div class="panel">
-          ${pool.graduated
+          ${pool.graduated && !CFG.router
             ? `<p>Token ini sudah graduate. Trading sekarang di DEX (pair <code>${short(pool.pair)}</code>).</p>`
-            : `<div class="tabs"><button class="btn active buy" data-side="buy">Buy</button><button class="btn sell" data-side="sell">Sell</button></div>
+            : `${pool.graduated ? `<p class="muted">Sudah graduate — trade lewat DEX (Uniswap V2).</p>` : ""}
+               <div class="tabs"><button class="btn active buy" data-side="buy">Buy</button><button class="btn sell" data-side="sell">Sell</button></div>
                <label id="amtLabel">Jumlah HYPE</label>
                <input id="amt" type="number" min="0" step="any" placeholder="0.0" />
                <div class="quote" id="quote"></div>
                <button id="tradeBtn" class="btn btn-buy" style="width:100%">Buy</button>
-               <p class="muted">Fee trading ${Number(feeBps) / 100}% · slippage ${Number(SLIPPAGE_BPS) / 100}%</p>`}
+               <p class="muted">${pool.graduated ? "Fee LP DEX 0.3%" : `Fee trading ${Number(feeBps) / 100}%`} · slippage ${Number(SLIPPAGE_BPS) / 100}%</p>`}
           ${account ? `<p class="muted">Saldo kamu: ${fmt(bal)} ${esc(symbol)}</p>` : `<p class="muted">Hubungkan wallet untuk trading.</p>`}
           ${account && creatorFees > 0n ? `<button id="claimBtn" class="btn" style="width:100%">Klaim creator fee (${fmt(creatorFees)} HYPE)</button>` : ""}
         </div>
       </div></div>`;
 
     loadTrades(addr, symbol);
-    if (!pool.graduated) bindTrade(addr, symbol);
+    if (!pool.graduated) bindTrade(symbol, curveVenue(addr, symbol), addr);
+    else if (CFG.router) bindTrade(symbol, await dexVenue(addr, symbol), addr);
     const claim = $("#claimBtn");
     if (claim)
       claim.onclick = () =>
         send(async () => writeLaunchpad().claimCreatorFees(), () => viewToken(addr));
   }
 
-  function bindTrade(addr, symbol) {
+  const withSlippage = (q) => (q * (10_000n - SLIPPAGE_BPS)) / 10_000n;
+
+  // Bonding-curve venue (before graduation).
+  function curveVenue(addr, symbol) {
+    return {
+      async quote(side, v) {
+        if (side === "buy") {
+          const q = await readLaunchpad.quoteBuy(addr, v);
+          return {
+            out: q.tokensOut,
+            text: `≈ ${fmt(q.tokensOut, 2)} ${symbol} · fee ${fmt(q.fee)} HYPE${q.refund > 0n ? ` · refund ${fmt(q.refund)} HYPE (curve penuh → graduation)` : ""}`,
+          };
+        }
+        const q = await readLaunchpad.quoteSell(addr, v);
+        return { out: q.nativeOut, text: `≈ ${fmt(q.nativeOut)} HYPE · fee ${fmt(q.fee)} HYPE` };
+      },
+      async exec(side, v, out) {
+        const lp = writeLaunchpad();
+        return side === "buy" ? lp.buy(addr, withSlippage(out), { value: v }) : lp.sell(addr, v, withSlippage(out));
+      },
+    };
+  }
+
+  // Uniswap V2 venue (after graduation).
+  async function dexVenue(addr, symbol) {
+    const whype = await readLaunchpad.wrappedNative();
+    const readRouter = new ethers.Contract(CFG.router, ROUTER_ABI, readProvider);
+    const pathFor = (side) => (side === "buy" ? [whype, addr] : [addr, whype]);
+    return {
+      async quote(side, v) {
+        const amounts = await readRouter.getAmountsOut(v, pathFor(side));
+        const out = amounts[amounts.length - 1];
+        return { out, text: side === "buy" ? `≈ ${fmt(out, 2)} ${symbol} (DEX)` : `≈ ${fmt(out)} HYPE (DEX)` };
+      },
+      async exec(side, v, out) {
+        if (!signer) throw new Error("Hubungkan wallet terlebih dahulu.");
+        const router = new ethers.Contract(CFG.router, ROUTER_ABI, signer);
+        const deadline = Math.floor(Date.now() / 1000) + 600;
+        if (side === "buy") {
+          return router.swapExactETHForTokens(withSlippage(out), pathFor(side), account, deadline, { value: v });
+        }
+        const token = new ethers.Contract(addr, TOKEN_ABI, signer);
+        if ((await token.allowance(account, CFG.router)) < v) {
+          banner("Approve token untuk router…", true);
+          await (await token.approve(CFG.router, v)).wait();
+        }
+        return router.swapExactTokensForETH(v, withSlippage(out), pathFor(side), account, deadline);
+      },
+    };
+  }
+
+  function bindTrade(symbol, venue, addr) {
     let side = "buy";
     const amt = $("#amt");
     const quoteEl = $("#quote");
@@ -344,6 +405,7 @@
         btn.style.width = "100%";
         amt.value = "";
         quoteEl.textContent = "";
+        lastQuote = null;
       };
     });
 
@@ -355,15 +417,9 @@
         if (!amt.value || Number(amt.value) <= 0) return (quoteEl.textContent = "");
         try {
           const v = ethers.parseEther(amt.value);
-          if (side === "buy") {
-            const q = await readLaunchpad.quoteBuy(addr, v);
-            lastQuote = { v, out: q.tokensOut };
-            quoteEl.textContent = `≈ ${fmt(q.tokensOut, 2)} ${symbol} · fee ${fmt(q.fee)} HYPE${q.refund > 0n ? ` · refund ${fmt(q.refund)} HYPE (curve penuh → graduation)` : ""}`;
-          } else {
-            const q = await readLaunchpad.quoteSell(addr, v);
-            lastQuote = { v, out: q.nativeOut };
-            quoteEl.textContent = `≈ ${fmt(q.nativeOut)} HYPE · fee ${fmt(q.fee)} HYPE`;
-          }
+          const q = await venue.quote(side, v);
+          lastQuote = { side, v, out: q.out };
+          quoteEl.textContent = q.text;
         } catch (e) {
           quoteEl.textContent = errMsg(e);
         }
@@ -375,13 +431,9 @@
         async () => {
           if (!amt.value) throw new Error("Masukkan jumlah.");
           const v = ethers.parseEther(amt.value);
-          const lp = writeLaunchpad();
-          if (side === "buy") {
-            const q = lastQuote?.v === v ? lastQuote.out : (await readLaunchpad.quoteBuy(addr, v)).tokensOut;
-            return lp.buy(addr, (q * (10_000n - SLIPPAGE_BPS)) / 10_000n, { value: v });
-          }
-          const q = lastQuote?.v === v ? lastQuote.out : (await readLaunchpad.quoteSell(addr, v)).nativeOut;
-          return lp.sell(addr, v, (q * (10_000n - SLIPPAGE_BPS)) / 10_000n);
+          const out =
+            lastQuote && lastQuote.side === side && lastQuote.v === v ? lastQuote.out : (await venue.quote(side, v)).out;
+          return venue.exec(side, v, out);
         },
         () => viewToken(addr)
       );
