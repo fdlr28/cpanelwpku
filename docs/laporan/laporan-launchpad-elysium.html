@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Laporan Riset Launchpad Elysium</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+  :root { --ink:#16202c; --muted:#5b6676; --line:#d9dee6; --accent:#0f7a5c; --accent2:#2b59c3; --soft:#f3f6f9; --warn:#a35b00; }
+  * { box-sizing: border-box; }
+  body { font-family: "DejaVu Sans", "Liberation Sans", Arial, sans-serif; color: var(--ink); font-size: 9.6pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 24pt; margin: 0 0 6pt; line-height: 1.15; }
+  h2 { font-size: 14.5pt; margin: 20pt 0 6pt; padding-bottom: 4pt; border-bottom: 2px solid var(--accent); break-after: avoid; }
+  h3 { font-size: 11.2pt; margin: 13pt 0 4pt; color: var(--accent); break-after: avoid; }
+  h4 { font-size: 10pt; margin: 9pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 6pt; }
+  ul, ol { margin: 0 0 6pt; padding-left: 16pt; }
+  li { margin: 1.5pt 0; }
+  code, .mono { font-family: "DejaVu Sans Mono", "Liberation Mono", monospace; font-size: 8.3pt; }
+  code { background: var(--soft); padding: 0 2pt; border-radius: 2pt; }
+  table { width: 100%; border-collapse: collapse; margin: 4pt 0 9pt; font-size: 8.6pt; break-inside: auto; }
+  th, td { border: 1px solid var(--line); padding: 3.5pt 5pt; text-align: left; vertical-align: top; }
+  th { background: #e9f3ef; font-weight: 700; }
+  tr { break-inside: avoid; }
+  .cover { height: 255mm; display: flex; flex-direction: column; justify-content: space-between; page-break-after: always; }
+  .cover .band { background: var(--accent); color: #fff; padding: 22mm 14mm 16mm; border-radius: 4pt; }
+  .cover .band h1 { color: #fff; font-size: 28pt; }
+  .cover .band p { font-size: 12pt; opacity: .95; }
+  .cover .meta td { border: none; padding: 2pt 6pt 2pt 0; font-size: 10pt; }
+  .cover .meta td:first-child { color: var(--muted); width: 38mm; }
+  .box { background: var(--soft); border-left: 3px solid var(--accent2); padding: 6pt 9pt; margin: 6pt 0 9pt; break-inside: avoid; }
+  .warn { border-left-color: var(--warn); background: #fff6ea; }
+  .kpis { display: flex; gap: 6pt; margin: 6pt 0 10pt; }
+  .kpi { flex: 1; border: 1px solid var(--line); border-radius: 4pt; padding: 6pt 8pt; }
+  .kpi b { display: block; font-size: 15pt; color: var(--accent); }
+  .kpi span { color: var(--muted); font-size: 8pt; }
+  .flow { display: flex; align-items: stretch; gap: 0; margin: 6pt 0 10pt; break-inside: avoid; }
+  .flow .st { flex: 1; border: 1px solid var(--accent); border-radius: 4pt; padding: 5pt 6pt; font-size: 8.2pt; background: #fff; }
+  .flow .st b { display: block; color: var(--accent); font-size: 8.6pt; margin-bottom: 2pt; }
+  .flow .ar { width: 14pt; display: flex; align-items: center; justify-content: center; color: var(--accent); font-weight: 700; }
+  .tag { display: inline-block; font-size: 7.6pt; padding: 0 5pt; border-radius: 8pt; background: #e9f3ef; color: var(--accent); font-weight: 700; }
+  .tag.t { background: #eaf0fb; color: var(--accent2); }
+  .tag.n { background: #fdeee0; color: var(--warn); }
+  .small { font-size: 8.2pt; color: var(--muted); }
+  .pb { page-break-before: always; }
+  .toc li { margin: 2pt 0; }
+  .grid2 { display: flex; gap: 10pt; }
+  .grid2 > div { flex: 1; }
+  pre { font-family: "DejaVu Sans Mono", monospace; font-size: 8pt; background: var(--soft); padding: 6pt 8pt; border-radius: 3pt; white-space: pre-wrap; margin: 4pt 0 9pt; break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ============================== COVER ============================== -->
+<section class="cover">
+  <div class="band">
+    <h1>Laporan Riset Launchpad di Jaringan Elysium</h1>
+    <p>Launchpad, factory, pool, dan hook: analisis Kleos, BOXA, Obol, CorePad, dan Ascend, serta posisi MVP launchpad kita</p>
+  </div>
+  <div>
+    <table class="meta">
+      <tr><td>Tanggal</td><td>3 November 2026</td></tr>
+      <tr><td>Jaringan</td><td>Elysium mainnet (chain ID 99901) &amp; testnet (99801)</td></tr>
+      <tr><td>Data on-chain</td><td>Dibaca via RPC hingga blok ±282.500 (mainnet)</td></tr>
+      <tr><td>Repositori</td><td><span class="mono">fdlr28/cpanelwpku</span>, branch <span class="mono">claude/hopeful-pascal-icu4bu</span></td></tr>
+      <tr><td>Status</td><td>Riset pra-pengembangan, belum diaudit</td></tr>
+    </table>
+    <div class="box small">Catatan: kontrak Kleos, BOXA, dan Obol tidak diverifikasi di explorer. Nama event dan rumus fee untuk ketiganya adalah <b>inferensi</b> dari data transaksi, tetapi angka-angkanya dicocokkan sampai satuan wei pada transaksi sampel. CorePad dan Ascend dianalisis dari source code (repo publik / source terverifikasi).</div>
+  </div>
+</section>
+
+<!-- ============================== DAFTAR ISI ============================== -->
+<h2>Daftar isi</h2>
+<ol class="toc">
+  <li>Ringkasan eksekutif</li>
+  <li>Konsep dasar: launchpad, factory, pool, hook</li>
+  <li>Jaringan Elysium: fakta penting untuk builder</li>
+  <li>Lanskap pool V4 di mainnet Elysium</li>
+  <li>Kleos — "Taxed V4"</li>
+  <li>BOXA V4 — PoolManager + Router + Hook + Launcher</li>
+  <li>Obol — curve → pool internal tanpa LP token</li>
+  <li>CorePad — curve → HyperCore</li>
+  <li>Ascend — hook PancakeSwap Infinity, quote USDC</li>
+  <li>Perbandingan lintas launchpad</li>
+  <li>Launchpad kita (MVP saat ini)</li>
+  <li>Rekomendasi dan langkah berikutnya</li>
+  <li>Metodologi, batasan, dan sumber</li>
+</ol>
+
+<!-- ============================== 1 ============================== -->
+<h2>1. Ringkasan eksekutif</h2>
+<div class="kpis">
+  <div class="kpi"><b>2.581</b><span>pool Uniswap-V4-style di mainnet</span></div>
+  <div class="kpi"><b>11</b><span>PoolManager berbeda (semua di-deploy sendiri)</span></div>
+  <div class="kpi"><b>0</b><span>pool PancakeSwap Infinity di mainnet (Ascend belum live)</span></div>
+  <div class="kpi"><b>0</b><span>pool ber-quote USDC di mainnet</span></div>
+</div>
+<ul>
+  <li><b>Ada tiga model launchpad di Elysium.</b> (a) <b>Pool V4 + hook sejak blok pertama</b>, tanpa bonding curve dan tanpa graduation: Kleos, BOXA, Ascend. (b) <b>Bonding curve → pool internal</b>: Obol. (c) <b>Bonding curve → order book HyperCore</b>: CorePad.</li>
+  <li><b>Kleos dan BOXA</b> masing-masing men-deploy <b>PoolManager Uniswap V4 sendiri</b>. Pool-nya HYPE native dengan fee PoolKey 0%; seluruh pendapatan berupa <b>tax yang dipungut hook</b>: Kleos mengambil 20% untuk protokol dan membagi sisanya ke 4 bagian, BOXA mengambil 30% dan membagi sisanya ke 3 bagian.</li>
+  <li><b>Obol</b> memakai curve x·y=k dengan reserve virtual dan mendukung banyak aset quote (WHYPE, KNTQ, wNVDAx, dll.). Saat graduation, likuiditas pindah ke pool milik Obol sendiri yang <b>tidak punya LP token</b>, sehingga terkunci permanen.</li>
+  <li><b>CorePad</b> hanya ada di testnet dan HyperEVM. Graduation ke HyperCore bergantung pada keeper EOA dan tiket HIP-1 yang mahal (≥ 500 HYPE di mainnet); jalur ini belum pernah berhasil live.</li>
+  <li><b>Ascend</b> bukan Uniswap V4, melainkan <b>PancakeSwap Infinity</b>. Kurvanya bertingkat (14 band), quote-nya USDC, dan fee LP dinamis 90% → 1% dalam 5 detik, lalu 1% selamanya. Fee dibagi 50% creator / 50% protokol, ditambah "flywheel bid" untuk buyback. Saat ini baru live di testnet.</li>
+  <li><b>Launchpad kita</b> (MVP yang sudah dibangun) secara mekanisme paling dekat dengan Obol: curve virtual x·y=k dengan rumus <span class="mono">virtualToken = S²/(2S−N)</span> yang sama, lalu graduation ke pool Uniswap V2. 21 test lulus.</li>
+</ul>
+
+<!-- ============================== 2 ============================== -->
+<h2 class="pb">2. Konsep dasar: launchpad, factory, pool, hook</h2>
+<table>
+  <tr><th style="width:20%">Komponen</th><th>Fungsi</th><th style="width:30%">Contoh di sesi ini</th></tr>
+  <tr><td><b>Launchpad</b></td><td>Produk lengkap untuk membuat token baru, menjualnya ke publik secara adil, dan mengelola fee serta tahap lanjut (graduation/listing).</td><td>Kleos, BOXA, Obol, CorePad, Ascend</td></tr>
+  <tr><td><b>Factory / Launcher</b></td><td>Kontrak yang men-deploy token (sering via CREATE2), membuat atau menginisialisasi pool, menanam likuiditas awal, dan mencatat parameter fee. Sering juga menangani dev buy.</td><td>Kleos <span class="mono">0x2dA6…9502</span>, BOXA <span class="mono">0x00d4…D205</span>, Obol v2 <span class="mono">0xfeE8…2348</span>, <span class="mono">AscendLaunchpad</span></td></tr>
+  <tr><td><b>Pool</b></td><td>Tempat harga terbentuk dan trading terjadi. Bisa berupa bonding curve internal, pool AMM sendiri, atau pool di DEX (V2/V4/Infinity).</td><td>Pool V4 Kleos/BOXA, pool internal Obol, 14 band Ascend</td></tr>
+  <tr><td><b>PoolManager</b> (V4/Infinity)</td><td>Satu kontrak <i>singleton</i> yang menyimpan semua pool. Pool hanya punya <span class="mono">PoolId = keccak(PoolKey)</span>, tanpa alamat sendiri.</td><td>Kleos <span class="mono">0xb308…2490</span>, BOXA <span class="mono">0x06C6…B2c4</span></td></tr>
+  <tr><td><b>Hook</b></td><td>Kontrak yang dipanggil PoolManager pada titik tertentu (initialize, add/remove liquidity, swap). Bisa menutup pool, memungut tax, mengubah jumlah swap, atau membuat kurva harga sendiri.</td><td>Kleos <span class="mono">0xD506…EAcC</span>, BOXA <span class="mono">0xBCc1…6acC</span>, Ascend (hook = factory)</td></tr>
+  <tr><td><b>Router</b></td><td>Pintu masuk swap untuk pengguna; memanggil <span class="mono">unlock/lock</span> lalu menyelesaikan saldo.</td><td>Kleos v4 router, BoxaV4Router, Router02 V2 kita</td></tr>
+</table>
+
+<h3>2.1 Uniswap V3 vs V4 vs PancakeSwap Infinity</h3>
+<table>
+  <tr><th style="width:18%"></th><th>Uniswap V3</th><th>Uniswap V4</th><th>PancakeSwap Infinity</th></tr>
+  <tr><td>Arsitektur</td><td>Satu kontrak per pool, dibuat factory</td><td>Satu PoolManager singleton</td><td>Satu CLPoolManager + Vault</td></tr>
+  <tr><td>Identitas pool</td><td>Alamat (<span class="mono">getPool</span>)</td><td><span class="mono">PoolId</span> dari PoolKey</td><td><span class="mono">PoolId</span> dari PoolKey (ada field <span class="mono">poolManager</span> &amp; <span class="mono">parameters</span>)</td></tr>
+  <tr><td>Native coin</td><td>Wajib wrapped (WHYPE)</td><td>Native (<span class="mono">address(0)</span>)</td><td>Native / ERC-20</td></tr>
+  <tr><td>Fee</td><td>Tier tetap 0,01/0,05/0,3/1%</td><td>Bebas, bisa dinamis via hook</td><td>Bebas, dinamis + flag override</td></tr>
+  <tr><td>Izin hook</td><td>—</td><td>14 bit terakhir alamat hook (harus di-<i>mine</i> CREATE2)</td><td>Bitmap di <span class="mono">parameters</span> PoolKey</td></tr>
+  <tr><td>Eksekusi</td><td>Transfer per pool</td><td>Flash accounting (<span class="mono">unlock</span>), klaim ERC-6909</td><td>Flash accounting (<span class="mono">lock</span>)</td></tr>
+  <tr><td>Event Initialize</td><td><span class="mono">PoolCreated</span> di factory</td><td><span class="mono">0xdd466e67…</span></td><td><span class="mono">0x426cc62f…</span> (signature berbeda)</td></tr>
+</table>
+
+<h3>2.2 Bentuk kurva harga yang ditemukan</h3>
+<table>
+  <tr><th style="width:26%">Model</th><th>Cara kerja</th><th style="width:22%">Dipakai oleh</th></tr>
+  <tr><td>Bonding curve x·y=k virtual</td><td>Reserve virtual (vHYPE, vToken) menentukan harga; setelah S token terjual curve ditutup dan likuiditas dipindahkan.</td><td>Obol, CorePad, launchpad kita</td></tr>
+  <tr><td>Likuiditas satu sisi, satu rentang</td><td>Seluruh supply ditanam sebagai token-only liquidity di <span class="mono">[MIN_TICK, tick awal]</span>. Perilakunya mirip x·y=k tanpa batas akhir, jadi tidak perlu graduation.</td><td>Kleos, BOXA</td></tr>
+  <tr><td>Likuiditas satu sisi, bertingkat</td><td>Supply dibagi ke beberapa band tick dengan porsi berbeda, sehingga kedalaman di setiap rentang harga bisa didesain.</td><td>Ascend (14 band)</td></tr>
+</table>
+
+<!-- ============================== 3 ============================== -->
+<h2>3. Jaringan Elysium: fakta penting untuk builder</h2>
+<table>
+  <tr><th style="width:28%">Parameter</th><th>Nilai</th></tr>
+  <tr><td>Stack</td><td>Arbitrum Orbit (Nitro/ArbOS) dioperasikan Conduit; settle ke HyperEVM (chain 999)</td></tr>
+  <tr><td>Blok</td><td>100 ms; receipt ±300 ms; target 300 Mgas/s</td></tr>
+  <tr><td>Gas</td><td>HYPE native, di-bridge 1:1 dari HyperEVM</td></tr>
+  <tr><td>Chain ID</td><td>Mainnet 99901 (sudah berjalan sebelum peluncuran publik 9 Nov), testnet 99801</td></tr>
+  <tr><td>RPC</td><td>Testnet publik <span class="mono">testnet-rpc.elysium.kinetiq.xyz</span>; Alchemy (direkomendasikan); RPC komunitas mainnet: <span class="mono">rpc-live.elyspump.com</span>, <span class="mono">rpc.thekleos.xyz/rpc</span>, <span class="mono">rpc-live.boxa.club</span> (memangkas state setelah ±50k blok)</td></tr>
+  <tr><td>Kontrak testnet resmi</td><td>WHYPE <span class="mono">0xCD57…F234</span>, USDC <span class="mono">0x7D29…47b2</span>, Multicall3, bridge factory <span class="mono">0xb94A…BE5a</span></td></tr>
+  <tr><td>WHYPE mainnet (teramati)</td><td><span class="mono">0x9F041fAd8323D7C5bf8f928AAde05B610DF34b64</span></td></tr>
+  <tr><td>Lifecycle token resmi</td><td>Launch di Elysium → mirror bridge ke HyperEVM → HyperCore spot → HIP-3 perps. Syarat token: ERC-20 standar, metadata tetap, tanpa fee-on-transfer/rebase.</td></tr>
+  <tr><td>Fitur yang menyusul</td><td>Precompile data HyperCore &amp; <span class="mono">ElysiumCoreWriter</span>, ±4 minggu setelah mainnet</td></tr>
+  <tr><td>Catatan teknis</td><td><span class="mono">block.number</span> di Orbit = nomor blok parent chain, jadi gunakan <span class="mono">block.timestamp</span>. viem <span class="mono">elysiumTestnet</span> bawaan adalah chain lain (1338).</td></tr>
+</table>
+
+<!-- ============================== 4 ============================== -->
+<h2 class="pb">4. Lanskap pool V4 di mainnet Elysium</h2>
+<p>Seluruh chain (blok 0 – 282.190) dipindai untuk event <span class="mono">Initialize</span> Uniswap V4. Hasilnya <b>2.581 pool</b> di <b>11 PoolManager</b>, semuanya di-deploy sendiri oleh tim launchpad; belum ada deployment Uniswap resmi. Pindaian kedua dengan signature PancakeSwap Infinity menemukan <b>0 pool</b>.</p>
+<table>
+  <tr><th>PoolManager</th><th>Pool</th><th>Hook utama (jumlah pool)</th><th>Keterangan</th></tr>
+  <tr><td class="mono">0x06C63714…B2c4</td><td>1.153</td><td class="mono">0xBCc1…6acC (705), 0xB3E2…2AcC (437)</td><td>BOXA; hook kedua mendukung quote KNTQ/wNVDAx</td></tr>
+  <tr><td class="mono">0xb308B5df…2490</td><td>882</td><td class="mono">0x0c83…79Cc (542), 0xD506…EAcC (322)</td><td>Kleos (hook lama &amp; "Taxed V4"); ada pool ber-quote $KLEOS dan BLOB</td></tr>
+  <tr><td class="mono">0x5fb015a4…9600</td><td>327</td><td class="mono">0xe11C…20Cc (276)</td><td>Launchpad lain (termasuk pool fee 0,3–20% tanpa hook)</td></tr>
+  <tr><td class="mono">0x5c54A729…37Da</td><td>94</td><td class="mono">0x8680…6acC (87)</td><td>Launchpad lain</td></tr>
+  <tr><td class="mono">0x3564d7DE…FA25</td><td>82</td><td class="mono">0xE208…60cc (79)</td><td>Launchpad lain (ada pool fee dinamis)</td></tr>
+  <tr><td class="mono">0xE2e105d3…23F1</td><td>26</td><td>campuran</td><td>DEX/launchpad kecil</td></tr>
+  <tr><td>5 PoolManager lain</td><td>17</td><td>—</td><td>Bytecode lebih kecil (17 KB), uji coba</td></tr>
+</table>
+<div class="box">Implikasi: likuiditas di Elysium <b>terfragmentasi</b> per launchpad. Aggregator dan bot butuh adapter khusus untuk tiap PoolManager + router. Pola PoolKey yang dominan: <span class="mono">HYPE native / token, fee = 0, tickSpacing = 200</span>, dengan hook yang menutup pool dan memungut tax.</div>
+
+<!-- ============================== 5 KLEOS ============================== -->
+<h2>5. Kleos — "Taxed V4" <span class="tag">mainnet</span></h2>
+<h3>Kontrak</h3>
+<table>
+  <tr><th style="width:26%">Peran</th><th style="width:44%">Alamat (99901)</th><th>Bukti</th></tr>
+  <tr><td>Factory v4</td><td class="mono">0x2dA68edFF4588A77B55A829689C382F2acB39502</td><td>tx pembuatan ketiga token sampel (selector <span class="mono">0x428f0875</span>)</td></tr>
+  <tr><td>PoolManager (fork V4)</td><td class="mono">0xb308B5df891c300a5f5a5b8fdBC30108bA842490</td><td>di-deploy deployer Kleos <span class="mono">0x4116…179b</span></td></tr>
+  <tr><td>Hook</td><td class="mono">0xD5068e7f4e2D70d5eFbaC6fD28A8407252E1EAcC</td><td><span class="mono">claimCreatorFees</span>, <span class="mono">claimProtocolFees</span>; dibuat via CREATE2 deployer</td></tr>
+  <tr><td>Liquidity helper</td><td class="mono">0x7db0519a39f1039678522b41FB483fC7f912F759</td><td>menerima mint 1 M lalu menanam likuiditas</td></tr>
+  <tr><td>Router v4</td><td class="mono">0xbA0b2699A9d21a2a138C494db82DFD2fFce3344c</td><td><span class="mono">buy</span> / <span class="mono">sell</span></td></tr>
+  <tr><td>Vault token reward</td><td class="mono">0xc9EaECE8829eBCe9aF2a6E15d01b4C586B0faf7E</td><td>dibuat oleh hook; menerima HYPE untuk membeli KNTQ/wNVDAx</td></tr>
+</table>
+<h3>Pool &amp; alur launch (satu transaksi)</h3>
+<div class="flow">
+  <div class="st"><b>1. Mint</b>1 M token ke helper</div><div class="ar">›</div>
+  <div class="st"><b>2. Initialize</b>HYPE/token, fee 0, spacing 200, tick 173400 (MC awal 30 HYPE)</div><div class="ar">›</div>
+  <div class="st"><b>3. Likuiditas</b>Satu sisi di [-887200, 173400]</div><div class="ar">›</div>
+  <div class="st"><b>4. Dev buy</b>Langsung kena tax hook</div>
+</div>
+<p>Izin hook: <span class="mono">BEFORE_INIT · BEFORE_ADD_LIQ · BEFORE_REMOVE_LIQ · BEFORE_SWAP · AFTER_SWAP · BEFORE/AFTER_SWAP_RETURNS_DELTA</span>. Pool tertutup untuk pihak luar, dan hook mengubah jumlah setiap swap.</p>
+<h3>Tax dan pembagiannya</h3>
+<p>Event <span class="mono">TokenCreated</span> (<span class="mono">0x274c55b0</span>) memuat: target MC awal (30 HYPE), tax buy/sell (bps), 4 bobot split, nama, simbol, dan JSON metadata. Event <span class="mono">0x7337a406</span> memuat token reward holder beserta porsinya.</p>
+<table>
+  <tr><th>Token</th><th>Tax buy/sell</th><th>Split (creator / holder / burn / bagian ke-4)</th><th>Reward holder</th></tr>
+  <tr><td>ELYPHANT</td><td>1% / 1%</td><td>0 / 50% / 50% / 0</td><td>KNTQ, 50%</td></tr>
+  <tr><td>MANTE</td><td>2% / 2%</td><td>100% / 0 / 0 / 0</td><td>—</td></tr>
+  <tr><td>ECAT</td><td>3% / 3%</td><td>30% / 70% / 0 / 0</td><td>wNVDAx, 100%</td></tr>
+</table>
+<pre>tax       = HYPE_in × taxBps
+protokol  = 20% × tax                      → tetap di hook (claimProtocolFees)
+sisa 80%  → creator / holder / burn / bagian ke-4 sesuai split
+holder    → rewardBps% ke vault 0xc9Ea… (dibelikan KNTQ/wNVDAx), sisanya HYPE yang bisa diklaim
+burn      → hook swap HYPE → token, kirim ke 0xdEaD
+
+Cek ELYPHANT (beli 1,5673 HYPE, tax 0,015673):
+protokol 0,0031346 · burn 0,0062692 (→ 191.813 token dibakar) · holder 0,0062692 (separuh ke vault KNTQ) ✓</pre>
+<p class="small">Tax bisa diubah setelah launch (event <span class="mono">0xd040a1b6</span>, contoh 200 → 300 bps). Identitas bagian ke-4 belum terungkap dari sampel.</p>
+
+<!-- ============================== 6 BOXA ============================== -->
+<h2 class="pb">6. BOXA V4 — PoolManager + Router + Hook + Launcher <span class="tag">mainnet</span></h2>
+<table>
+  <tr><th style="width:26%">Peran</th><th style="width:44%">Alamat (99901)</th><th>Bukti</th></tr>
+  <tr><td>Launcher</td><td class="mono">0x00d4C904f74f74c6920C95E3Ee807ab3C52DD205</td><td>selector launch <span class="mono">0x41811a10</span>, menerima mint 1 M</td></tr>
+  <tr><td>PoolManager (fork V4)</td><td class="mono">0x06C63714fBf1F5753017123E2FcfdEde4540B2c4</td><td>di-deploy deployer BOXA <span class="mono">0x4AC8…6ee2</span></td></tr>
+  <tr><td>Hook</td><td class="mono">0xBCc1f22d137C1D98DFa5548E4d4261D7AeE06acC</td><td><span class="mono">claim</span>, <span class="mono">claimRewards</span>, <span class="mono">processBuyback</span></td></tr>
+  <tr><td>Router</td><td class="mono">0x7d812380c241b331d753e8eef1cefdea4e539496</td><td><span class="mono">buy</span> / <span class="mono">sell</span></td></tr>
+  <tr><td>Launcher lama</td><td class="mono">0x8ca88b12bc89b58034c583f1a5df02f7e67d62e1</td><td>versi pra-V4</td></tr>
+</table>
+<p><b>Pool:</b> HYPE native/token, fee 0, spacing 200, hook dengan izin <b>identik</b> dengan Kleos. Tick awal 166200 (±16,5 juta token per HYPE → <b>MC awal ±60,6 HYPE</b>). Likuiditas satu sisi <span class="mono">[-887200, 166200]</span>, LP dipegang launcher.</p>
+<p><b>Pendaftaran pool</b> (event hook <span class="mono">0x719e98cb</span>): <span class="mono">[split0, split1, split2, flag, buyTax, sellTax]</span>, dengan tax dalam satuan 1e-6 (10000 = 1%).</p>
+<table>
+  <tr><th>Token</th><th>Tax</th><th>Split</th><th>Distribusi satu trade (event <span class="mono">0x72c3c882</span>)</th></tr>
+  <tr><td>KAT</td><td>1%</td><td>0 / 30% / 70%</td><td>0,012 tax → protokol 0,0036 (30%) · 0 / 0,00252 / 0,00588</td></tr>
+  <tr><td>ELYSX</td><td>5%</td><td>100% / 0 / 0</td><td>0,05 tax → protokol 0,015 (30%) · 0,035 ke bagian pertama</td></tr>
+</table>
+<p>Rumusnya: <b>protokol 30% dari tax</b>, sisanya dibagi 3 bagian yang sesuai dengan fungsi hook: creator (<span class="mono">claim</span>), holder (<span class="mono">claimRewards</span>), buyback &amp; burn (<span class="mono">processBuyback</span>, event <span class="mono">0x9ff78e7c</span>).</p>
+
+<!-- ============================== 7 OBOL ============================== -->
+<h2>7. Obol — curve → pool internal tanpa LP token <span class="tag">mainnet</span></h2>
+<table>
+  <tr><th style="width:26%">Peran</th><th>Alamat (99901)</th></tr>
+  <tr><td>Obol v1 factory</td><td class="mono">0x7D1904Bfb2472A0Ef97d886139A4236060e064aB (buy/sell, buyPool/sellPool)</td></tr>
+  <tr><td>Obol v2 factory</td><td class="mono">0xfeE823BE55EE12b8C3A76aff0bd69470aFAf2348 (create, buy, sell, claimRewardsFor)</td></tr>
+  <tr><td>Pool hasil graduation (Helios)</td><td class="mono">0x97f4e88348788b148378b094bdd184c50d09b1ea</td></tr>
+</table>
+<ul>
+  <li><b>Curve:</b> x·y=k dengan reserve virtual dalam WHYPE (factory yang wrap/unwrap). Contoh Helios: vQuote awal 61,152 HYPE, vToken awal 1.078,13 juta. Fee 1% di sisi HYPE.</li>
+  <li><b>Multi-quote:</b> event <span class="mono">QuoteConfigured(quote, virtualReserve, enabled, isNative)</span>. Di v2 ada 10 aset, misalnya WHYPE 65,15 · KNTQ 12.275 · wNVDAx 26,33. Reserve di-update terus agar MC awal setara dalam USD.</li>
+  <li><b>Graduation Helios</b> (blok 180655): pembelian terakhir di-clip (refund 0,497 HYPE). Curve berhenti di vQuote 227,168 / vToken 290,225 juta (787,9 juta token terjual). Lalu 166,016 WHYPE + 212,096 juta token dikirim ke pool baru, yang meng-emit <span class="mono">Sync</span> diikuti <span class="mono">Graduated</span>.</li>
+  <li><b>Harga kontinu:</b> 166,016 / 212,096 juta = 7,827e-7 HYPE, persis harga akhir curve. Parameter ini cocok dengan rumus <span class="mono">virtualToken = S²/(2S−N)</span>.</li>
+  <li><b>Pool tanpa LP token:</b> punya <span class="mono">getReserves</span>, <span class="mono">token0</span>, <span class="mono">token1</span>, <span class="mono">factory()</span> = Obol, tetapi <span class="mono">totalSupply</span> revert. Likuiditas terkunci by design; trading pasca-graduation lewat <span class="mono">factory.buyPool/sellPool</span> (423 swap).</li>
+  <li>v2: 103 token dalam 80k blok terakhir, belum ada yang graduate; menambah reward holder.</li>
+</ul>
+
+<!-- ============================== 8 COREPAD ============================== -->
+<h2 class="pb">8. CorePad — curve → HyperCore <span class="tag t">testnet</span> <span class="tag n">belum di mainnet</span></h2>
+<p>Sumber: repo publik <span class="mono">CorePad-team/corepad-contracts</span> (commit b3d32d7), dibaca langsung dari source.</p>
+<table>
+  <tr><th>Jaringan</th><th>Alamat</th><th>Status</th></tr>
+  <tr><td>Elysium testnet 99801</td><td class="mono">Factory 0x8547…de13 · Settlement 0x2cde…559C · Adapter 0x9BAA…7e37</td><td>Live, tersambung ke corepad.app</td></tr>
+  <tr><td>HyperEVM mainnet 999</td><td class="mono">Factory 0xbF5c…0E05 · Settlement 0xe2F9…f295</td><td>Launch/curve/graduate/abort live; dispatch tidak tersambung</td></tr>
+  <tr><td>Elysium mainnet 99901</td><td>—</td><td>Belum ada (getCode = 0)</td></tr>
+</table>
+<table>
+  <tr><th style="width:26%">Komponen</th><th>Mekanisme</th></tr>
+  <tr><td>Supply</td><td>1 M: 800 juta dijual di curve, 200 juta untuk order book HyperCore</td></tr>
+  <tr><td>Curve</td><td>x·y=k virtual, <span class="mono">virtualToken0 = 1.073 jt</span>, <span class="mono">virtualHype0 = graduationHype × 273/800</span></td></tr>
+  <tr><td>Fee</td><td>1% sisi HYPE, langsung ke treasury</td></tr>
+  <tr><td>Anti-sniper</td><td>60 detik pertama: maks 1% supply per <span class="mono">msg.sender</span> dan per <span class="mono">tx.origin</span>; creator buy maks 2%</td></tr>
+  <tr><td>Graduation</td><td>800 juta terjual → pool dibekukan → <span class="mono">graduate()</span> permissionless → HYPE + 200 juta token ke Settlement</td></tr>
+  <tr><td>Settlement</td><td>Keeper: register mirror → <span class="mono">dispatch</span> (mirror bridge + <span class="mono">ArbSys.withdrawEth</span>) → challenge period → klaim di Outbox → HIP-1 (beli ticker, genesis, registerSpot, ladder order) → <span class="mono">confirm</span></td></tr>
+  <tr><td>Pengaman</td><td>Jika tidak di-dispatch dalam 7 hari, siapa pun bisa <span class="mono">abort</span>: aset kembali dan curve dibuka di titik yang sama</td></tr>
+</table>
+<div class="box warn"><b>Risiko yang diakui sendiri:</b> keeper EOA memegang aset setelah bridge; satu kunci untuk deployer/treasury/keeper (pernah beredar dalam teks biasa); ticker HIP-1 testnet ±1.260–1.440 HYPE jauh di atas reserve; listing HIP-1 belum pernah berhasil live; setelah graduation token tidak bisa di-trade di Elysium.</div>
+
+<!-- ============================== 9 ASCEND ============================== -->
+<h2>9. Ascend — hook PancakeSwap Infinity, quote USDC <span class="tag t">testnet</span> <span class="tag n">belum di mainnet</span></h2>
+<p>Sumber: source terverifikasi di explorer testnet, disalin ke repo <span class="mono">zynorr/ascendkit</span> (rebuild byte-identik; solc 0.8.30). Ekonomi sesuai litepaper Ascend.</p>
+<table>
+  <tr><th style="width:30%">Peran (testnet)</th><th>Alamat</th></tr>
+  <tr><td>AscendLaunchpad (factory + hook + pemilik LP + kolektor fee)</td><td class="mono">0xc05193a68ED25df678bB7d6644D081BffDAA01D9</td></tr>
+  <tr><td>CLPoolManager (PancakeSwap Infinity)</td><td class="mono">0x12e84206cb53ae0df055482ebc4658635096e1aa</td></tr>
+  <tr><td>Treasury</td><td>7 kontrak dibuat di constructor + <span class="mono">ListingDesk</span></td></tr>
+</table>
+<h3>Factory = hook: alur <span class="mono">launch()</span></h3>
+<div class="flow">
+  <div class="st"><b>1. Token</b>CREATE2, salt = keccak(sender, salt), 1 M supply</div><div class="ar">›</div>
+  <div class="st"><b>2. Pool</b>token/USDC, fee dinamis, spacing 200, bitmap 0x0445</div><div class="ar">›</div>
+  <div class="st"><b>3. Seed</b>14 band likuiditas satu sisi</div><div class="ar">›</div>
+  <div class="st"><b>4. Dev buy</b>Bebas fee, refund sisa</div>
+</div>
+<div class="grid2">
+  <div>
+    <h4>Kurva bertingkat (USDC testnet)</h4>
+    <table>
+      <tr><th>Band (offset tick)</th><th>Supply</th></tr>
+      <tr><td>0 – 19.400</td><td>35,19%</td></tr>
+      <tr><td>19.400 – 23.000 (3 band)</td><td>4,81%</td></tr>
+      <tr><td>23.000 – 40.000</td><td>18,88%</td></tr>
+      <tr><td>40.000 – 46.000 (5 band)</td><td>6,12%</td></tr>
+      <tr><td>46.000 – 66.600</td><td>18,53%</td></tr>
+      <tr><td>66.600 – 69.000 (2 band)</td><td>1,47%</td></tr>
+      <tr><td>69.000 – 92.000</td><td>10,00%</td></tr>
+    </table>
+    <p class="small">startTick −393800 → harga awal ≈ 7,9e-6 USDC per token (FDV ≈ $7.900); puncak kurva ≈ 9.900× harga awal.</p>
+  </div>
+  <div>
+    <h4>Fee dan pembagian</h4>
+    <ul>
+      <li>LP fee dinamis: <b>90% → 1% dalam 5 detik</b>, lalu <b>1% selamanya</b></li>
+      <li>Fee terkumpul di posisi LP launchpad, dipanen dengan <span class="mono">collect()</span></li>
+      <li><b>Creator 50%</b> (opsional 20% bagian quote disisihkan untuk listing HyperCore)</li>
+      <li><b>Protokol 50%</b>: KNTQ 50% · staking HYPE 20% · buyback ekosistem 15% · opex 10% · yield staker 5%</li>
+    </ul>
+    <h4>Flywheel bid</h4>
+    <p>Setiap pool punya cadangan bid (<span class="mono">fundBid</span>). Penjualan exact-input bisa diisi dari bid di harga spot jika spot dalam ±5% dari EMA (τ 600 s), dibatasi <span class="mono">maxClip</span> per 10 menit (USDC testnet: 4.000). Di luar syarat itu, swap diteruskan ke AMM biasa.</p>
+  </div>
+</div>
+<p class="small">Kontrol: creator bisa menyerahkan peran (<span class="mono">transferCreator</span>/<span class="mono">acceptCreator</span>), owner tidak bisa menimpa. Owner hanya bisa pause launch baru dan mengatur config quote untuk launch berikutnya; tidak ada fungsi untuk menarik likuiditas pokok.</p>
+
+<!-- ============================== 10 PERBANDINGAN ============================== -->
+<h2 class="pb">10. Perbandingan lintas launchpad</h2>
+<table>
+  <tr><th style="width:15%"></th><th>Kleos</th><th>BOXA</th><th>Obol</th><th>CorePad</th><th>Ascend</th></tr>
+  <tr><td>Status</td><td>Mainnet</td><td>Mainnet</td><td>Mainnet</td><td>Testnet / HyperEVM</td><td>Testnet</td></tr>
+  <tr><td>Mesin</td><td>Uniswap V4 (PM sendiri)</td><td>Uniswap V4 (PM sendiri)</td><td>Curve + pool internal</td><td>Curve internal</td><td>PancakeSwap Infinity</td></tr>
+  <tr><td>Factory ≠ hook?</td><td>Terpisah (factory, hook, helper, router, vault)</td><td>Terpisah (launcher, hook, router)</td><td>Satu factory</td><td>Factory + pool per launch + Settlement</td><td>Satu kontrak</td></tr>
+  <tr><td>Quote</td><td>HYPE (+ $KLEOS, BLOB)</td><td>HYPE (+ KNTQ, wNVDAx)</td><td>WHYPE + 9 aset lain</td><td>HYPE</td><td>USDC</td></tr>
+  <tr><td>Kurva</td><td>Satu rentang penuh</td><td>Satu rentang penuh</td><td>x·y=k virtual</td><td>x·y=k virtual</td><td>14 band</td></tr>
+  <tr><td>MC awal</td><td>30 HYPE</td><td>±60,6 HYPE</td><td>±60 HYPE</td><td>Dari target graduation</td><td>≈ $7.900</td></tr>
+  <tr><td>Graduation</td><td>Tidak perlu</td><td>Tidak perlu</td><td>Ke pool internal tanpa LP</td><td>Ke HyperCore (keeper)</td><td>Listing HyperCore via ListingDesk</td></tr>
+  <tr><td>Fee</td><td>Tax 1–10% via hook</td><td>Tax via hook</td><td>1%</td><td>1%</td><td>LP fee 90%→1%</td></tr>
+  <tr><td>Potongan protokol</td><td>20% dari tax</td><td>30% dari tax</td><td>—</td><td>100% (treasury)</td><td>50% dari fee</td></tr>
+  <tr><td>Untuk creator/holder</td><td>Split 4 bagian, reward token</td><td>Split 3 bagian, buyback</td><td>Reward holder (v2)</td><td>—</td><td>Creator 50%, flywheel bid</td></tr>
+  <tr><td>Anti-sniper</td><td>—</td><td>—</td><td>—</td><td>Batas 1% / 60 s</td><td>Fee 90% turun dalam 5 s</td></tr>
+</table>
+
+<!-- ============================== 11 KITA ============================== -->
+<h2>11. Launchpad kita (MVP saat ini)</h2>
+<table>
+  <tr><th style="width:26%">Komponen</th><th>Isi</th></tr>
+  <tr><td>Kontrak</td><td><span class="mono">ElysiumLaunchpad.sol</span> (factory + curve + graduation) dan <span class="mono">LaunchToken.sol</span> (ERC-20 supply tetap)</td></tr>
+  <tr><td>Kurva</td><td>x·y=k virtual dalam HYPE native; 1 M supply, 800 juta di curve; <span class="mono">virtualToken = S²/(2S−N)</span> sehingga harga DEX sama dengan harga akhir curve</td></tr>
+  <tr><td>Fee</td><td>1% per trade (maks 5%), 25% ke creator (default seperti Ascend), sisanya protokol; fee graduation dan fee pembuatan opsional</td></tr>
+  <tr><td>Graduation</td><td>Otomatis ke pair Uniswap V2 (factory + Router02 di-deploy sendiri karena belum ada DEX V2 resmi); LP dikirim ke <span class="mono">0xdEaD</span>; token sisa dibakar</td></tr>
+  <tr><td>Keamanan</td><td>Transfer ke pair diblokir sebelum graduation; tahan donasi WHYPE + sync; tahan front-run createPair; slippage guard; pull-pattern fee; pause tidak memblokir sell</td></tr>
+  <tr><td>Frontend</td><td>HTML/JS statis (cocok untuk cPanel): daftar token, launch, buy/sell di curve dan DEX, klaim fee creator</td></tr>
+  <tr><td>Pengujian</td><td>21 test Hardhat dengan bytecode Uniswap V2 asli; uji E2E browser lokal (create → buy → sell → graduation → swap DEX)</td></tr>
+  <tr><td>Belum</td><td>Belum di-deploy ke testnet/mainnet; belum diaudit</td></tr>
+</table>
+
+<!-- ============================== 12 REKOMENDASI ============================== -->
+<h2>12. Rekomendasi dan langkah berikutnya</h2>
+<table>
+  <tr><th style="width:22%">Opsi</th><th>Gambaran</th><th style="width:28%">Kelebihan</th><th style="width:24%">Tantangan</th></tr>
+  <tr><td><b>A. Model Ascend / Kleos</b> (V4 atau Infinity + hook)</td><td>Pool dibuat saat launch, likuiditas satu sisi (satu rentang atau bertingkat), fee dinamis/tax 1% selamanya, dibagi creator/holder/burn/protokol</td><td>Pendapatan berkelanjutan, tanpa graduation, anti-sniper lewat fee, creator tetap dapat fee setelah listing</td><td>Perlu PoolManager sendiri, hook dengan alamat hasil mining, router; kompleksitas dan permukaan audit besar</td></tr>
+  <tr><td><b>B. Model Obol</b> (lanjutan MVP)</td><td>Curve yang sudah ada + graduation ke pool internal tanpa LP token, multi-quote, reward holder</td><td>Paling cepat (80% sudah ada), tidak bergantung DEX luar</td><td>Fee setelah graduation tetap via pool sendiri; perlu UI swap sendiri</td></tr>
+  <tr><td><b>C. Model CorePad</b> (lanjutan jangka panjang)</td><td>Graduation ke HyperCore lewat mirror bridge</td><td>Akses likuiditas order book HyperCore</td><td>Keeper terpercaya, biaya ticker ≥ 500 HYPE, menunggu <span class="mono">ElysiumCoreWriter</span></td></tr>
+</table>
+<div class="box">
+  <b>Saran urutan kerja:</b>
+  <ol>
+    <li>Ambil fitur yang mudah dan terbukti: anti-sniper (fee menurun atau batas per alamat), creator handoff, abort + reopen ala CorePad.</li>
+    <li>Pilih arah utama: <b>A</b> untuk produk yang bersaing langsung dengan Kleos/BOXA/Ascend, atau <b>B</b> untuk peluncuran cepat.</li>
+    <li>Deploy ke testnet (99801), lalu uji dengan bot dan beberapa launch nyata.</li>
+    <li>Audit eksternal sebelum mainnet; gunakan multisig untuk treasury dan kunci terpisah per peran.</li>
+  </ol>
+</div>
+
+<!-- ============================== 13 METODOLOGI ============================== -->
+<h2>13. Metodologi, batasan, dan sumber</h2>
+<h4>Metodologi</h4>
+<ul>
+  <li>RPC mainnet <span class="mono">rpc-live.elyspump.com</span> (ethers v6). Transaksi pembuatan setiap token dicari lewat event mint <span class="mono">Transfer(0x0 → …)</span> per 10.000 blok.</li>
+  <li>Event PoolManager didecode (<span class="mono">Initialize 0xdd466e67</span>, <span class="mono">ModifyLiquidity 0xf208f491</span>, <span class="mono">Swap 0x40e9cecb</span>, ERC-6909 <span class="mono">Transfer 0x1b3d7edb</span>), begitu juga event kustom per word.</li>
+  <li>Izin hook didecode dari 14 bit terakhir alamat (V4). Nama method diambil dari elyscan.live.</li>
+  <li>Pindaian seluruh chain untuk event <span class="mono">Initialize</span> V4 dan Infinity.</li>
+  <li>Source CorePad dan Ascend dibaca dari repo publik.</li>
+  <li>Skrip analisis tersimpan di <span class="mono">tools/onchain/</span>; catatan lengkap di <span class="mono">docs/riset-launchpad-elysium.md</span>.</li>
+</ul>
+<h4>Batasan</h4>
+<ul>
+  <li>Kleos, BOXA, Obol: source tidak terverifikasi, jadi nama event, urutan bucket split, dan bagian ke-4 Kleos adalah inferensi.</li>
+  <li>RPC testnet resmi tidak bisa diakses dari lingkungan riset, sehingga data testnet CorePad/Ascend berasal dari dokumen dan fixture mereka.</li>
+  <li>Alamat yang diklaim tim di issue GitHub sudah dicocokkan on-chain; ketiga domain launchpad pernah masuk blocklist phishing MetaMask (status banding).</li>
+  <li>Ini bukan audit keamanan dan bukan saran investasi.</li>
+</ul>
+<h4>Sumber</h4>
+<ul class="small">
+  <li>Dokumentasi Elysium: elysium.kinetiq.xyz/docs (connecting, building, token bridging, contract addresses)</li>
+  <li>Dokumentasi Ascend: ascendlaunch.gitbook.io/docs (lifecycle, trading fee, revenue allocation)</li>
+  <li>Source Ascend: github.com/zynorr/ascendkit (vendor dari explorer testnet)</li>
+  <li>Source CorePad: github.com/CorePad-team/corepad-contracts</li>
+  <li>MetaMask eth-phishing-detect issues #308580, #308584 (Kleos), #307359 (BOXA), #307261 (Obol)</li>
+  <li>elysium-wallet-tracker issue #30 (daftar RPC komunitas)</li>
+  <li>Data on-chain Elysium mainnet (chain 99901) dan elyscan.live</li>
+</ul>
+
+</body>
+</html>
