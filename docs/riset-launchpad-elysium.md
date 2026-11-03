@@ -1,4 +1,4 @@
-# Riset: launchpad di Elysium — Kleos, BOXA, Obol, CorePad
+# Riset: launchpad di Elysium — Kleos, BOXA, Obol, CorePad, Ascend
 
 Dibaca langsung dari **mainnet Elysium (chain ID `99901`)** lewat RPC `rpc-live.elyspump.com`
 pada blok ±278.000 (3 Nov 2026). Source code Kleos, BOXA dan Obol **tidak diverifikasi** di
@@ -176,6 +176,66 @@ wallet belum dipublikasikan, dan `ElysiumCoreWriter` belum ada. Tiket TEST1 masi
 melewati batas abort.
 
 **Kualitas:** 75 test (fuzz 1.000 run, 11 invariant), 34/34 mutant terbunuh, audit internal 0 critical/high.
+
+## 5. Ascend — PancakeSwap Infinity hook, quote USDC (dibaca dari source code)
+
+Sumber: source terverifikasi di explorer testnet yang di-vendor oleh
+[zynorr/ascendkit](https://github.com/zynorr/ascendkit) (rebuild byte-identik dengan bytecode live;
+solc 0.8.30, cancun). Tidak resmi, tapi setiap konstanta di bawah dibaca langsung dari source.
+
+**Status:** live di **testnet 99801** saja. Di mainnet 99901 belum ada: alamat launchpad/PoolManager
+kosong, dan **tidak ada satu pun pool PancakeSwap Infinity** di mainnet (dipindai seluruh chain dengan
+topic `Initialize` Infinity `0x426cc62f…`).
+
+| Peran (testnet) | Alamat |
+|---|---|
+| `AscendLaunchpad` (factory + hook + pemilik posisi LP + kolektor fee) | `0xc05193a68ED25df678bB7d6644D081BffDAA01D9` |
+| `CLPoolManager` (PancakeSwap Infinity) | `0x12e84206cb53ae0df055482ebc4658635096e1aa` |
+| Quote yang dipakai | `0xa0d2293c…` dan `0xbb98f64d…` (`baseQuote` = USDC) |
+| Treasury | 7 kontrak `Treasury` dibuat di constructor (staking, opex, ecosystem, staker-yield, KNTQ, cohort, inventory) + `ListingDesk` |
+
+**Bukan Uniswap V4, melainkan PancakeSwap Infinity** (`infinity-core`: `ICLPoolManager`, `IVault`,
+`lockAcquired`). Konsepnya sama (singleton + hook + flash accounting), tapi `PoolKey` Infinity berisi
+`poolManager` dan `parameters` (bitmap hook + tickSpacing), bukan izin hook di bit alamat.
+
+**Factory = hook = satu kontrak.** `launch(LaunchParams)`:
+1. Deploy `AscendToken` via CREATE2 (`salt = keccak(msg.sender, p.salt)`; alamat bisa diprediksi), supply 1 M.
+2. `initialize` pool: `fee = DYNAMIC_FEE_FLAG`, `tickSpacing = 200`, hook bitmap `0x0445`
+   (beforeInitialize, beforeAddLiquidity, beforeSwap, beforeSwapReturnsDelta). Pool eksternal & add-liquidity pihak lain ditolak.
+3. Seed **14 band likuiditas satu sisi** (token saja) di atas `startTick` per quote (USDC testnet: `-393800`
+   → harga awal ≈ 7,9e-6 USDC/token, FDV awal ≈ $7.900). Total rentang 92.000 tick (harga maksimum ≈ 9.900× awal):
+
+| Band (offset tick) | Bagian supply |
+|---|---|
+| 0 – 19.400 | 35,19% |
+| 19.400 – 23.000 (3 band kecil) | 4,81% |
+| 23.000 – 40.000 | 18,88% |
+| 40.000 – 46.000 (5 band kecil) | 6,12% |
+| 46.000 – 66.600 | 18,53% |
+| 66.600 – 69.000 (2 band kecil) | 1,47% |
+| 69.000 – 92.000 | 10,00% |
+
+   Hasilnya = "sealed launch curve" bertingkat, bukan bonding curve x·y=k. Tidak ada graduation di Elysium; tahap lanjut adalah listing HyperCore lewat `ListingDesk`.
+4. Dev buy opsional (bebas fee, karena Infinity melewati hook saat hook sendiri yang swap), refund jika curve habis.
+
+**Fee = LP fee dinamis, bukan tax:** `beforeSwap` mengembalikan fee override
+90% saat t=0 → turun linear ke **1% dalam 5 detik** (anti-sniper), lalu **1% selamanya**. Fee terkumpul di
+posisi LP milik launchpad; `collect(poolId)` (permissionless) memanen dan membagi:
+
+```
+creator   50%  (20% dari bagian quote creator bisa disisihkan untuk biaya listing HyperCore, opsional)
+protokol  50% → treasury staking HYPE 20% · ecosystem buyback 15% · staker yield 5% · KNTQ 50% · opex 10%
+```
+(Bagian ini cocok dengan litepaper: separuh revenue bersih protokol membeli KNTQ.)
+
+**Flywheel "bid fill":** setiap pool punya inventori bid (`fundBid`, didanai komunitas/buyback ekosistem).
+Pada *sell exact-input*, `beforeSwap` bisa mengisi sebagian penjualan langsung dari bid **di harga spot**,
+hanya jika spot dalam ±5% dari EMA harga (τ = 600 s), dibatasi `maxClip` per 10 menit (USDC testnet: 4.000 USDC).
+Di luar syarat itu swap jatuh ke AMM biasa (fail open, tidak pernah revert).
+
+**Peran & kontrol:** creator bisa menyerahkan peran (`transferCreator`/`acceptCreator`, owner tidak bisa
+menimpa). Owner hanya bisa `pause` launch baru dan mengatur quote config untuk launch berikutnya; tidak ada
+fungsi yang menarik likuiditas pokok.
 
 ---
 
