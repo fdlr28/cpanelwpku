@@ -1,0 +1,25 @@
+{
+  "name": "elysium-launchpad",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bonding-curve token launchpad for the Elysium network (Kinetiq L2, HYPE gas)",
+  "license": "MIT",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run scripts/deploy.js --network elysiumTestnet",
+    "deploy:local": "hardhat run scripts/deploy-local.js --network localhost",
+    "node": "hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@uniswap/v2-core": "^1.0.1",
+    "dotenv": "^18.0.9",
+    "ethers": "6.17.0",
+    "hardhat": "^2.29.1",
+    "solc": "^0.8.28"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.6.1"
+  }
+}
