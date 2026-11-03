@@ -9,7 +9,7 @@ dicocokkan sampai ke wei). CorePad open source: [CorePad-team/corepad-contracts]
 
 | | Kleos "Taxed V4" | BOXA V4 | Obol | CorePad |
 |---|---|---|---|---|
-| Mesin harga | Uniswap V4 **fork sendiri** (PoolManager `0xb308…2490`) | Uniswap V4 **fork sendiri** (PoolManager `0x06C6…B2c4`) | Curve virtual x·y=k di factory → pool x·y=k milik Obol | Curve virtual x·y=k di `LaunchPool` |
+| Mesin harga | Uniswap V4 **fork sendiri** (PoolManager `0xb308…2490`) | Uniswap V4 **fork sendiri** (PoolManager `0x06C6…B2c4`) | Curve virtual x·y=k di factory → pool x·y=k milik Obol | Curve virtual x·y=k di `LaunchPool` (testnet + HyperEVM, **belum di Elysium mainnet**) |
 | Fase bonding curve | Tidak ada — langsung pool V4 | Tidak ada — langsung pool V4 | Ada, graduation di ±788 jt token terjual | Ada, beku di 800 jt token terjual |
 | Graduation | Tidak perlu | Tidak perlu | Otomatis ke pool internal **tanpa LP token** | Ke **HyperCore spot** (HIP-1) lewat bridge + keeper |
 | Quote | HYPE native | HYPE native | WHYPE + banyak quote (KNTQ, wNVDAx, …) | HYPE native |
@@ -131,23 +131,51 @@ tidak ada LP token**, likuiditas terkunci by design; trading pasca-graduation le
 v2 (103 token di 80k blok terakhir): belum ada yang graduate; menambah reward holder
 (`claimRewardsFor`, event `0xf7a40077`) dan launch tanpa dev buy.
 
-## 4. CorePad — curve → HyperCore (testnet)
+## 4. CorePad — curve → HyperCore (dibaca dari source code)
 
-Sumber: README/SPEC di repo, live di **testnet 99801** (`CorePadFactory 0x8547…de13`,
-`Settlement 0x2cde…559C`, `ElysiumBridgeAdapter 0x9BAA…7e37`).
+Sumber: [CorePad-team/corepad-contracts](https://github.com/CorePad-team/corepad-contracts) commit `b3d32d7`
+(`src/LaunchPool.sol`, `CorePadFactory.sol`, `Settlement.sol`, `ElysiumBridgeAdapter.sol`, `docs/STATUS.md`).
 
-- `CorePadToken`: ERC-20 polos (solady), simbol `[A-Z0-9]{1,6}` unik (= ticker HyperCore), 13 ticker
-  besar dicadangkan.
-- `LaunchPool`: virtual x·y, `virtualHype0 = graduationHype × 273 / 800`, `virtualToken0 = 1,073e27`;
-  fee 1% sisi HYPE langsung ke treasury; anti-sniper per `msg.sender` **dan** `tx.origin` (maks 1% di
-  60 detik pertama); creator buy maks 2%.
-- 800 jt terjual → pool **beku**, siapa pun memanggil `graduate()` → HYPE + 200 jt token ke `Settlement`.
-- Keeper: register mirror di HyperEVM → `dispatch` (token lewat mirror bridge, HYPE lewat
-  `ArbSys.withdrawEth`) → tunggu challenge period → klaim di Outbox → HIP-1 (beli ticker ≥ 500 HYPE di
-  mainnet, genesis, `registerSpot`, ladder order simetris di sekitar `listPrice`) → `confirm`.
-- Kalau belum di-dispatch 7 hari → siapa pun bisa `abort`: aset kembali, curve dibuka lagi.
-- Trust: setelah bridge, keeper EOA memegang aset (belum ada `ElysiumCoreWriter`). Ticker HIP-1 mahal
-  (testnet auction ±1.260–1.440 HYPE), jadi `graduationHype` harus mencakup biaya ticker.
+**Status deployment**
+
+| Jaringan | Alamat | Status |
+|---|---|---|
+| Elysium testnet 99801 | Factory `0x8547…de13`, Settlement `0x2cde…559C`, BridgeAdapter `0x9BAA…7e37` | Live, terhubung ke corepad.app. Graduation 0,4 HYPE, ticker reserve 0,1 HYPE |
+| HyperEVM mainnet 999 | Factory `0xbF5c…0E05`, Settlement `0xe2F9…f295` | Launch/curve/graduate/abort live, **dispatch tidak tersambung** (tidak ada bridge Elysium di HyperEVM) |
+| **Elysium mainnet 99901** | — | **Belum ada** (dicek `getCode` = 0 di ketiga alamat) |
+
+Semua peran (deployer, treasury, keeper, coreSettler) dipegang **satu EOA** `0x0d22…4310` — audit
+mereka sendiri (L-4) menyebut kunci ini pernah beredar dalam teks biasa; harus diganti multisig sebelum mainnet.
+
+**Mekanika `LaunchPool` (satu kontrak per launch, membuat tokennya sendiri)**
+
+| Parameter | Nilai |
+|---|---|
+| Supply | 1 M: 800 jt dijual di curve, 200 jt untuk order book HyperCore |
+| Curve | x·y=k virtual, `virtualToken0 = 1.073 jt`, `virtualHype0 = graduationHype × 273/800` → menjual tepat 800 jt menghasilkan tepat `graduationHype` |
+| Fee | 1% sisi HYPE tiap buy/sell, langsung ke treasury di tx yang sama (`forceSafeTransferETH`) |
+| Anti-sniper | `guardSeconds` 60 s, maks 10 jt token (1%) kumulatif per `msg.sender` **dan** per `tx.origin` |
+| Creator buy | Maks 2% supply, hanya di tx launch |
+| Proteksi | Slippage + `deadline` di setiap trade, reentrancy guard transient (TSTORE) |
+| Freeze | Buy yang menembus 800 jt di-clip + refund, lalu pool `frozen` (tidak bisa buy/sell) |
+| Graduation | `graduate()` permissionless → seluruh HYPE + 200 jt token ke `Settlement.openTicket(…, listPrice)` |
+| Abort | Jika tiket tidak di-dispatch dalam `rescueDelay` (7 hari testnet), siapa pun bisa `abort` → aset kembali, `reopen()` membuka curve di titik yang sama, holder bisa jual |
+
+Catatan desain: berbeda dengan Obol/kontrak kita, **tidak ada fee graduation dan tidak ada DEX di Elysium** —
+setelah graduation token tidak bisa diperdagangkan di Elysium sampai listing HyperCore selesai (atau abort).
+
+**Alur settlement ke HyperCore (keeper)**
+1. Register mirror token di HyperEVM (`createAndRegisterL1Mirror`).
+2. `dispatch(id)`: token lewat mirror bridge (approve tepat ke escrow wallet), HYPE lewat `ArbSys.withdrawEth`, penerima `coreSettler`.
+3. Tunggu challenge period → klaim keduanya di Outbox HyperEVM.
+4. HIP-1: `registerToken2` (dibiayai `tickerBudget`), deposit wallet, genesis, `registerSpot`, HYPE→USDC, ladder order simetris di sekitar `listPrice` → `confirm(id, tokenIndex, spotIndex)`.
+
+**Yang belum terbukti live** (menurut `docs/STATUS.md`): dispatch, claim Outbox dan listing HIP-1 belum
+pernah jalan live. Ticker HIP-1 testnet ±1.260–1.440 HYPE jauh di atas reserve 0,1 HYPE, factory deposit
+wallet belum dipublikasikan, dan `ElysiumCoreWriter` belum ada. Tiket TEST1 masih `Open` padahal sudah
+melewati batas abort.
+
+**Kualitas:** 75 test (fuzz 1.000 run, 11 invariant), 34/34 mutant terbunuh, audit internal 0 critical/high.
 
 ---
 
