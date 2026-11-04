@@ -97,7 +97,7 @@
   <li><b>Kleos dan BOXA</b> masing-masing men-deploy <b>PoolManager Uniswap V4 sendiri</b>. Pool-nya HYPE native dengan fee PoolKey 0%; seluruh pendapatan berupa <b>tax yang dipungut hook</b>: Kleos mengambil 20% untuk protokol dan membagi sisanya ke 4 bagian, BOXA mengambil 30% dan membagi sisanya ke 3 bagian.</li>
   <li><b>Obol</b> memakai curve x·y=k dengan reserve virtual dan mendukung banyak aset quote (WHYPE, KNTQ, wNVDAx, dll.). Saat graduation, likuiditas pindah ke pool milik Obol sendiri yang <b>tidak punya LP token</b>, sehingga terkunci permanen.</li>
   <li><b>CorePad</b> hanya ada di testnet dan HyperEVM. Graduation ke HyperCore bergantung pada keeper EOA dan tiket HIP-1 yang mahal (≥ 500 HYPE di mainnet); jalur ini belum pernah berhasil live.</li>
-  <li><b>Ascend</b> bukan Uniswap V4, melainkan <b>PancakeSwap Infinity</b>. Kurvanya bertingkat (14 band), quote-nya USDC, dan fee LP dinamis 90% → 1% dalam 5 detik, lalu 1% selamanya. Fee dibagi 50% creator / 50% protokol, ditambah "flywheel bid" untuk buyback. Saat ini baru live di testnet.</li>
+  <li><b>Ascend</b> bukan Uniswap V4, melainkan <b>PancakeSwap Infinity</b>. Kurvanya bertingkat (15 band), quote-nya USDC, dan fee LP dinamis 90% → 1% dalam 5 detik, lalu 1% selamanya. Fee dibagi 50% creator / 50% protokol, ditambah "flywheel bid" untuk buyback. Saat ini baru live di testnet.</li>
 </ul>
 
 <!-- ============================== 2 ============================== -->
@@ -106,7 +106,7 @@
   <tr><th style="width:20%">Komponen</th><th>Fungsi</th><th style="width:30%">Contoh di sesi ini</th></tr>
   <tr><td><b>Launchpad</b></td><td>Produk lengkap untuk membuat token baru, menjualnya ke publik secara adil, dan mengelola fee serta tahap lanjut (graduation/listing).</td><td>Kleos, BOXA, Obol, CorePad, Ascend</td></tr>
   <tr><td><b>Factory / Launcher</b></td><td>Kontrak yang men-deploy token (sering via CREATE2), membuat atau menginisialisasi pool, menanam likuiditas awal, dan mencatat parameter fee. Sering juga menangani dev buy.</td><td>Kleos <span class="mono">0x2dA6…9502</span>, BOXA <span class="mono">0x00d4…D205</span>, Obol v2 <span class="mono">0xfeE8…2348</span>, <span class="mono">AscendLaunchpad</span></td></tr>
-  <tr><td><b>Pool</b></td><td>Tempat harga terbentuk dan trading terjadi. Bisa berupa bonding curve internal, pool AMM sendiri, atau pool di DEX (V2/V4/Infinity).</td><td>Pool V4 Kleos/BOXA, pool internal Obol, 14 band Ascend</td></tr>
+  <tr><td><b>Pool</b></td><td>Tempat harga terbentuk dan trading terjadi. Bisa berupa bonding curve internal, pool AMM sendiri, atau pool di DEX (V2/V4/Infinity).</td><td>Pool V4 Kleos/BOXA, pool internal Obol, 15 band Ascend</td></tr>
   <tr><td><b>PoolManager</b> (V4/Infinity)</td><td>Satu kontrak <i>singleton</i> yang menyimpan semua pool. Pool hanya punya <span class="mono">PoolId = keccak(PoolKey)</span>, tanpa alamat sendiri.</td><td>Kleos <span class="mono">0xb308…2490</span>, BOXA <span class="mono">0x06C6…B2c4</span></td></tr>
   <tr><td><b>Hook</b></td><td>Kontrak yang dipanggil PoolManager pada titik tertentu (initialize, add/remove liquidity, swap). Bisa menutup pool, memungut tax, mengubah jumlah swap, atau membuat kurva harga sendiri.</td><td>Kleos <span class="mono">0xD506…EAcC</span>, BOXA <span class="mono">0xBCc1…6acC</span>, Ascend (hook = factory)</td></tr>
   <tr><td><b>Router</b></td><td>Pintu masuk swap untuk pengguna; memanggil <span class="mono">unlock/lock</span> lalu menyelesaikan saldo.</td><td>Kleos v4 router, BoxaV4Router, Router02 V2 kita</td></tr>
@@ -129,7 +129,7 @@
   <tr><th style="width:26%">Model</th><th>Cara kerja</th><th style="width:22%">Dipakai oleh</th></tr>
   <tr><td>Bonding curve x·y=k virtual</td><td>Reserve virtual (vHYPE, vToken) menentukan harga; setelah S token terjual curve ditutup dan likuiditas dipindahkan.</td><td>Obol, CorePad, launchpad kita</td></tr>
   <tr><td>Likuiditas satu sisi, satu rentang</td><td>Seluruh supply ditanam sebagai token-only liquidity di <span class="mono">[MIN_TICK, tick awal]</span>. Perilakunya mirip x·y=k tanpa batas akhir, jadi tidak perlu graduation.</td><td>Kleos, BOXA</td></tr>
-  <tr><td>Likuiditas satu sisi, bertingkat</td><td>Supply dibagi ke beberapa band tick dengan porsi berbeda, sehingga kedalaman di setiap rentang harga bisa didesain.</td><td>Ascend (14 band)</td></tr>
+  <tr><td>Likuiditas satu sisi, bertingkat</td><td>Supply dibagi ke beberapa band tick dengan porsi berbeda, sehingga kedalaman di setiap rentang harga bisa didesain.</td><td>Ascend (15 band)</td></tr>
 </table>
 
 <!-- ============================== 3 ============================== -->
@@ -271,7 +271,7 @@ protokol 0,0031346 · burn 0,0062692 (→ 191.813 token dibakar) · holder 0,006
 <div class="flow">
   <div class="st"><b>1. Token</b>CREATE2, salt = keccak(sender, salt), 1 M supply</div><div class="ar">›</div>
   <div class="st"><b>2. Pool</b>token/USDC, fee dinamis, spacing 200, bitmap 0x0445</div><div class="ar">›</div>
-  <div class="st"><b>3. Seed</b>14 band likuiditas satu sisi</div><div class="ar">›</div>
+  <div class="st"><b>3. Seed</b>15 band likuiditas satu sisi</div><div class="ar">›</div>
   <div class="st"><b>4. Dev buy</b>Bebas fee, refund sisa</div>
 </div>
 <div class="grid2">
@@ -286,8 +286,9 @@ protokol 0,0031346 · burn 0,0062692 (→ 191.813 token dibakar) · holder 0,006
       <tr><td>46.000 – 66.600</td><td>18,53%</td></tr>
       <tr><td>66.600 – 69.000 (2 band)</td><td>1,47%</td></tr>
       <tr><td>69.000 – 92.000</td><td>10,00%</td></tr>
+      <tr><td>92.000 – 200.000</td><td>5,00%</td></tr>
     </table>
-    <p class="small">startTick −393800 → harga awal ≈ 7,9e-6 USDC per token (FDV ≈ $7.900); puncak kurva ≈ 9.900× harga awal.</p>
+    <p class="small">startTick −393800 → harga awal ≈ 7,9e-6 USDC per token (FDV ≈ $7.900); puncak kurva ≈ 4,8 × 10<super>8</super> kali harga awal (200.000 tick).</p>
   </div>
   <div>
     <h4>Fee dan pembagian</h4>
@@ -311,7 +312,7 @@ protokol 0,0031346 · burn 0,0062692 (→ 191.813 token dibakar) · holder 0,006
   <tr><td>Mesin</td><td>Uniswap V4 (PM sendiri)</td><td>Uniswap V4 (PM sendiri)</td><td>Curve + pool internal</td><td>Curve internal</td><td>PancakeSwap Infinity</td></tr>
   <tr><td>Factory ≠ hook?</td><td>Terpisah (factory, hook, helper, router, vault)</td><td>Terpisah (launcher, hook, router)</td><td>Satu factory</td><td>Factory + pool per launch + Settlement</td><td>Satu kontrak</td></tr>
   <tr><td>Quote</td><td>HYPE (+ $KLEOS, BLOB)</td><td>HYPE (+ KNTQ, wNVDAx)</td><td>WHYPE + 9 aset lain</td><td>HYPE</td><td>USDC</td></tr>
-  <tr><td>Kurva</td><td>Satu rentang penuh</td><td>Satu rentang penuh</td><td>x·y=k virtual</td><td>x·y=k virtual</td><td>14 band</td></tr>
+  <tr><td>Kurva</td><td>Satu rentang penuh</td><td>Satu rentang penuh</td><td>x·y=k virtual</td><td>x·y=k virtual</td><td>15 band</td></tr>
   <tr><td>MC awal</td><td>30 HYPE</td><td>±60,6 HYPE</td><td>±60 HYPE</td><td>Dari target graduation</td><td>≈ $7.900</td></tr>
   <tr><td>Graduation</td><td>Tidak perlu</td><td>Tidak perlu</td><td>Ke pool internal tanpa LP</td><td>Ke HyperCore (keeper)</td><td>Listing HyperCore via ListingDesk</td></tr>
   <tr><td>Fee</td><td>Tax 1–10% via hook</td><td>Tax via hook</td><td>1%</td><td>1%</td><td>LP fee 90%→1%</td></tr>

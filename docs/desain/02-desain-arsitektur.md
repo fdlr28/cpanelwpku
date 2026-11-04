@@ -2,7 +2,7 @@
 
 Status: **revisi 2, keputusan pemilik proyek sudah dimasukkan (4 Nov 2026)**. Belum ada kode kontrak.
 Target pertama: **Elysium testnet (99801)**.
-Nama kerja protokol: **ELP (Elysium Launch Protocol)**; nama final belum ditentukan.
+Nama: protokol **Eridanos** (lapis protokol), app **Hypelys** (integrator #1). Ditetapkan 4 Nov 2026.
 
 Dasar riset: `01-riset-model-acuan.md` (Doppler, Bankr, Ascend dari sumber asli) dan
 `../riset-launchpad-elysium.md` (launchpad yang sudah ada di Elysium).
@@ -48,7 +48,7 @@ flowchart TB
     LC["LaunchCore<br/>gerbang launch tunggal"]
     IR["IntegratorRegistry<br/>+ mode allowlist"]
     PC["ProtocolConfig<br/>quote, preset kurva, batas fee"]
-    TK["LaunchToken<br/>ERC-20 polos"]
+    TK["EridanosToken<br/>ERC-20 polos"]
     VV["VestingVault"]
     CH["CurveHook<br/>hook V4 + pemilik LP"]
     FD["FeeDistributor"]
@@ -116,11 +116,14 @@ Indexer dan UI mengambil label dari registry, bukan dari metadata token.
 | **B · Signed** | Pengguna langsung (front-end tanpa kontrak, mis. Agora) | Tanda tangan EIP-712 `LaunchIntent` dari `registry.signer(id)` | id tersebut |
 | **C · None** | Siapa saja | — | `0`; split 20 / 0 / 80 |
 
-`LaunchIntent` (EIP-712, domain = `ELP`, `chainId`, `verifyingContract = LaunchCore`):
+`LaunchIntent` (EIP-712, domain `name = "Eridanos"`, `version = "1"`, `chainId`, `verifyingContract = IntegratorRegistry`).
+Registry yang memverifikasi tanda tangan karena registry yang menyimpan signer dan nonce. Hanya core yang
+diotorisasi Timelock yang boleh memakai nonce, sehingga pihak lain tidak bisa "membakar" nonce integrator:
 
 ```
 LaunchIntent {
   uint32  integratorId;
+  address core;          // LaunchCore yang boleh memakainya: tanda tangan terikat ke satu versi core
   address caller;        // harus == msg.sender: tanda tangan tidak bisa dipakai orang lain
   address creator;
   bytes32 paramsHash;    // hash LaunchParams tanpa tanda tangan
@@ -176,10 +179,14 @@ ke `LaunchCore`, lalu dibagi habis dalam transaksi yang sama.
 `policy` integrator hanya boleh **sama atau lebih ketat** daripada batas protokol. Integrator yang ingin melindungi
 penggunanya (misalnya app kita) bisa mewajibkan cliff/vesting minimum dan batas lebih kecil.
 
+Semantik vesting (`VestingVault`): `vested(t) = 0` sebelum `start + cliff`; `total · (t − start) / duration` sampai
+`start + duration`; lalu `total`. Cliff berada **di dalam** jendela vesting (seperti Bankr). `duration = 0` dibayar
+langsung di dalam `createSchedule`, tetapi jadwalnya tetap tercatat on-chain.
+
 Invarian yang diuji:
 * Setelah `launch`, saldo token di `LaunchCore` = 0; `totalSupply = tokenDiPool + tokenDiVault + alokasiInstan`
   (dev buy keluar dari pool).
-* `LaunchToken` tidak punya `owner`, `mint`, pajak transfer, blacklist, atau kunci transfer. Metadata immutable
+* `EridanosToken` tidak punya `owner`, `mint`, pajak transfer, blacklist, atau kunci transfer. Metadata immutable
   (syarat mirror bridge Elysium → HyperEVM).
 * Tidak ada jalur lain untuk memindahkan token ke creator selain alokasi dan dev buy, keduanya dalam batas kontrak dan tercatat di event.
 
@@ -364,7 +371,7 @@ sequenceDiagram
   participant LC as LaunchCore
   participant IR as IntegratorRegistry
   participant PC as ProtocolConfig
-  participant TK as LaunchToken
+  participant TK as EridanosToken
   participant VV as VestingVault
   participant CH as CurveHook
   participant PM as PoolManager V4
@@ -413,7 +420,7 @@ flowchart LR
 | 1 | `LaunchCore` | Protokol | Gerbang `launch`; resolusi integrator (A/B/C); validasi policy, preset, batas supply; deploy token; orkestrasi vault + hook; emit `Launched`; pause launch baru. PoolManager = parameter konstruktor | Timelock (pause: guardian) |
 | 2 | `IntegratorRegistry` | Protokol | Daftar integrator, signer, payout, policy tertunda, nonce EIP-712, `verified`, **mode allowlist** | Integrator untuk record-nya; Timelock untuk `verified`/`active`/allowlist |
 | 3 | `ProtocolConfig` | Protokol | Quote yang diizinkan, preset kurva, treasury | Timelock; perubahan hanya untuk launch berikutnya |
-| 4 | `LaunchToken` | Protokol | ERC-20 polos, supply tetap, metadata immutable, tanpa owner | Tidak ada |
+| 4 | `EridanosToken` | Protokol | ERC-20 polos, supply tetap, metadata immutable, tanpa owner | Tidak ada |
 | 5 | `VestingVault` | Protokol | Simpan alokasi ber-vesting; cliff + linear; `release` oleh siapa saja ke penerima tetap | Tidak ada |
 | 6 | `CurveHook` | Protokol | Hook V4; buat pool, tanam band, fee dasar + surcharge, blok likuiditas luar, `collect`; pemilik posisi LP. PoolManager = parameter konstruktor | Tidak ada (hanya `LaunchCore` yang boleh `seed`) |
 | 7 | `FeeDistributor` | Protokol | Akuntansi `owed` per pool/peran; klaim; pengalihan peran creator; terima surcharge protokol | Tidak ada |

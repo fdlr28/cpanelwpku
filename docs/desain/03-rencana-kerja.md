@@ -12,7 +12,7 @@ Keputusan D1–D6 sudah ditetapkan (lihat `02-desain-arsitektur.md` §0). Yang m
 
 | # | Keputusan | Usulan | Dibutuhkan sebelum |
 |---|---|---|---|
-| T1 | Nama protokol dan app | Protokol **Eridanos**, app **Hypelys** (alternatif: Hypelysium, Elymint); lihat bagian "Usulan nama" | Fase 5 (UI), tidak menghambat kontrak |
+| T1 | Nama protokol dan app | ✅ Ditetapkan: protokol **Eridanos**, app **Hypelys** | — |
 | T2 | Policy integrator #1 (app kita): `integratorBps` dan batas alokasi bagi pengguna app kita | `integratorBps` 3000; alokasi pengguna ≤ 20% sesuai batas protokol; tampilkan peringatan jelas bila instan | Fase 5 |
 | T3 | Surcharge dalam token: dibakar atau ke protokol | Dibakar (protokol tidak menumpuk token yang diluncurkan); surcharge dalam quote ke protokol | Fase 3 |
 
@@ -65,7 +65,7 @@ alamatnya diberikan saat deploy.
 
 ## Fase 2 · Token, vesting, konfigurasi, registry
 
-* `LaunchToken`, `VestingVault`, `ProtocolConfig` (termasuk validasi preset kurva), `IntegratorRegistry`
+* `EridanosToken`, `VestingVault`, `ProtocolConfig` (termasuk validasi preset kurva), `IntegratorRegistry`
   (mode A/B, EIP-712, EIP-1271, nonce, payout, policy tertunda, mode allowlist), `TimelockController`.
 * Test unit + fuzz:
   * vesting: tidak cair sebelum cliff, linear setelahnya; `duration = 0` cair penuh di tx launch;
@@ -76,6 +76,20 @@ alamatnya diberikan saat deploy.
     pool lama tetap membayar integrator lama.
 
 **Selesai bila** semua test lulus dan batas di `02 §4` dan `§10.3` terbukti di test.
+
+✅ **Selesai 4 Nov 2026** (`test/v2/registry.test.js`, `test/v2/token-vault-config.test.js`, 34 test). Hasil:
+* `contracts/v2/libraries/EridanosConstants.sol`: semua batas protokol sebagai konstanta kode.
+* `EridanosToken` (nama dipilih agar tidak bentrok dengan `LaunchToken` lama): supply 1e27 sekali mint, tanpa owner/mint/pajak, metadata immutable.
+* `VestingVault`: cliff di dalam jendela vesting, linear, `duration = 0` dibayar langsung tapi tetap tercatat; menolak token fee-on-transfer.
+* `ProtocolConfig`: quote, preset kurva append-only dengan validasi (urutan band, spacing, total bps, rentang tick,
+  likuiditas per tick untuk kedua urutan token), treasury, guardian.
+* `IntegratorRegistry`: identitas = `msg.sender`; akun pindah 2 langkah; signer/payout; policy ditunda 24 jam dan
+  dibatasi konstanta; allowlist; suspend; pause pendaftaran oleh guardian; mode B EIP-712 + EIP-1271 dengan nonce acak
+  sekali pakai, terikat ke chain, core, caller, creator, dan hash parameter.
+* `EridanosTimelock` (OpenZeppelin `TimelockController`): perubahan admin hanya setelah jeda.
+
+Koreksi data: fixture kurva memakai bentuk Ascend yang benar (15 band, total 10.000 bps, puncak 200.000 tick); dokumen
+riset dan laporan PDF yang sebelumnya menulis 14 band sudah diperbaiki.
 
 ## Fase 3 · Mesin pool: `CurveHook` + `FeeDistributor` + `LaunchCore`
 

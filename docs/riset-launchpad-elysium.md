@@ -202,8 +202,8 @@ topic `Initialize` Infinity `0x426cc62f…`).
 1. Deploy `AscendToken` via CREATE2 (`salt = keccak(msg.sender, p.salt)`; alamat bisa diprediksi), supply 1 M.
 2. `initialize` pool: `fee = DYNAMIC_FEE_FLAG`, `tickSpacing = 200`, hook bitmap `0x0445`
    (beforeInitialize, beforeAddLiquidity, beforeSwap, beforeSwapReturnsDelta). Pool eksternal & add-liquidity pihak lain ditolak.
-3. Seed **14 band likuiditas satu sisi** (token saja) di atas `startTick` per quote (USDC testnet: `-393800`
-   → harga awal ≈ 7,9e-6 USDC/token, FDV awal ≈ $7.900). Total rentang 92.000 tick (harga maksimum ≈ 9.900× awal):
+3. Seed **15 band likuiditas satu sisi** (token saja) di atas `startTick` per quote (USDC testnet: `-393800`
+   → harga awal ≈ 7,9e-6 USDC/token, FDV awal ≈ $7.900). Total rentang 200.000 tick (harga puncak ≈ 4,8 × 10⁸ kali harga awal). *Koreksi 4 Nov 2026: versi sebelumnya menulis 14 band / 92.000 tick karena band terakhir terpotong saat dibaca.*
 
 | Band (offset tick) | Bagian supply |
 |---|---|
@@ -214,6 +214,7 @@ topic `Initialize` Infinity `0x426cc62f…`).
 | 46.000 – 66.600 | 18,53% |
 | 66.600 – 69.000 (2 band kecil) | 1,47% |
 | 69.000 – 92.000 | 10,00% |
+| 92.000 – 200.000 | 5,00% |
 
    Hasilnya = "sealed launch curve" bertingkat, bukan bonding curve x·y=k. Tidak ada graduation di Elysium; tahap lanjut adalah listing HyperCore lewat `ListingDesk`.
 4. Dev buy opsional (bebas fee, karena Infinity melewati hook saat hook sendiri yang swap), refund jika curve habis.

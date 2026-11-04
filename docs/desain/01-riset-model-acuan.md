@@ -128,7 +128,7 @@ Detail lengkap ada di `docs/riset-launchpad-elysium.md` bagian 5.
 * Factory = hook = pemilik posisi LP = kolektor fee, satu kontrak (`AscendLaunchpad.sol:252 launch`).
 * **PancakeSwap Infinity**, bukan Uniswap V4; hook bitmap `0x0445` (beforeInitialize, beforeAddLiquidity,
   beforeSwap, beforeSwapReturnsDelta) di `LaunchpadKey.sol:32`.
-* Likuiditas satu sisi **14 band**, quote USDC.
+* Likuiditas satu sisi **15 band** (puncak 200.000 tick di atas harga awal), quote USDC.
 * Fee LP dinamis 90% → 1% selama 5 detik, lalu 1% selamanya (`AscendLaunchpad.sol:37-39, 897`).
 * Fee dipanen dengan `collect()` lalu dibagi creator 50% / protokol 50% (`:84, :358`).
 * `launch(LaunchParams)` memisahkan `creator` dari `msg.sender`, tetapi event `Launched` tidak mencatat pemanggil,
