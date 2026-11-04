@@ -4,22 +4,30 @@ require("dotenv").config();
 const { subtask } = require("hardhat/config");
 const { TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD } = require("hardhat/builtin-tasks/task-names");
 
-const SOLC_VERSION = "0.8.28";
+// Compilers come from npm (solcjs/wasm) instead of binaries.soliditylang.org, which is
+// unreachable from restricted CI. 0.8.28 builds the legacy MVP; 0.8.26 builds the v2
+// protocol (same compiler as Uniswap v4-core, which v2 imports).
+const SOLCJS = {
+  "0.8.28": "solc",
+  "0.8.26": "solc0826",
+};
 
-// Use the solcjs (wasm) build bundled in node_modules/solc instead of downloading
-// a compiler from binaries.soliditylang.org. Handy for offline / restricted CI.
 subtask(TASK_COMPILE_SOLIDITY_GET_SOLC_BUILD, async (args, hre, runSuper) => {
-  if (args.solcVersion === SOLC_VERSION && process.env.USE_NATIVE_SOLC !== "1") {
-    const solcPkg = require("solc/package.json");
+  const pkg = SOLCJS[args.solcVersion];
+  if (pkg && process.env.USE_NATIVE_SOLC !== "1") {
     return {
-      compilerPath: require.resolve("solc/soljson.js"),
+      compilerPath: require.resolve(`${pkg}/soljson.js`),
       isSolcJs: true,
       version: args.solcVersion,
-      longVersion: solcPkg.version,
+      longVersion: require(`${pkg}/package.json`).version,
     };
   }
   return runSuper();
 });
+
+// Elysium is an Arbitrum Orbit (Nitro) chain; its ArbOS supports Cancun opcodes
+// (PUSH0, MCOPY, TSTORE) except blobs. Uniswap v4 requires Cancun (transient storage).
+const EVM_VERSION = process.env.EVM_VERSION || "cancun";
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 const accounts = PRIVATE_KEY ? [PRIVATE_KEY] : [];
@@ -27,16 +35,13 @@ const accounts = PRIVATE_KEY ? [PRIVATE_KEY] : [];
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: SOLC_VERSION,
-    settings: {
-      optimizer: { enabled: true, runs: 200 },
-      // Elysium is an Arbitrum Orbit (Nitro) chain; recent ArbOS supports Cancun opcodes
-      // (except blobs). Switch to "paris" if your target chain rejects PUSH0/MCOPY.
-      evmVersion: process.env.EVM_VERSION || "cancun",
-    },
+    compilers: [
+      { version: "0.8.28", settings: { optimizer: { enabled: true, runs: 200 }, evmVersion: EVM_VERSION } },
+      { version: "0.8.26", settings: { optimizer: { enabled: true, runs: 200 }, evmVersion: EVM_VERSION } },
+    ],
   },
   networks: {
-    hardhat: {},
+    hardhat: { hardfork: "cancun" },
     localhost: { url: "http://127.0.0.1:8545" },
     elysiumTestnet: {
       // Public RPC from the docs; Alchemy (https://elysium-testnet.g.alchemy.com/v2/KEY) is recommended.

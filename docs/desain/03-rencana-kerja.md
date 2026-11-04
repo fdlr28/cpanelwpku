@@ -12,15 +12,30 @@ Keputusan D1–D6 sudah ditetapkan (lihat `02-desain-arsitektur.md` §0). Yang m
 
 | # | Keputusan | Usulan | Dibutuhkan sebelum |
 |---|---|---|---|
-| T1 | Nama protokol dan app | Nama kerja "ELP" | Fase 5 (UI), tidak menghambat kontrak |
+| T1 | Nama protokol dan app | Protokol **Eridanos**, app **Hypelys** (alternatif: Hypelysium, Elymint); lihat bagian "Usulan nama" | Fase 5 (UI), tidak menghambat kontrak |
 | T2 | Policy integrator #1 (app kita): `integratorBps` dan batas alokasi bagi pengguna app kita | `integratorBps` 3000; alokasi pengguna ≤ 20% sesuai batas protokol; tampilkan peringatan jelas bila instan | Fase 5 |
 | T3 | Surcharge dalam token: dibakar atau ke protokol | Dibakar (protokol tidak menumpuk token yang diluncurkan); surcharge dalam quote ke protokol | Fase 3 |
+
+### Usulan nama (T1)
+
+Dicek 4 Nov 2026: 0 repo GitHub dengan nama itu, nama paket npm masih kosong, dan tidak ada proyek kripto
+bernama sama di pencarian web.
+
+| Lapis | Nama | Makna | Cek nama |
+|---|---|---|---|
+| Protokol (setara Doppler) | **Eridanos** | Sungai yang mengalir melewati padang Elysium dalam mitologi Yunani (Vergilius, *Aeneis* VI). Sungai = likuiditas (*liquid*, Hyperliquid) yang dibawa satu jalur bersama untuk semua app di Elysium, di atas HyperEVM | GitHub 0, npm kosong, web tidak ada |
+| App (setara Bankr) | **Hypelys** | HYPE (gas dan aset Hyperliquid) + Elysium; pendek dan mudah diucapkan | GitHub 1 repo tak terkait, npm kosong, web tidak ada |
+| Alternatif app | Hypelysium | Bentuk panjang HYPE + Elysium | GitHub 0, npm kosong |
+| Alternatif app | Elymint | Elysium + *mint* (pembuatan token EVM) | GitHub 0, npm kosong; mirip "Elys Network" (Cosmos, tidak terkait) |
+
+Catatan: nama berawalan "Elys…" bisa tertukar dengan Elys Network dan Elysium milik Vulcan Forged; "Eridanos" dan
+"Hypelys" tidak punya masalah itu. Cek merek dagang dan domain belum dilakukan.
 
 ## Fase 0 · Persetujuan desain
 
 **Hasil:** `01-riset-model-acuan.md`, `02-desain-arsitektur.md` (revisi 2), dokumen ini.
 
-**Selesai bila** revisi 2 disetujui.
+**Selesai bila** revisi 2 disetujui. ✅ Disetujui 4 Nov 2026.
 
 ## Fase 1 · Toolchain dan fondasi
 
@@ -36,6 +51,17 @@ Keputusan D1–D6 sudah ditetapkan (lihat `02-desain-arsitektur.md` §0). Yang m
 
 **Selesai bila** test lokal bisa membuat pool V4 dengan hook dummy di alamat hasil *mining*, pada PoolManager yang
 alamatnya diberikan saat deploy.
+
+✅ **Selesai 4 Nov 2026** (`test/v2/foundation.test.js`, 9 test). Hasil:
+* `hardhat.config.js`: dua compiler solcjs dari npm (0.8.28 untuk kode lama, 0.8.26 untuk v2), hardfork `cancun`.
+* PoolManager di-deploy dari artifact `@uniswap/v4-core@1.0.2` dan dibuktikan identik byte-per-byte dengan
+  artifact (bagian `immutable` di-mask) — `scripts/lib/v4.js`.
+* `contracts/v2/libraries/CurveHookFlags.sol`: satu sumber izin hook, flag `0x28CC`.
+* `contracts/v2/utils/HookDeployer.sol` + `scripts/lib/hookMiner.js`: CREATE2 dengan salt hasil *mining*; alamat
+  on-chain = alamat off-chain.
+* `contracts/v2/mocks/DummyCurveHook.sol`: PoolManager sebagai parameter konstruktor; menolak di-deploy pada alamat
+  tanpa bit yang benar; menolak dipakai lewat PoolManager lain.
+* Kontrak MVP dipindah ke `contracts/legacy/`; 21 test lamanya tetap lulus.
 
 ## Fase 2 · Token, vesting, konfigurasi, registry
 
