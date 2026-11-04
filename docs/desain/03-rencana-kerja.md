@@ -145,6 +145,9 @@ Juga: review kode internal dengan checklist dari `02 §10`, laporan gas, dan uku
 
 **Selesai bila** semua skenario gagal sebagaimana mestinya dan laporan review tidak menyisakan temuan tinggi.
 
+✅ **Selesai 4 Nov 2026**. 17 skenario serangan gagal sebagaimana mestinya (`test/v2/attacks.test.js`); laporan review
+di `04-review-fase4.md`: tanpa temuan tinggi/kritis, tiga temuan rendah (R-2..R-4) dengan mitigasi, gas terukur.
+
 ## Fase 5 · Lapis app
 
 * `AppRouter` (integrator #1), frontend baru (menggantikan frontend MVP; tetap statis, cocok untuk cPanel), indexer
