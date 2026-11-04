@@ -186,6 +186,11 @@ Isi fase:
 
 **Selesai bila** alamat terdokumentasi di `deployments/99801.json` dan semua uji asap lulus di testnet.
 
+⏳ **Disiapkan 4 Nov 2026, menunggu pemilik proyek.** `scripts/deploy-testnet-v2.js` (menolak chain selain 99801/31337,
+butuh `CONFIRM=yes` untuk live) dan `scripts/timelock-execute-accept.js` siap; *dry run* lokal lulus, termasuk serah
+terima owner ke Timelock (config, registry, core, PoolManager). Langkah lengkap di `05-runbook-testnet.md`.
+Tidak dijalankan dari sesi ini: tidak ada kunci (dan memang tidak boleh) serta RPC testnet diblokir di sini.
+
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 
 Butuh persetujuan terpisah:
