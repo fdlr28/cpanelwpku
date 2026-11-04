@@ -37,7 +37,8 @@ module.exports = {
   solidity: {
     compilers: [
       { version: "0.8.28", settings: { optimizer: { enabled: true, runs: 200 }, evmVersion: EVM_VERSION } },
-      { version: "0.8.26", settings: { optimizer: { enabled: true, runs: 200 }, evmVersion: EVM_VERSION } },
+      // viaIR like Uniswap v4-core itself; needed for the v4 hook/launch code paths.
+      { version: "0.8.26", settings: { optimizer: { enabled: true, runs: 200 }, viaIR: true, evmVersion: EVM_VERSION } },
     ],
   },
   networks: {

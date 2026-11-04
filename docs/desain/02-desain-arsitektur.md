@@ -278,8 +278,11 @@ Fee dipecah menjadi dua bagian dengan tujuan berbeda:
 
 * Creator yang membeli tokennya sendiri lewat router di detik pertama membayar surcharge penuh ke protokol, jadi
   anti-sniper berlaku juga baginya (D3b). Satu-satunya pengecualian adalah dev buy di tx launch (D3c), yang dibatasi 10%.
-* Rumus surcharge yang pasti (atas input bruto, dengan fee dasar dikenakan pada sisa) dikunci di fase 3 dan diuji
-  agar total efektif = `f(t)` dengan toleransi pembulatan.
+* Rumus surcharge (dikunci di fase 3, total efektif = `f(t)` dalam toleransi 2 wei per 1e18 di test):
+  * exact-input `X`: `s = X · (f − 1%) / (1 − 1%)`, dipungut di `beforeSwap` sebelum swap;
+  * exact-output (pool menerima `A` termasuk fee LP): `s = A · (f − 1%) / (1 − f)`, dipungut di `afterSwap`.
+  Surcharge dihitung dari input yang ditentukan; jika router memakai batas harga sehingga swap terisi sebagian,
+  surcharge tetap dihitung dari jumlah yang ditentukan.
 * Jadwal disimpan per pool saat launch dan **immutable**.
 * Catatan Elysium: blok 100 ms tetapi `block.timestamp` beresolusi 1 detik, jadi fee turun per detik dan ±10 blok
   pertama berbagi fee 90%.

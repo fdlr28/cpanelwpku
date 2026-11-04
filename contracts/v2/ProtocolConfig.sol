@@ -3,9 +3,9 @@ pragma solidity 0.8.26;
 
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
-import {FullMath} from "@uniswap/v4-core/src/libraries/FullMath.sol";
 import {Pool} from "@uniswap/v4-core/src/libraries/Pool.sol";
 import {EridanosConstants as C} from "./libraries/EridanosConstants.sol";
+import {CurveBand, CurveMath} from "./libraries/CurveMath.sol";
 
 /// @title ProtocolConfig
 /// @notice Settings that the launch core snapshots at launch time: allowed quote currencies, curve presets
@@ -19,12 +19,6 @@ import {EridanosConstants as C} from "./libraries/EridanosConstants.sol";
 ///   is mirrored to [-(start + upper), -(start + lower)]. Presets are append-only: once added they can be
 ///   disabled for future launches but never edited, so every launch's curve stays reproducible.
 contract ProtocolConfig is Ownable2Step {
-    struct CurveBand {
-        int24 offsetLower;
-        int24 offsetUpper;
-        uint16 bps;
-    }
-
     struct PresetInfo {
         address quote;
         int24 startTick;
@@ -166,8 +160,8 @@ contract ProtocolConfig is Ownable2Step {
         for (uint256 i; i < bands.length; ++i) {
             CurveBand calldata b = bands[i];
             uint256 amount = (C.TOTAL_SUPPLY * b.bps) / C.BPS;
-            uint256 l0 = bandLiquidity(true, startTick, b, amount);
-            uint256 l1 = bandLiquidity(false, startTick, b, amount);
+            uint256 l0 = CurveMath.bandLiquidity(true, startTick, b, amount);
+            uint256 l1 = CurveMath.bandLiquidity(false, startTick, b, amount);
             bool adjacent = i > 0 && b.offsetLower == prevUpper;
             if (l0 == 0 || l1 == 0) revert LiquidityTooHigh(i);
             if (adjacent && (l0 + prev0 > maxLiquidity || l1 + prev1 > maxLiquidity)) revert LiquidityTooHigh(i);
@@ -177,35 +171,17 @@ contract ProtocolConfig is Ownable2Step {
     }
 
     /// @notice Pool-space ticks of a band for the given token ordering.
-    function bandTicks(bool tokenIs0, int24 startTick, CurveBand memory b)
-        public
-        pure
-        returns (int24 tickLower, int24 tickUpper)
-    {
-        (tickLower, tickUpper) = (startTick + b.offsetLower, startTick + b.offsetUpper);
-        if (!tokenIs0) (tickLower, tickUpper) = (-tickUpper, -tickLower);
+    function bandTicks(bool tokenIs0, int24 startTick, CurveBand memory b) external pure returns (int24, int24) {
+        return CurveMath.bandTicks(tokenIs0, startTick, b);
     }
 
-    /// @notice Liquidity that places `amount` tokens single-sided in the band (same math as v4 periphery's
-    ///         LiquidityAmounts, written out to avoid a periphery dependency). Returns 0 on overflow so the
-    ///         caller rejects the curve instead of truncating.
+    /// @notice Liquidity that places `amount` tokens single-sided in the band (0 if it overflows uint128).
     function bandLiquidity(bool tokenIs0, int24 startTick, CurveBand memory b, uint256 amount)
-        public
+        external
         pure
-        returns (uint256 liquidity)
+        returns (uint256)
     {
-        (int24 lo, int24 up) = bandTicks(tokenIs0, startTick, b);
-        uint256 sqrtA = TickMath.getSqrtPriceAtTick(lo);
-        uint256 sqrtB = TickMath.getSqrtPriceAtTick(up);
-        if (tokenIs0) {
-            // amount0 = L · (sqrtB − sqrtA) · Q96 / (sqrtA · sqrtB)
-            uint256 intermediate = FullMath.mulDiv(sqrtA, sqrtB, 1 << 96);
-            liquidity = FullMath.mulDiv(amount, intermediate, sqrtB - sqrtA);
-        } else {
-            // amount1 = L · (sqrtB − sqrtA) / Q96
-            liquidity = FullMath.mulDiv(amount, 1 << 96, sqrtB - sqrtA);
-        }
-        if (liquidity > type(uint128).max) liquidity = 0;
+        return CurveMath.bandLiquidity(tokenIs0, startTick, b, amount);
     }
 
     function _setTreasury(address treasury_) internal {

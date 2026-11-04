@@ -14,7 +14,7 @@ Keputusan D1–D6 sudah ditetapkan (lihat `02-desain-arsitektur.md` §0). Yang m
 |---|---|---|---|
 | T1 | Nama protokol dan app | ✅ Ditetapkan: protokol **Eridanos**, app **Hypelys** | — |
 | T2 | Policy integrator #1 (app kita): `integratorBps` dan batas alokasi bagi pengguna app kita | `integratorBps` 3000; alokasi pengguna ≤ 20% sesuai batas protokol; tampilkan peringatan jelas bila instan | Fase 5 |
-| T3 | Surcharge dalam token: dibakar atau ke protokol | Dibakar (protokol tidak menumpuk token yang diluncurkan); surcharge dalam quote ke protokol | Fase 3 |
+| T3 | Surcharge dalam token: dibakar atau ke protokol | ✅ Dibakar (persetujuan tetap pemilik proyek, 4 Nov 2026); surcharge dalam quote ke protokol | — |
 
 ### Usulan nama (T1)
 
@@ -113,6 +113,20 @@ riset dan laporan PDF yang sebelumnya menulis 14 band sudah diperbaiki.
 **Selesai bila** satu launch lengkap (mode A, B, C; dengan dan tanpa alokasi instan; dengan dev buy) berjalan di
 jaringan lokal, termasuk swap beli/jual di dalam dan di luar jendela anti-sniper, `collect`, dan tiga klaim, dengan
 angka yang cocok sampai wei.
+
+✅ **Selesai 4 Nov 2026** (`test/v2/launch.test.js`, 21 test; total suite 85 test). Hasil:
+* `CurveHook` (13,4 KB): seeding 15 band + dev buy dalam satu `unlock`; fee dasar 1% (override dan disimpan untuk
+  quoter); surcharge lewat *return delta* disimpan sebagai klaim ERC-6909; `collect` → `FeeDistributor`,
+  surcharge quote → protokol, surcharge token → dibakar; menolak pool/likuiditas pihak luar.
+* `FeeDistributor` (4,2 KB): 20 / integrator / creator dengan sisa pembulatan ke creator; klaim tiga peran;
+  pengalihan creator 2 langkah.
+* `LaunchCore` (16,6 KB): mode A/B/C, batas alokasi/dev buy/policy, token CREATE2 (salt terikat pemanggil),
+  `Launched` dengan `LaunchRecord` lengkap, tidak ada token tersisa.
+* `CurveMath`: satu sumber rumus band untuk validasi dan seeding.
+* Penyesuaian teknis: compiler 0.8.26 memakai `viaIR` (seperti v4-core); `CurveHook` menerima alamat `binder`
+  di konstruktor karena di-deploy lewat CREATE2; `scripts/lib/eridanos.js` men-deploy dan menyambung seluruh stack.
+* Angka terukur di test: debu pembulatan seeding ±3.400 wei dari 1e27 (dibakar); fee efektif = `f(t)` ± 2 wei;
+  dev buy membayar 1% tanpa surcharge; likuiditas band tidak berubah setelah banyak swap dan `collect`.
 
 ## Fase 4 · Uji serangan dan review internal
 
