@@ -6,11 +6,21 @@ Aturan main untuk semua fase:
   kuncinya sendiri lewat skrip yang kami siapkan.
 * Setiap fase berakhir dengan bukti yang bisa dicek (test, laporan) dan menunggu persetujuan sebelum fase berikutnya.
 
-## Fase 0 · Persetujuan desain (sekarang)
+## Status keputusan
 
-**Hasil:** `01-riset-model-acuan.md`, `02-desain-arsitektur.md`, dokumen ini.
+Keputusan D1–D6 sudah ditetapkan (lihat `02-desain-arsitektur.md` §0). Yang masih terbuka:
 
-**Selesai bila** keputusan di bagian "Keputusan yang dibutuhkan" di bawah dijawab.
+| # | Keputusan | Usulan | Dibutuhkan sebelum |
+|---|---|---|---|
+| T1 | Nama protokol dan app | Nama kerja "ELP" | Fase 5 (UI), tidak menghambat kontrak |
+| T2 | Policy integrator #1 (app kita): `integratorBps` dan batas alokasi bagi pengguna app kita | `integratorBps` 3000; alokasi pengguna ≤ 20% sesuai batas protokol; tampilkan peringatan jelas bila instan | Fase 5 |
+| T3 | Surcharge dalam token: dibakar atau ke protokol | Dibakar (protokol tidak menumpuk token yang diluncurkan); surcharge dalam quote ke protokol | Fase 3 |
+
+## Fase 0 · Persetujuan desain
+
+**Hasil:** `01-riset-model-acuan.md`, `02-desain-arsitektur.md` (revisi 2), dokumen ini.
+
+**Selesai bila** revisi 2 disetujui.
 
 ## Fase 1 · Toolchain dan fondasi
 
@@ -18,45 +28,59 @@ Aturan main untuk semua fase:
   `evmVersion: cancun`.
 * PoolManager di-deploy dari artifact kanonik `@uniswap/v4-core@1.0.2` (`out/PoolManager.sol/PoolManager.json`,
   24.195 byte), tanpa kompilasi ulang. Router uji dan `V4Quoter` dari `@uniswap/v4-periphery`.
-* Helper *mining* alamat hook (CREATE2) dan test yang memastikan bit izin sesuai.
+* Semua kontrak yang butuh PoolManager menerimanya sebagai parameter konstruktor (`immutable`); test memakai
+  dua PoolManager berbeda untuk membuktikan tidak ada alamat yang di-hardcode.
+* Helper *mining* alamat hook (CREATE2) untuk bit: `beforeInitialize`, `beforeAddLiquidity`, `beforeSwap`,
+  `beforeSwapReturnsDelta`, `afterSwap`, `afterSwapReturnsDelta`; test yang memastikan bit izinnya tepat.
 * Kontrak lama MVP dipindah ke `contracts/legacy/`; tidak dihapus.
 
-**Selesai bila** test lokal bisa membuat pool V4 kosong dengan hook dummy di alamat hasil *mining*.
+**Selesai bila** test lokal bisa membuat pool V4 dengan hook dummy di alamat hasil *mining*, pada PoolManager yang
+alamatnya diberikan saat deploy.
 
 ## Fase 2 · Token, vesting, konfigurasi, registry
 
 * `LaunchToken`, `VestingVault`, `ProtocolConfig` (termasuk validasi preset kurva), `IntegratorRegistry`
-  (mode A/B, EIP-712, EIP-1271, nonce, policy tertunda), `TimelockController`.
+  (mode A/B, EIP-712, EIP-1271, nonce, payout, policy tertunda, mode allowlist), `TimelockController`.
 * Test unit + fuzz:
-  * vesting tidak pernah cair sebelum cliff, linear setelahnya;
-  * durasi 0 dan cliff 0 dengan alokasi > 0 selalu ditolak;
-  * batas alokasi/dev buy, perubahan policy hanya berlaku setelah 24 jam;
-  * tanda tangan tidak bisa dipakai ulang, dipakai pemanggil lain, atau dipakai di chain lain.
+  * vesting: tidak cair sebelum cliff, linear setelahnya; `duration = 0` cair penuh di tx launch;
+  * batas: alokasi > 20%, dev buy > 10%, penerima > 3, `cliff > duration` selalu ditolak;
+  * policy integrator yang lebih longgar dari batas protokol ditolak; perubahan policy baru berlaku setelah 24 jam;
+  * tanda tangan tidak bisa dipakai ulang, dipakai pemanggil lain, atau dipakai di chain lain;
+  * allowlist: saat menyala, integrator yang belum disetujui tidak bisa dipakai untuk launch; mode C tetap jalan;
+    pool lama tetap membayar integrator lama.
 
-**Selesai bila** semua test lulus dan batas kebijakan dari `02 §4` dan `§10.3` terbukti di test.
+**Selesai bila** semua test lulus dan batas di `02 §4` dan `§10.3` terbukti di test.
 
 ## Fase 3 · Mesin pool: `CurveHook` + `FeeDistributor` + `LaunchCore`
 
-* Penanaman band satu sisi, jadwal fee anti-sniper, penolakan likuiditas luar, `collect`, split, klaim,
+* Penanaman band satu sisi, fee dasar 1% (override), surcharge anti-sniper lewat *return delta*
+  (exact-input dan exact-output), penolakan likuiditas luar, `collect`, split 20 / integrator / creator, klaim,
   pengalihan peran creator, pause launch.
 * Simulasi untuk memilih **preset kurva awal** untuk HYPE dan USDC (harga awal, jumlah band, porsi), lalu
   didokumentasikan sebelum dikunci.
+* Test khusus anti-sniper:
+  * `f(t)` per detik dari `block.timestamp`, termasuk banyak blok dengan timestamp sama;
+  * total fee efektif = `f(t)` untuk beli dan jual, exact-input dan exact-output, kedua urutan mata uang;
+  * surcharge tidak pernah tercatat untuk creator/integrator;
+  * creator yang membeli lewat router di detik pertama membayar surcharge penuh;
+  * dev buy di tx launch hanya membayar 1%.
 * Test invarian:
-  * konservasi supply;
-  * likuiditas band tidak pernah turun;
-  * total klaim ≤ total fee, sisa pembulatan ke creator;
-  * porsi dan jadwal fee tidak berubah setelah launch;
-  * saldo `LaunchCore` = 0 setelah launch.
+  * konservasi supply; likuiditas band tidak pernah turun;
+  * total klaim ≤ total fee dasar, sisa pembulatan ke creator;
+  * `protocolBps` selalu 2000 dan `creatorBps = 8000 − integratorBps`;
+  * porsi dan jadwal fee tidak berubah setelah launch; saldo `LaunchCore` = 0 setelah launch.
 
-**Selesai bila** satu launch lengkap (mode A, B, C) berjalan di jaringan lokal, termasuk dev buy, swap
-beli/jual, `collect`, dan tiga klaim, dengan angka yang cocok sampai wei.
+**Selesai bila** satu launch lengkap (mode A, B, C; dengan dan tanpa alokasi instan; dengan dev buy) berjalan di
+jaringan lokal, termasuk swap beli/jual di dalam dan di luar jendela anti-sniper, `collect`, dan tiga klaim, dengan
+angka yang cocok sampai wei.
 
 ## Fase 4 · Uji serangan dan review internal
 
 Skenario yang wajib gagal:
-* integrator palsu: mengisi id orang lain tanpa menjadi `account` atau tanpa tanda tangannya;
+* integrator palsu: memakai id orang lain tanpa menjadi `account` atau tanpa tanda tangannya;
 * replay tanda tangan, salah chain, salah caller;
-* bypass kebijakan: alokasi instan, alokasi > batas, dev buy > batas, beneficiary berlebih;
+* bypass batas: alokasi > 20%, dev buy > 10%, dev buy kedua di luar tx launch tanpa surcharge;
+* menghindari surcharge lewat exact-output, swap multi-hop, atau router lain;
 * menambah likuiditas dari luar ke pool kita; membuat pool palsu dengan hook kita;
 * menarik LP;
 * reentrancy saat klaim;
@@ -71,6 +95,7 @@ Juga: review kode internal dengan checklist dari `02 §10`, laporan gas, dan uku
 
 * `AppRouter` (integrator #1), frontend baru (menggantikan frontend MVP; tetap statis, cocok untuk cPanel), indexer
   sederhana dari event, SDK TypeScript kecil + contoh integrasi untuk pihak ketiga (mode A dan B).
+* Halaman token menampilkan alokasi creator (instan/vesting), dev buy, integrator (id + alamat), dan pembagian fee.
 * Uji E2E di browser pada jaringan lokal: daftar integrator → launch → dev buy → trading → klaim tiap peran.
 
 **Selesai bila** E2E lulus untuk app kita dan untuk contoh integrator pihak ketiga.
@@ -82,32 +107,19 @@ Prasyarat:
 * HYPE testnet di dompet deployer milik pemilik proyek.
 
 Isi fase:
-* Skrip deploy dengan *dry-run*.
+* Skrip deploy dengan *dry-run*; alamat PoolManager dibaca dari konfigurasi deploy.
 * Urutan deploy: PoolManager → Timelock → config → registry → vault → hook (mined) → distributor → core → AppRouter.
 * Serah terima owner PoolManager ke Timelock dengan `protocolFeeController = 0`.
 * Verifikasi source di explorer testnet.
-* Uji asap: beberapa launch nyata dalam mode A/B/C, swap, klaim.
+* Uji asap: beberapa launch nyata dalam mode A/B/C, swap di dalam dan di luar jendela anti-sniper, klaim.
 
 **Selesai bila** alamat terdokumentasi di `deployments/99801.json` dan semua uji asap lulus di testnet.
 
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 
-Audit eksternal, keputusan lisensi PoolManager (`02 §5.1`), multisig produksi, jeda Timelock 48 jam.
-Butuh persetujuan terpisah.
-
----
-
-## Keputusan yang dibutuhkan sebelum fase 1
-
-| # | Keputusan | Usulan |
-|---|---|---|
-| 1 | Mesin pool | Uniswap V4, PoolManager sendiri di testnet dari bytecode kanonik |
-| 2 | Pembagian fee protokol / integrator / creator | 20 / 30 / 50; tanpa integrator → 50 / 0 / 50 |
-| 3 | Jadwal fee | Mulai 90%, turun dalam 10 detik, lalu 1% selamanya |
-| 4 | Kebijakan supply | Supply 1 miliar; alokasi 0% atau ≤ 10% dengan cliff ≥ 30 hari + vesting ≥ 180 hari; dev buy ≤ 5% |
-| 5 | Kebijakan app kita | 0% atau 5% (cliff 30 hari, vesting 1 tahun); dev buy ≤ 3% |
-| 6 | Quote | HYPE native dan USDC testnet (`0x7D29…47b2`) |
-| 7 | Pendaftaran integrator | Permissionless di testnet; bond/persetujuan untuk mainnet diputuskan nanti |
-| 8 | Mode atribusi | A (caller) dan B (signed) keduanya didukung |
-| 9 | Jeda Timelock | Testnet 1 jam; policy integrator 24 jam |
-| 10 | Nama protokol dan app | Nama kerja "ELP"; nama final dari Anda |
+Butuh persetujuan terpisah:
+* audit eksternal;
+* pilihan PoolManager: deployment resmi Uniswap V4 bila sudah ada, atau keputusan lisensi (`02 §5.1`);
+* nyalakan mode allowlist bila diperlukan;
+* tinjau ulang batas alokasi instan (`02 §4.2`);
+* multisig produksi, jeda Timelock 48 jam.
