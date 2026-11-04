@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Elysium Launchpad</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/" class="brand">◆ Elysium Launchpad</a>
+    <nav>
+      <a href="#/">Tokens</a>
+      <a href="#/create" class="btn btn-primary">+ Launch Token</a>
+      <button id="connectBtn" class="btn">Connect Wallet</button>
+    </nav>
+  </header>
+
+  <div id="banner" class="banner hidden"></div>
+  <main id="app"></main>
+
+  <footer class="footer">
+    Bonding curve → auto-graduation ke DEX. Native gas: HYPE. <span id="netInfo"></span>
+  </footer>
+
+  <script src="../vendor/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <!-- For local testing, generate config.local.js with `npm run deploy:local` and uncomment: -->
+  <!-- <script src="config.local.js"></script> -->
+  <script src="app.js"></script>
+</body>
+</html>

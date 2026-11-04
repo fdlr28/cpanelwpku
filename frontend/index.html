@@ -3,29 +3,28 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Elysium Launchpad</title>
+  <title>Hypelys</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <a href="#/" class="brand">◆ Elysium Launchpad</a>
+    <a href="#/" class="brand">Hypelys <span class="muted small">di atas Eridanos</span></a>
     <nav>
-      <a href="#/">Tokens</a>
-      <a href="#/create" class="btn btn-primary">+ Launch Token</a>
-      <button id="connectBtn" class="btn">Connect Wallet</button>
+      <a href="#/">Token</a>
+      <a href="#/create" class="btn btn-primary">+ Luncurkan</a>
+      <button id="connectBtn" class="btn">Hubungkan dompet</button>
     </nav>
   </header>
-
   <div id="banner" class="banner hidden"></div>
   <main id="app"></main>
-
   <footer class="footer">
-    Bonding curve → auto-graduation ke DEX. Native gas: HYPE. <span id="netInfo"></span>
+    Peluncuran lewat protokol Eridanos (Uniswap v4). Fee 1% selamanya; 10 detik pertama ada fee anti-sniper 90%→1%.
+    <span id="netInfo"></span>
   </footer>
-
   <script src="vendor/ethers.umd.min.js"></script>
+  <script src="eridanos-sdk.js"></script>
   <script src="config.js"></script>
-  <!-- For local testing, generate config.local.js with `npm run deploy:local` and uncomment: -->
+  <!-- Local testing: generate config.local.js with scripts/deploy-local-v2.js, then uncomment. -->
   <!-- <script src="config.local.js"></script> -->
   <script src="app.js"></script>
 </body>

@@ -157,6 +157,20 @@ di `04-review-fase4.md`: tanpa temuan tinggi/kritis, tiga temuan rendah (R-2..R-
 
 **Selesai bila** E2E lulus untuk app kita dan untuk contoh integrator pihak ketiga.
 
+✅ **Selesai 4 Nov 2026**. Hasil:
+* `contracts/v2/app/HypelysRouter.sol` (9 KB): integrator #1 (mendaftarkan dirinya sendiri), `launch` (caller = creator,
+  salt diikat ke pengguna, refund dev buy), `buy`/`sell` exact-input dengan slippage dan deadline tanpa batas harga
+  (R-2), refund jika beli melebihi sisa kurva, owner hanya mengelola record registry miliknya.
+* `sdk/eridanos-sdk.js` (Node + browser): ABI, `hashLaunchParams` (identik dengan `LaunchCore.hashParams`),
+  `signLaunchIntent`, `listLaunches`, rumus fee, `describeSupply`. Salinannya di `frontend/eridanos-sdk.js`.
+* `examples/agora-mode-a.js` dan `examples/agora-mode-b.js`: integrator pihak ketiga, keduanya berjalan.
+* Frontend Hypelys baru di `frontend/` (frontend MVP lama di `frontend/legacy/`): daftar token dengan label alokasi/dev
+  buy, form peluncuran dengan batas dari policy dan peringatan alokasi instan, halaman token dengan pengungkapan,
+  harga, fee saat ini, beli/jual, `collect`, klaim creator.
+* `scripts/deploy-local-v2.js` menulis `frontend/config.local.js`; `scripts/e2e-hypelys.js` menjalankan E2E browser:
+  launch (alokasi instan 5% + dev buy 2%) → beli → jual → collect → klaim creator, tanpa error aplikasi.
+* Test: `test/v2/app.test.js` (10 test). Total suite 112 test.
+
 ## Fase 6 · Testnet 99801
 
 Prasyarat:

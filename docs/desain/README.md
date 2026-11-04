@@ -10,5 +10,8 @@ dengan launchpad kita sebagai integrator pertama. Mesin pool mengikuti model Asc
 | [03-rencana-kerja.md](03-rencana-kerja.md) | Fase kerja dengan kriteria selesai, status, dan keputusan |
 | [04-review-fase4.md](04-review-fase4.md) | Review internal: skenario serangan, temuan, checklist keamanan, gas |
 
-Status: **revisi 2** (keputusan D1–D6 pemilik proyek, 4 Nov 2026), menunggu persetujuan akhir sebelum fase 1.
-Belum ada kode kontrak untuk desain ini.
+Status (4 Nov 2026): desain revisi 2 disetujui; **fase 1–5 selesai** (kontrak, test, review, router, SDK, frontend).
+Fase 6 (deploy testnet 99801) menunggu pemilik proyek: butuh kuncinya sendiri dan akses RPC testnet.
+
+Kode: `contracts/v2/` (protokol Eridanos), `contracts/v2/app/` (Hypelys), `sdk/`, `examples/`, `frontend/`,
+test di `test/v2/`.

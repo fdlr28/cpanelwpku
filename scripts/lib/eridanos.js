@@ -43,4 +43,12 @@ async function deployEridanos(hre, { deployer, owner, treasury, guardian, poolMa
   return { pm, config, registry, vault, hook, distributor, core, hookDeployer, hookSalt: salt };
 }
 
-module.exports = { deployEridanos };
+/** Deploys an app router and registers it as an integrator (it becomes the record's account). */
+async function deployAppRouter(hre, stack, { deployer, owner, name, uri = "", signer, payout, policy }) {
+  const Router = await hre.ethers.getContractFactory("HypelysRouter", deployer);
+  const router = await Router.deploy(owner, await stack.core.getAddress(), name, uri, signer, payout, policy);
+  await router.waitForDeployment();
+  return router;
+}
+
+module.exports = { deployEridanos, deployAppRouter };

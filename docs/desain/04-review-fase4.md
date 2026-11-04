@@ -45,6 +45,8 @@ Tanggal: 4 Nov 2026. Lingkup: kontrak v2 di `contracts/v2/` (commit fase 3) terh
 | I-4 | Info | `block.timestamp` Elysium beresolusi 1 detik: ±10 blok pertama berbagi fee 90% | Sesuai desain; diuji sniping di blok yang sama |
 | I-5 | Info | Router uji v4-core (`PoolSwapTest`, `PoolModifyLiquidityTest`, `TestERC20`, lisensi UNLICENSED) hanya dipakai di test | Tidak ikut deploy |
 | I-6 | Info | Owner PoolManager testnet harus dipindah ke Timelock dengan `protocolFeeController = 0` | Bagian skrip deploy fase 6 |
+| I-7 | Rendah (fase 5, sudah diperbaiki) | Di mode A semua pengguna router berbagi namespace salt token (`msg.sender` di core = router), sehingga penyerang bisa mendahului salt pengguna dan membuat transaksinya gagal | `HypelysRouter` mengikat salt ke pengguna (`userSalt = keccak(user, salt)`); diuji di `app.test.js`. Router integrator lain sebaiknya melakukan hal yang sama (dicatat di contoh dan SDK) |
+| I-8 | Rendah (fase 5, sudah diperbaiki) | Beli HYPE yang melebihi sisa kurva terisi sebagian; sisa HYPE akan tertahan di router | `HypelysRouter.buy` mengembalikan sisa |
 
 ## 4. Checklist `02 §10`
 
