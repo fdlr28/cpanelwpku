@@ -46,6 +46,8 @@ async function main() {
   const hypelysPayout = env("HYPELYS_PAYOUT", me);
 
   console.log(`${live ? "LIVE" : "DRY RUN"} on chain ${chainId} (${network.name}) as ${me}`);
+  const startBlock = await ethers.provider.getBlockNumber();
+  const startBalance = await ethers.provider.getBalance(me);
   console.log(`balance ${ethers.formatEther(await ethers.provider.getBalance(me))} HYPE`);
 
   // 1. PoolManager: reuse a canonical one (e.g. an official Uniswap deployment) or deploy our own.
@@ -125,6 +127,15 @@ async function main() {
     for (const c of [config, registry, core]) if ((await c.owner()) !== tl) throw new Error("ownership handover failed");
     if ((await pm.owner()) !== tl) throw new Error("PoolManager handover failed");
     console.log("dry run: timelock now owns config, registry, core and PoolManager ✓");
+  }
+
+  if (!live) {
+    let gas = 0n;
+    const end = await ethers.provider.getBlockNumber();
+    for (let b = startBlock + 1; b <= end; b++) gas += (await ethers.provider.getBlock(b)).gasUsed;
+    console.log(`gas used by the deploy: ${gas}`);
+  } else {
+    console.log(`HYPE spent: ${ethers.formatEther(startBalance - (await ethers.provider.getBalance(me)))}`);
   }
 
   const file = path.join(__dirname, "..", "deployments", `${network.name}-v2.json`);
