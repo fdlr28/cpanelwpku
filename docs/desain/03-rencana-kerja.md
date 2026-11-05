@@ -184,12 +184,36 @@ Isi fase:
 * Verifikasi source di explorer testnet.
 * Uji asap: beberapa launch nyata dalam mode A/B/C, swap di dalam dan di luar jendela anti-sniper, klaim.
 
-**Selesai bila** alamat terdokumentasi di `deployments/99801.json` dan semua uji asap lulus di testnet.
+**Selesai bila** alamat terdokumentasi di `deployments/elysiumTestnet-v2.json` dan semua uji asap lulus di testnet.
 
-⏳ **Disiapkan 4 Nov 2026, menunggu pemilik proyek.** `scripts/deploy-testnet-v2.js` (menolak chain selain 99801/31337,
-butuh `CONFIRM=yes` untuk live) dan `scripts/timelock-execute-accept.js` siap; *dry run* lokal lulus, termasuk serah
-terima owner ke Timelock (config, registry, core, PoolManager). Langkah lengkap di `05-runbook-testnet.md`.
-Tidak dijalankan dari sesi ini: tidak ada kunci (dan memang tidak boleh) serta RPC testnet diblokir di sini.
+✅ **Deploy dan uji asap selesai 5 Nov 2026** (dijalankan dari sesi ini atas izin pemilik proyek, dengan kunci
+deployer sementara buatan sesi, bukan kunci pemilik proyek).
+* Alamat: `deployments/elysiumTestnet-v2.json`; ringkasan di `05-runbook-testnet.md` §Deployment aktif.
+  Blok deploy 23833762, biaya deploy ±0,0023 HYPE.
+* Timelock (jeda 900 detik) kini owner `ProtocolConfig`, `IntegratorRegistry`, `LaunchCore` dan PoolManager
+  (`protocolFeeController = 0`, bytecode kanonik v4-core 1.0.2 terverifikasi).
+* Uji asap `scripts/smoke-testnet-v2.js`: **33/33 lulus** (hasil dan hash tx di
+  `deployments/elysiumTestnet-v2-smoke.json`, biaya ±0,0023 HYPE). Satu butir (tolak dev buy 11%) gagal pada
+  percobaan pertama karena skrip uji mengirim 1 HYPE melebihi saldo; dicek ulang: revert `DevBuyNotAllowed`, skrip
+  diperbaiki.
+  * Mode A (Hypelys, #1): alokasi instan 3% + 2%, dev buy dengan refund sisa HYPE, split 20/30/50, token di alamat
+    prediksi, saldo core 0.
+  * Beli di jendela (t+3 dtk, fee 81%) kena surcharge HYPE; setelah 10 dtk fee 1%, tanpa surcharge.
+  * Jual; `collect`; klaim creator, integrator, protokol.
+  * Mode C: split 20/0/80; jual di jendela (t+3 dtk) kena surcharge token, dibakar ke `0x…dEaD` saat `collect`.
+  * Mode B: integrator #2 "Eridanos Smoke B" (payout = deployer), intent bertanda tangan, split 20/15/65, replay
+    ditolak, alokasi vesting (cliff 30 dtk, durasi 120 dtk) rilis sebagian setelah cliff.
+  * Peluncuran USDC (preset 2) tanpa dev buy.
+  * Tolak: alokasi 21%, dev buy 11%, preset tak dikenal.
+
+Catatan dan sisa pekerjaan:
+* **Admin = kunci sementara sesi** (pilihan pemilik proyek). Kunci itu hilang saat sesi berakhir, sehingga proposer
+  Timelock, guardian, treasury, owner/payout Hypelys dan payout integrator #2 tidak bisa dipakai lagi. Untuk deploy
+  yang dipegang sendiri, jalankan ulang skrip dengan `TIMELOCK_PROPOSER`, `GUARDIAN`, `TREASURY`, `HYPELYS_OWNER`,
+  `HYPELYS_PAYOUT` = alamat pemilik proyek (atau Safe).
+* Verifikasi source di explorer belum dilakukan (butuh akses explorer dari sesi atau dilakukan pemilik proyek).
+* USDC: belum ada uji beli/jual dan dev buy dengan USDC (deployer tidak memegang USDC testnet).
+* Frontend `frontend/config.js` sudah berisi alamat testnet; unggah ke cPanel dilakukan pemilik proyek.
 
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 

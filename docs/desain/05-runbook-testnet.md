@@ -1,6 +1,7 @@
 # 05 · Runbook deploy testnet (fase 6)
 
-Fase ini dijalankan **oleh pemilik proyek** di komputernya sendiri, dengan kunci sendiri. Skrip menolak chain selain
+Runbook ini ditulis untuk pemilik proyek yang men-deploy dengan kunci sendiri. Deploy pertama (5 Nov 2026) dijalankan
+dari sesi Claude dengan kunci sementara; lihat §Deployment aktif. Skrip menolak chain selain
 Elysium testnet (99801) dan jaringan lokal (31337); mainnet tidak didukung.
 
 ## Prasyarat
@@ -53,3 +54,23 @@ npx hardhat run scripts/timelock-execute-accept.js --network elysiumTestnet
 `ProtocolConfig.setQuote`, `addCurvePreset`, `setCurvePresetEnabled`, `setTreasury`, `setGuardian`;
 `IntegratorRegistry.setAllowlistEnabled`, `setApproved`, `setVerified`, `setSuspended`, `setCore`;
 `LaunchCore.unpause`. Guardian hanya bisa `pause` (launch baru) dan `pauseRegistration`.
+
+## Deployment aktif (Elysium testnet, 5 Nov 2026)
+
+| Kontrak | Alamat |
+|---|---|
+| poolManager | `0xD02875d7Ea89e7e1f61512066828196c09FBD58d` |
+| timelock | `0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07` |
+| config | `0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3` |
+| registry | `0xB340bD11629fAd01a2D14d58057209c8F1512Ede` |
+| core | `0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E` |
+| hook | `0x9bcFA072d4d0cfA213bEb83242BcA5c1d50328cc` |
+| distributor | `0xa175683c380D15B2E3e49753fa048Dca05774495` |
+| vault | `0xf8C1554E691F45877731fD72a25df658465512b3` |
+| router | `0x7389E762b0b63d8A60D307554abA27D074762e4a` |
+| usdc | `0x7D29d8047B905000459c0E80c34a26CeedcB47b2` |
+
+Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan PoolManager. Deployer, treasury,
+guardian, proposer Timelock, owner dan payout Hypelys: `0x0bC67Dea40a043E62Ffb56e3B76ed127eD14f322` (kunci sementara sesi, **tidak dipegang
+siapa pun setelah sesi berakhir**). Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
+`deployments/elysiumTestnet-v2-smoke.json` (33/33).
