@@ -72,7 +72,7 @@ npx hardhat run scripts/timelock-execute-accept.js --network elysiumTestnet
 
 Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan PoolManager. Admin dipindah ke `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`
 (`scripts/handover-admin.js`): proposer/canceller Timelock, treasury, guardian, payout Hypelys, dan owner
-`HypelysRouter` (setelah `acceptOwnership()` dipanggil dari dompet itu). Deployer sementara `0x0bC67Dea…F322` tidak
+`HypelysRouter` (diterima lewat `scripts/accept-router-ownership.js`). Serah terima selesai 5 Nov 2026. Deployer sementara `0x0bC67Dea…F322` tidak
 memegang peran lagi. Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
 `deployments/elysiumTestnet-v2-smoke.json` (33/33).
 
