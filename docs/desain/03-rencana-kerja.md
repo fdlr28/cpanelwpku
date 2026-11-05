@@ -207,10 +207,12 @@ deployer sementara buatan sesi, bukan kunci pemilik proyek).
   * Tolak: alokasi 21%, dev buy 11%, preset tak dikenal.
 
 Catatan dan sisa pekerjaan:
-* **Admin = kunci sementara sesi** (pilihan pemilik proyek). Kunci itu hilang saat sesi berakhir, sehingga proposer
-  Timelock, guardian, treasury, owner/payout Hypelys dan payout integrator #2 tidak bisa dipakai lagi. Untuk deploy
-  yang dipegang sendiri, jalankan ulang skrip dengan `TIMELOCK_PROPOSER`, `GUARDIAN`, `TREASURY`, `HYPELYS_OWNER`,
-  `HYPELYS_PAYOUT` = alamat pemilik proyek (atau Safe).
+* **Admin dipindah ke dompet pemilik proyek `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`** (`scripts/handover-admin.js`):
+  * langsung: payout Hypelys → dompet itu; owner `HypelysRouter` menunggu `acceptOwnership()` dari dompet itu;
+    integrator uji #2 dinonaktifkan dan payout-nya ke dompet itu;
+  * lewat Timelock (jeda 900 dtk): dompet itu mendapat PROPOSER + CANCELLER, kunci deployer dicabut; treasury dan
+    guardian (`ProtocolConfig`, `IntegratorRegistry`) → dompet itu.
+  Kunci deployer sementara tidak diserahkan dan tidak lagi memegang peran apa pun setelah serah terima.
 * Verifikasi source di explorer belum dilakukan (butuh akses explorer dari sesi atau dilakukan pemilik proyek).
 * USDC: belum ada uji beli/jual dan dev buy dengan USDC (deployer tidak memegang USDC testnet).
 * Frontend `frontend/config.js` sudah berisi alamat testnet; unggah ke cPanel dilakukan pemilik proyek.

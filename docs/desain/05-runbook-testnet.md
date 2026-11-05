@@ -70,7 +70,15 @@ npx hardhat run scripts/timelock-execute-accept.js --network elysiumTestnet
 | router | `0x7389E762b0b63d8A60D307554abA27D074762e4a` |
 | usdc | `0x7D29d8047B905000459c0E80c34a26CeedcB47b2` |
 
-Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan PoolManager. Deployer, treasury,
-guardian, proposer Timelock, owner dan payout Hypelys: `0x0bC67Dea40a043E62Ffb56e3B76ed127eD14f322` (kunci sementara sesi, **tidak dipegang
-siapa pun setelah sesi berakhir**). Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
+Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan PoolManager. Admin dipindah ke `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`
+(`scripts/handover-admin.js`): proposer/canceller Timelock, treasury, guardian, payout Hypelys, dan owner
+`HypelysRouter` (setelah `acceptOwnership()` dipanggil dari dompet itu). Deployer sementara `0x0bC67Dea…F322` tidak
+memegang peran lagi. Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
 `deployments/elysiumTestnet-v2-smoke.json` (33/33).
+
+### Mengelola protokol dari dompet admin
+
+Semua perubahan protokol lewat Timelock: `schedule`/`scheduleBatch` dari dompet admin, tunggu 900 dtk, lalu
+`execute` (siapa pun boleh). Contoh: lihat `scripts/handover-admin.js`. Guardian bisa langsung `LaunchCore.pause()`
+dan `IntegratorRegistry.pauseRegistration()`. Owner `HypelysRouter` bisa langsung `setPayout`, `setSigner`,
+`setProfile`, `queuePolicy`. Dompet admin butuh sedikit HYPE di Elysium testnet untuk gas.
