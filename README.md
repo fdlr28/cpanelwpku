@@ -110,9 +110,11 @@ Kalau nanti ada DEX V2-compatible resmi di Elysium, cukup isi `DEX_FACTORY` dan 
 
 ### Hosting frontend di cPanel
 
-Upload isi folder `frontend/` (`index.html`, `app.js`, `style.css`, `config.js`, `vendor/`) ke
-`public_html` lewat File Manager/FTP. Tidak perlu Node.js di server — semua statis, ethers.js
-sudah dibundel di `vendor/`.
+Jalankan `bash scripts/package-frontend.sh` → `dist/hypelys-frontend.zip` (isi: `index.html`, `app.js`,
+`style.css`, `config.js`, `eridanos-sdk.js`, `vendor/`). Di cPanel: File Manager → buka folder tujuan (subdomain
+sendiri, atau subfolder seperti `public_html/hypelys`) → Upload zip → klik kanan → Extract. Jangan ekstrak ke root
+`public_html` bila di sana ada WordPress: `index.html` akan menimpa halaman depan WordPress. Tidak perlu Node.js di
+server; semuanya statis dan ethers.js sudah dibundel di `vendor/`.
 
 ## Data jaringan (dari docs resmi Elysium)
 
@@ -123,7 +125,7 @@ Sumber: [elysium.kinetiq.xyz/docs](https://elysium.kinetiq.xyz/docs) (diperbarui
 | Chain ID | `99801` | diumumkan saat launch |
 | RPC publik | `https://testnet-rpc.elysium.kinetiq.xyz` | diumumkan saat launch |
 | RPC Alchemy | `https://elysium-testnet.g.alchemy.com/v2/{KEY}` | `https://elysium-mainnet.g.alchemy.com/v2/{KEY}` |
-| Explorer | `https://elysium.kinetiq.xyz/testnet-explorer` | diumumkan saat launch |
+| Explorer | `https://explorer-elysium-testnet.t.conduit.xyz` (verifikasi: Sourcify `https://contracts.conduit.xyz`) | diumumkan saat launch |
 | Settle ke | HyperEVM testnet (998) | HyperEVM (999) |
 | WHYPE | `0xCD57F65c2B0e5881CFC2E609F7CD53b746E1F234` | — |
 | USDC | `0x7D29d8047B905000459c0E80c34a26CeedcB47b2` | — |

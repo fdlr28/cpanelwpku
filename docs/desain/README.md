@@ -13,7 +13,7 @@ dengan launchpad kita sebagai integrator pertama. Mesin pool mengikuti model Asc
 
 Status (5 Nov 2026): desain revisi 2 disetujui; **fase 1–6 selesai**. Eridanos v2 + Hypelys ter-deploy di Elysium
 testnet 99801 dan lulus uji asap 33/33 (alamat di `05-runbook-testnet.md`). Admin testnet dipindah ke dompet pemilik proyek
-`0x78DceE56aD39180adDed458B8D09D445aAbFAde1`; verifikasi source di explorer belum dilakukan.
+`0x78DceE56aD39180adDed458B8D09D445aAbFAde1`; source terverifikasi di explorer (Sourcify Conduit).
 
 Kode: `contracts/v2/` (protokol Eridanos), `contracts/v2/app/` (Hypelys), `sdk/`, `examples/`, `frontend/`,
 test di `test/v2/`.

@@ -213,9 +213,21 @@ Catatan dan sisa pekerjaan:
   * lewat Timelock (jeda 900 dtk): dompet itu mendapat PROPOSER + CANCELLER, kunci deployer dicabut; treasury dan
     guardian (`ProtocolConfig`, `IntegratorRegistry`) → dompet itu.
   ✅ Selesai 5 Nov 2026. Kunci deployer sementara tidak diserahkan dan tidak lagi memegang peran apa pun.
-* Verifikasi source di explorer belum dilakukan (butuh akses explorer dari sesi atau dilakukan pemilik proyek).
-* USDC: belum ada uji beli/jual dan dev buy dengan USDC (deployer tidak memegang USDC testnet).
-* Frontend `frontend/config.js` sudah berisi alamat testnet; unggah ke cPanel dilakukan pemilik proyek.
+* ✅ Verifikasi source (5 Nov 2026): explorer testnet Conduit membaca Sourcify `contracts.conduit.xyz`.
+  `scripts/verify-sourcify.js` memverifikasi 14/14: 9 kontrak protokol + HookDeployer `exact_match`, PoolManager
+  `match` (v4-core dikompilasi dengan `bytecodeHash: none`, jadi tidak ada hash metadata untuk *exact match*), dan 4
+  token uji. Hasil di `deployments/elysiumTestnet-v2.json` (`verification`). Token baru: jalankan ulang skrip.
+* USDC: `scripts/smoke-usdc-v2.js` (launch + dev buy, beli di dalam/luar jendela, jual, collect, tiga klaim; ±2,1 USDC)
+  lulus 15/15 di node lokal dengan `MockUSDC` 6 desimal. Di testnet dijalankan pemilik proyek dengan dompetnya
+  (yang memegang USDC); hasil tertulis di `deployments/elysiumTestnet-v2-smoke-usdc.json`.
+* Frontend: `frontend/config.js` berisi alamat testnet dan explorer Conduit. Diuji di Chromium terhadap testnet: daftar
+  token dan halaman token tampil tanpa error. Perbaikan yang ditemukan saat uji:
+  * RPC publik membatasi request beruntun (error -32017). `app.js` kini memakai provider dengan antrean (tanpa batch
+    JSON-RPC, maks. 3 request berjalan, jeda 120 ms, retry dengan backoff).
+  * Elysium membuat ±1 juta blok/hari; `listLaunches` di SDK kini membaca 5 juta blok per request dan membagi dua
+    rentang bila ditolak RPC.
+  * Dev buy di bawah 0,01% supply tampil "<0.01%" (sebelumnya "0.00%").
+  Paket unggah: `bash scripts/package-frontend.sh` → `dist/hypelys-frontend.zip`.
 
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 

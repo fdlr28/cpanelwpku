@@ -40,14 +40,27 @@ npx hardhat run scripts/timelock-execute-accept.js --network elysiumTestnet
 
 4. **Frontend**: salin alamat dari `deployments/elysiumTestnet-v2.json` ke `frontend/config.js`
    (`core`, `router`, `hook`, `distributor`, `registry`, `config`, `vault`, `poolManager`, `deployBlock`), lalu
-   unggah isi folder `frontend/` ke `public_html` di cPanel.
+   `bash scripts/package-frontend.sh` dan unggah `dist/hypelys-frontend.zip` ke cPanel (File Manager → Upload →
+   Extract) di folder subdomain atau subfolder, **bukan** root `public_html` yang berisi WordPress.
 
 5. **Uji asap** di testnet: beberapa peluncuran lewat UI (dengan/tanpa alokasi dan dev buy), beli/jual di dalam dan
    di luar 10 detik pertama, `collect`, klaim creator; satu peluncuran mode B memakai `examples/agora-mode-b.js`
    sebagai acuan.
 
-6. **Verifikasi source** di explorer testnet (halaman *Verify contract*): compiler 0.8.26, optimizer 200 runs,
-   `viaIR: true`, EVM `cancun`.
+   Uji USDC (dompet yang memegang beberapa USDC testnet):
+
+```bash
+CONFIRM=yes npx hardhat run scripts/smoke-usdc-v2.js --network elysiumTestnet
+```
+
+6. **Verifikasi source**: explorer testnet (`explorer-elysium-testnet.t.conduit.xyz`) membaca Sourcify milik Conduit.
+   Tanpa kunci dan tanpa gas:
+
+```bash
+NODE_USE_ENV_PROXY=1 node scripts/verify-sourcify.js
+```
+
+   (`NODE_USE_ENV_PROXY=1` hanya perlu di balik proxy.) Skrip juga memverifikasi semua token yang sudah diluncurkan.
 
 ## Yang diubah Timelock nanti (semuanya hanya untuk peluncuran baru)
 
@@ -74,7 +87,7 @@ Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan P
 (`scripts/handover-admin.js`): proposer/canceller Timelock, treasury, guardian, payout Hypelys, dan owner
 `HypelysRouter` (diterima lewat `scripts/accept-router-ownership.js`). Serah terima selesai 5 Nov 2026. Deployer sementara `0x0bC67Dea…F322` tidak
 memegang peran lagi. Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
-`deployments/elysiumTestnet-v2-smoke.json` (33/33).
+`deployments/elysiumTestnet-v2-smoke.json` (33/33). Source terverifikasi di Sourcify Conduit (14/14).
 
 ### Mengelola protokol dari dompet admin
 

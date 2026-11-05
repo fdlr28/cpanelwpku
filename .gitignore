@@ -9,3 +9,4 @@ deployments/*.local.json
 frontend/config.local.js
 tools/onchain/*.json
 deployments/localhost*
+dist/

@@ -5,7 +5,7 @@ window.HYPELYS_CONFIG = window.HYPELYS_CONFIG || {
   chainId: 99801,
   chainName: "Elysium Testnet",
   rpcUrl: "https://testnet-rpc.elysium.kinetiq.xyz",
-  explorer: "https://elysium.kinetiq.xyz/testnet-explorer",
+  explorer: "https://explorer-elysium-testnet.t.conduit.xyz",
   poolManager: "0xD02875d7Ea89e7e1f61512066828196c09FBD58d",
   core: "0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E",
   router: "0x7389E762b0b63d8A60D307554abA27D074762e4a",

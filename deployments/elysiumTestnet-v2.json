@@ -60,5 +60,67 @@
     "executableAfter": 1793864580,
     "deactivatedIntegrator": 2,
     "executed": true
+  },
+  "verification": {
+    "server": "https://contracts.conduit.xyz",
+    "checkedAt": "2026-11-05T08:07:34.024Z",
+    "contracts": {
+      "0xD02875d7Ea89e7e1f61512066828196c09FBD58d": {
+        "label": "PoolManager",
+        "match": "match"
+      },
+      "0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07": {
+        "label": "EridanosTimelock",
+        "match": "exact_match"
+      },
+      "0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3": {
+        "label": "ProtocolConfig",
+        "match": "exact_match"
+      },
+      "0xB340bD11629fAd01a2D14d58057209c8F1512Ede": {
+        "label": "IntegratorRegistry",
+        "match": "exact_match"
+      },
+      "0xf8C1554E691F45877731fD72a25df658465512b3": {
+        "label": "VestingVault",
+        "match": "exact_match"
+      },
+      "0x6E90FC23B41922feb9fE557c574C81d28b1e58b1": {
+        "label": "HookDeployer",
+        "match": "exact_match"
+      },
+      "0x9bcFA072d4d0cfA213bEb83242BcA5c1d50328cc": {
+        "label": "CurveHook",
+        "match": "exact_match"
+      },
+      "0xa175683c380D15B2E3e49753fa048Dca05774495": {
+        "label": "FeeDistributor",
+        "match": "exact_match"
+      },
+      "0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E": {
+        "label": "LaunchCore",
+        "match": "exact_match"
+      },
+      "0x7389E762b0b63d8A60D307554abA27D074762e4a": {
+        "label": "HypelysRouter",
+        "match": "exact_match"
+      },
+      "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466": {
+        "label": "EridanosToken #1",
+        "match": "exact_match"
+      },
+      "0x18c65497279384d32183026B2aF84b7eC5bF2De2": {
+        "label": "EridanosToken #2",
+        "match": "exact_match"
+      },
+      "0xD4CcABb5C6D77677932E8ab7f6802A0Abcb43C8F": {
+        "label": "EridanosToken #3",
+        "match": "exact_match"
+      },
+      "0x13aCae05DF01026AbEf8A48425D41F6955f05C90": {
+        "label": "EridanosToken #4",
+        "match": "exact_match"
+      }
+    }
   }
 }

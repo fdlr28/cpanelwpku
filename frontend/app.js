@@ -9,7 +9,40 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const app = $("#app");
 
-  const read = new ethers.JsonRpcProvider(CFG.rpcUrl, CFG.chainId, { staticNetwork: true });
+  // The public Elysium RPC rate-limits bursts (error -32017). Send one request at a time-ish: no JSON-RPC
+  // batching, at most 3 in flight, spaced out, and retry rate-limited calls with backoff.
+  class ThrottledProvider extends ethers.JsonRpcProvider {
+    constructor(url, chainId) {
+      super(url, chainId, { staticNetwork: true, batchMaxCount: 1 });
+      this._active = 0;
+      this._waiting = [];
+      this._next = 0;
+    }
+    async _acquire() {
+      if (this._active >= 3) await new Promise((r) => this._waiting.push(r));
+      this._active++;
+      const now = Date.now();
+      const at = Math.max(now, this._next);
+      this._next = at + 120;
+      if (at > now) await new Promise((r) => setTimeout(r, at - now));
+    }
+    _release() {
+      this._active--;
+      const r = this._waiting.shift();
+      if (r) r();
+    }
+    async _send(payload) {
+      for (let attempt = 0; ; attempt++) {
+        await this._acquire();
+        let res;
+        try { res = await super._send(payload); } finally { this._release(); }
+        const limited = res.some((r) => r.error && (r.error.code === -32017 || /rate limit/i.test(r.error.message || "")));
+        if (!limited || attempt >= 6) return res;
+        await new Promise((r) => setTimeout(r, 300 * 2 ** attempt + Math.random() * 200));
+      }
+    }
+  }
+  const read = new ThrottledProvider(CFG.rpcUrl, CFG.chainId);
   const C = (name, address, runner = read) => new ethers.Contract(address, SDK.ABI[name], runner);
   const core = C("LaunchCore", CFG.core);
   const router = C("HypelysRouter", CFG.router);
@@ -155,7 +188,7 @@
       const r = l.record;
       const allocTag = Number(r.allocBps) === 0 ? "" : r.instantAllocation
         ? `<span class="tag bad">alokasi ${pct(r.allocBps)} instan</span>` : `<span class="tag warn">alokasi ${pct(r.allocBps)} vesting</span>`;
-      const devTag = BigInt(r.devBuyTokens) > 0n ? `<span class="tag warn">dev buy ${pct((BigInt(r.devBuyTokens) * 10000n) / SDK.SUPPLY)}</span>` : "";
+      const devTag = BigInt(r.devBuyTokens) > 0n ? `<span class="tag warn">dev buy ${SDK.supplyPct(r.devBuyTokens)}</span>` : "";
       return `<a class="card" href="#/token/${l.token}">${avatar(meta, symbol)}
         <div style="min-width:0"><b>${esc(name)}</b> <span class="muted">$${esc(symbol)}</span>${allocTag}${devTag}
         <div class="muted small">MC ≈ ${mc.toLocaleString("en-US", { maximumFractionDigits: 2 })} ${esc(quoteSym(q))}</div>

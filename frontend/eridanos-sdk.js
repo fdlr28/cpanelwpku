@@ -126,12 +126,25 @@
     return signer.signTypedData(domain, INTENT_TYPES, intent);
   }
 
-  async function listLaunches(provider, coreAddress, { fromBlock = 0, toBlock = "latest", step = 10_000 } = {}) {
+  /**
+   * Decoded `Launched` events. Queries `step` blocks at a time (Elysium makes ~1M blocks a day, and its RPC
+   * accepts multi-million-block ranges for a single address); a range the RPC refuses is split in half.
+   */
+  async function listLaunches(provider, coreAddress, { fromBlock = 0, toBlock = "latest", step = 5_000_000, minStep = 1_000 } = {}) {
     const core = new ethers.Contract(coreAddress, ABI.LaunchCore, provider);
     const last = toBlock === "latest" ? await provider.getBlockNumber() : toBlock;
     const out = [];
-    for (let start = fromBlock; start <= last; start += step) {
-      const logs = await core.queryFilter(core.filters.Launched(), start, Math.min(last, start + step - 1));
+    for (let start = fromBlock; start <= last; ) {
+      const end = Math.min(last, start + step - 1);
+      let logs;
+      try {
+        logs = await core.queryFilter(core.filters.Launched(), start, end);
+      } catch (e) {
+        if (step <= minStep) throw e;
+        step = Math.max(minStep, Math.floor(step / 2));
+        continue;
+      }
+      start = end + 1;
       for (const l of logs) {
         out.push({
           launchId: l.args.launchId,
@@ -158,6 +171,14 @@
     return f <= BASE_FEE ? 0n : (BigInt(amount) * (f - BASE_FEE)) / (PIPS - BASE_FEE);
   }
 
+  /** Share of the fixed supply as a percentage string; tiny non-zero amounts show as "<0.01%". */
+  function supplyPct(tokens) {
+    const t = BigInt(tokens);
+    if (t === 0n) return "0%";
+    const bps = (t * 10000n) / SUPPLY;
+    return bps === 0n ? "<0.01%" : (Number(bps) / 100).toFixed(2) + "%";
+  }
+
   function describeSupply(r) {
     const pct = (bps) => (Number(bps) / 100).toFixed(2) + "%";
     const days = (s) => (Number(s) / 86400).toFixed(Number(s) % 86400 ? 2 : 0) + " hari";
@@ -167,13 +188,13 @@
     else lines.push(`Alokasi creator: ${pct(r.allocBps)} — cliff ${days(r.cliff)}, vesting ${days(r.duration)}`);
     const dev = BigInt(r.devBuyTokens);
     if (dev === 0n) lines.push("Dev buy: tidak ada");
-    else lines.push(`Dev buy: ${((Number((dev * 10000n) / SUPPLY)) / 100).toFixed(2)}% supply${Number(r.devBuyLock) ? `, dikunci ${days(r.devBuyLock)}` : ""}`);
+    else lines.push(`Dev buy: ${supplyPct(dev)} supply${Number(r.devBuyLock) ? `, dikunci ${days(r.devBuyLock)}` : ""}`);
     lines.push(`Fee dasar 1%: protokol ${pct(r.protocolBps)} · integrator ${pct(r.integratorBps)} · creator ${pct(r.creatorBps)}`);
     return lines;
   }
 
   return {
     SUPPLY, PIPS, BASE_FEE, START_FEE, DECAY_SECONDS, ABI, INTENT_TYPES, LAUNCH_PARAMS, LAUNCH_RECORD,
-    normalizeParams, hashLaunchParams, signLaunchIntent, listLaunches, scheduleFee, surchargeExactIn, describeSupply,
+    normalizeParams, hashLaunchParams, signLaunchIntent, listLaunches, scheduleFee, surchargeExactIn, describeSupply, supplyPct,
   };
 });
