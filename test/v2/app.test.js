@@ -1,4 +1,4 @@
-// Phase 5: Hypelys app layer — HypelysRouter (integrator #1 contract) and the Eridanos SDK.
+// Phase 5: Provenalt app layer — HypelysRouter (integrator #1 contract) and the Eridanos SDK.
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
@@ -8,19 +8,19 @@ const { deployAppRouter } = require("../../scripts/lib/eridanos");
 const { SUPPLY, DAY, MAX_POLICY } = require("./helpers");
 const { E, fixture, params, clean, events } = require("./launchFixture");
 
-const HYPELYS_POLICY = { ...MAX_POLICY }; // 30% integrator share, protocol supply bounds
+const PROVENALT_POLICY = { ...MAX_POLICY }; // 30% integrator share, protocol supply bounds
 
 async function appFixture() {
   const ctx = await fixture();
-  const [, , , , , , , , , , hypelysOwner, hypelysPayout, agoraOwner] = await ethers.getSigners();
+  const [, , , , , , , , , , provenaltOwner, provenaltPayout, agoraOwner] = await ethers.getSigners();
   const router = await deployAppRouter(hre, ctx, {
-    deployer: hypelysOwner, owner: hypelysOwner.address, name: "Hypelys", uri: "https://hypelys.example",
-    signer: ethers.ZeroAddress, payout: hypelysPayout.address, policy: HYPELYS_POLICY,
+    deployer: provenaltOwner, owner: provenaltOwner.address, name: "Provenalt", uri: "https://provenalt.example",
+    signer: ethers.ZeroAddress, payout: provenaltPayout.address, policy: PROVENALT_POLICY,
   });
   for (const s of [ctx.alice, ctx.bob, ctx.user, ctx.creator]) {
     await ctx.usdc.connect(s).approve(await router.getAddress(), ethers.MaxUint256);
   }
-  return { ...ctx, router, hypelysOwner, hypelysPayout, agoraOwner };
+  return { ...ctx, router, provenaltOwner, provenaltPayout, agoraOwner };
 }
 
 async function launchVia(ctx, signer, p, value = 0n) {
@@ -30,7 +30,7 @@ async function launchVia(ctx, signer, p, value = 0n) {
   return { rc, ev, token: await ethers.getContractAt("EridanosToken", ev.args.token), poolId: ev.args.record.poolId, launchedAt: block.timestamp };
 }
 
-describe("v2 phase 5 · Hypelys app layer", function () {
+describe("v2 phase 5 · Provenalt app layer", function () {
   describe("HypelysRouter", function () {
     it("registers itself as an integrator and attributes launches to itself (mode A)", async function () {
       const ctx = await loadFixture(appFixture);
@@ -107,10 +107,10 @@ describe("v2 phase 5 · Hypelys app layer", function () {
       await ctx.hook.collect(poolId);
       const id = await ctx.router.integratorId();
       const owed = await ctx.distributor.integratorOwed(id, ethers.ZeroAddress);
-      await expect(ctx.distributor.claimIntegrator(id, ethers.ZeroAddress)).to.changeEtherBalance(ctx.hypelysPayout, owed);
+      await expect(ctx.distributor.claimIntegrator(id, ethers.ZeroAddress)).to.changeEtherBalance(ctx.provenaltPayout, owed);
 
       await expect(ctx.router.connect(ctx.alice).setPayout(ctx.alice.address)).to.be.revertedWithCustomError(ctx.router, "OwnableUnauthorizedAccount");
-      await ctx.router.connect(ctx.hypelysOwner).queuePolicy({ ...HYPELYS_POLICY, minDuration: 30 * DAY });
+      await ctx.router.connect(ctx.provenaltOwner).queuePolicy({ ...PROVENALT_POLICY, minDuration: 30 * DAY });
       await time.increase(DAY);
       expect((await ctx.registry.policyOf(id)).minDuration).to.equal(BigInt(30 * DAY));
     });

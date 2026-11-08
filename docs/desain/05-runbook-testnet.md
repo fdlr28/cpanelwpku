@@ -12,7 +12,7 @@ Elysium testnet (99801) dan jaringan lokal (31337); mainnet tidak didukung.
    * `PRIVATE_KEY` — kunci deployer Anda (jangan pernah di-commit);
    * `ELYSIUM_TESTNET_RPC` — disarankan endpoint Alchemy sendiri;
    * opsional: `TREASURY`, `GUARDIAN`, `TIMELOCK_PROPOSER` (alamat Safe), `TIMELOCK_DELAY` (detik),
-     `HYPELYS_OWNER`, `HYPELYS_PAYOUT`, `POOL_MANAGER` (bila memakai PoolManager v4 kanonik yang sudah ada).
+     `PROVENALT_OWNER`, `PROVENALT_PAYOUT`, `POOL_MANAGER` (bila memakai PoolManager v4 kanonik yang sudah ada).
 
 ## Langkah
 
@@ -29,7 +29,7 @@ CONFIRM=yes npx hardhat run scripts/deploy-testnet-v2.js --network elysiumTestne
 ```
 
    Hasil: `deployments/elysiumTestnet-v2.json`. Skrip men-deploy PoolManager kanonik (atau memakai `POOL_MANAGER`),
-   Timelock, seluruh kontrak Eridanos, preset HYPE + USDC, router Hypelys (integrator #1), lalu memindahkan owner
+   Timelock, seluruh kontrak Eridanos, preset HYPE + USDC, router Provenalt (integrator #1), lalu memindahkan owner
    ke Timelock. `acceptOwnership` dijadwalkan di Timelock bila deployer adalah proposer.
 
 3. **Setelah jeda Timelock** (default 1 jam), siapa pun bisa menyelesaikan serah terima:
@@ -40,7 +40,7 @@ npx hardhat run scripts/timelock-execute-accept.js --network elysiumTestnet
 
 4. **Frontend**: salin alamat dari `deployments/elysiumTestnet-v2.json` ke `frontend/config.js`
    (`core`, `router`, `hook`, `distributor`, `registry`, `config`, `vault`, `poolManager`, `deployBlock`), lalu
-   `bash scripts/package-frontend.sh` dan unggah `dist/hypelys-frontend.zip` ke cPanel (File Manager → Upload →
+   `bash scripts/package-frontend.sh` dan unggah `dist/provenalt-frontend.zip` ke cPanel (File Manager → Upload →
    Extract) di folder subdomain atau subfolder, **bukan** root `public_html` yang berisi WordPress.
 
 5. **Uji asap** di testnet: beberapa peluncuran lewat UI (dengan/tanpa alokasi dan dev buy), beli/jual di dalam dan
@@ -84,7 +84,7 @@ NODE_USE_ENV_PROXY=1 node scripts/verify-sourcify.js
 | usdc | `0x7D29d8047B905000459c0E80c34a26CeedcB47b2` |
 
 Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan PoolManager. Admin dipindah ke `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`
-(`scripts/handover-admin.js`): proposer/canceller Timelock, treasury, guardian, payout Hypelys, dan owner
+(`scripts/handover-admin.js`): proposer/canceller Timelock, treasury, guardian, payout Provenalt, dan owner
 `HypelysRouter` (diterima lewat `scripts/accept-router-ownership.js`). Serah terima selesai 5 Nov 2026. Deployer sementara `0x0bC67Dea…F322` tidak
 memegang peran lagi. Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
 `deployments/elysiumTestnet-v2-smoke.json` (33/33). Source terverifikasi di Sourcify Conduit (14/14).
@@ -95,3 +95,13 @@ Semua perubahan protokol lewat Timelock: `schedule`/`scheduleBatch` dari dompet 
 `execute` (siapa pun boleh). Contoh: lihat `scripts/handover-admin.js`. Guardian bisa langsung `LaunchCore.pause()`
 dan `IntegratorRegistry.pauseRegistration()`. Owner `HypelysRouter` bisa langsung `setPayout`, `setSigner`,
 `setProfile`, `queuePolicy`. Dompet admin butuh sedikit HYPE di Elysium testnet untuk gas.
+
+### Nama app di registry
+
+Profil integrator #1 (nama dan situs yang dibaca frontend/explorer) diubah owner router tanpa Timelock:
+
+```bash
+CONFIRM=yes npx hardhat run scripts/set-app-profile.js --network elysiumTestnet
+```
+
+Default `APP_NAME=Provenalt`; isi `APP_URI` bila domain sudah ada.

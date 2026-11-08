@@ -73,7 +73,7 @@ async function main() {
   // --- status
   const reg1 = await registry.getIntegrator(1);
   console.log({
-    routerOwner: await router.owner(), routerPendingOwner: await router.pendingOwner(), hypelysPayout: reg1.payout,
+    routerOwner: await router.owner(), routerPendingOwner: await router.pendingOwner(), provenaltPayout: reg1.payout,
     treasury: await config.treasury(), configGuardian: await config.guardian(), registryGuardian: await registry.guardian(),
     newAdminProposer: await tl.hasRole(PROPOSER, newAdmin), newAdminCanceller: await tl.hasRole(CANCELLER, newAdmin),
     deployerProposer: await tl.hasRole(PROPOSER, d.deployer),

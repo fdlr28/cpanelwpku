@@ -12,7 +12,7 @@ Keputusan D1–D6 sudah ditetapkan (lihat `02-desain-arsitektur.md` §0). Yang m
 
 | # | Keputusan | Usulan | Dibutuhkan sebelum |
 |---|---|---|---|
-| T1 | Nama protokol dan app | ✅ Ditetapkan: protokol **Eridanos**, app **Hypelys** | — |
+| T1 | Nama protokol dan app | ✅ Ditetapkan: protokol **Eridanos**, app **Provenalt** (diganti 8 Nov 2026; sebelumnya Hypelys) | — |
 | T2 | Policy integrator #1 (app kita): `integratorBps` dan batas alokasi bagi pengguna app kita | `integratorBps` 3000; alokasi pengguna ≤ 20% sesuai batas protokol; tampilkan peringatan jelas bila instan | Fase 5 |
 | T3 | Surcharge dalam token: dibakar atau ke protokol | ✅ Dibakar (persetujuan tetap pemilik proyek, 4 Nov 2026); surcharge dalam quote ke protokol | — |
 
@@ -30,6 +30,11 @@ bernama sama di pencarian web.
 
 Catatan: nama berawalan "Elys…" bisa tertukar dengan Elys Network dan Elysium milik Vulcan Forged; "Eridanos" dan
 "Hypelys" tidak punya masalah itu. Cek merek dagang dan domain belum dilakukan.
+
+**8 Nov 2026: app diganti nama menjadi Provenalt** atas permintaan pemilik proyek. Cek nama: npm kosong, pencarian
+web tidak menemukan proyek bernama sama, GitHub 1 repo (`Provenalt/provenalt`, tanpa deskripsi). Kontrak yang sudah
+ter-deploy tetap bernama `HypelysRouter` (source terverifikasi tidak boleh berubah); profil integrator #1 di registry
+diganti lewat `scripts/set-app-profile.js` oleh owner router.
 
 ## Fase 0 · Persetujuan desain
 
@@ -164,10 +169,10 @@ di `04-review-fase4.md`: tanpa temuan tinggi/kritis, tiga temuan rendah (R-2..R-
 * `sdk/eridanos-sdk.js` (Node + browser): ABI, `hashLaunchParams` (identik dengan `LaunchCore.hashParams`),
   `signLaunchIntent`, `listLaunches`, rumus fee, `describeSupply`. Salinannya di `frontend/eridanos-sdk.js`.
 * `examples/agora-mode-a.js` dan `examples/agora-mode-b.js`: integrator pihak ketiga, keduanya berjalan.
-* Frontend Hypelys baru di `frontend/` (frontend MVP lama di `frontend/legacy/`): daftar token dengan label alokasi/dev
+* Frontend Provenalt baru di `frontend/` (frontend MVP lama di `frontend/legacy/`): daftar token dengan label alokasi/dev
   buy, form peluncuran dengan batas dari policy dan peringatan alokasi instan, halaman token dengan pengungkapan,
   harga, fee saat ini, beli/jual, `collect`, klaim creator.
-* `scripts/deploy-local-v2.js` menulis `frontend/config.local.js`; `scripts/e2e-hypelys.js` menjalankan E2E browser:
+* `scripts/deploy-local-v2.js` menulis `frontend/config.local.js`; `scripts/e2e-provenalt.js` menjalankan E2E browser:
   launch (alokasi instan 5% + dev buy 2%) → beli → jual → collect → klaim creator, tanpa error aplikasi.
 * Test: `test/v2/app.test.js` (10 test). Total suite 112 test.
 
@@ -196,7 +201,7 @@ deployer sementara buatan sesi, bukan kunci pemilik proyek).
   `deployments/elysiumTestnet-v2-smoke.json`, biaya ±0,0023 HYPE). Satu butir (tolak dev buy 11%) gagal pada
   percobaan pertama karena skrip uji mengirim 1 HYPE melebihi saldo; dicek ulang: revert `DevBuyNotAllowed`, skrip
   diperbaiki.
-  * Mode A (Hypelys, #1): alokasi instan 3% + 2%, dev buy dengan refund sisa HYPE, split 20/30/50, token di alamat
+  * Mode A (Provenalt, #1): alokasi instan 3% + 2%, dev buy dengan refund sisa HYPE, split 20/30/50, token di alamat
     prediksi, saldo core 0.
   * Beli di jendela (t+3 dtk, fee 81%) kena surcharge HYPE; setelah 10 dtk fee 1%, tanpa surcharge.
   * Jual; `collect`; klaim creator, integrator, protokol.
@@ -208,7 +213,7 @@ deployer sementara buatan sesi, bukan kunci pemilik proyek).
 
 Catatan dan sisa pekerjaan:
 * **Admin dipindah ke dompet pemilik proyek `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`** (`scripts/handover-admin.js`):
-  * langsung: payout Hypelys → dompet itu; owner `HypelysRouter` diterima dompet itu (`acceptOwnership`, tx `0xe5ee68ae…4e8f`);
+  * langsung: payout Provenalt → dompet itu; owner `HypelysRouter` diterima dompet itu (`acceptOwnership`, tx `0xe5ee68ae…4e8f`);
     integrator uji #2 dinonaktifkan dan payout-nya ke dompet itu;
   * lewat Timelock (jeda 900 dtk): dompet itu mendapat PROPOSER + CANCELLER, kunci deployer dicabut; treasury dan
     guardian (`ProtocolConfig`, `IntegratorRegistry`) → dompet itu.
@@ -227,7 +232,7 @@ Catatan dan sisa pekerjaan:
   * Elysium membuat ±1 juta blok/hari; `listLaunches` di SDK kini membaca 5 juta blok per request dan membagi dua
     rentang bila ditolak RPC.
   * Dev buy di bawah 0,01% supply tampil "<0.01%" (sebelumnya "0.00%").
-  Paket unggah: `bash scripts/package-frontend.sh` → `dist/hypelys-frontend.zip`.
+  Paket unggah: `bash scripts/package-frontend.sh` → `dist/provenalt-frontend.zip`.
 
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 

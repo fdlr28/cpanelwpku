@@ -2,7 +2,7 @@
 (() => {
   "use strict";
 
-  const CFG = window.HYPELYS_CONFIG;
+  const CFG = window.PROVENALT_CONFIG;
   const SDK = EridanosSDK;
   const ZERO = ethers.ZeroAddress;
   const SLIPPAGE_BPS = 200n; // 2%
@@ -213,7 +213,7 @@
     app.innerHTML = `<div class="panel" style="max-width:680px;margin:0 auto">
       <h2 style="margin-top:0">Luncurkan token</h2>
       <p class="muted small">Supply 1.000.000.000. Token tanpa owner dan tanpa mint. Fee 1% selamanya dibagi: protokol 20%,
-      Hypelys ${pct(policy.integratorBps)}, creator ${pct(8000n - BigInt(policy.integratorBps))}.</p>
+      Provenalt ${pct(policy.integratorBps)}, creator ${pct(8000n - BigInt(policy.integratorBps))}.</p>
       <form id="f">
         <div class="row"><div><label>Nama</label><input name="name" maxlength="32" required /></div>
         <div><label>Ticker</label><input name="symbol" maxlength="12" required style="text-transform:uppercase" /></div></div>

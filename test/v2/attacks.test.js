@@ -18,7 +18,7 @@ describe("v2 phase 4 · attacks", function () {
 
     it("a copycat registering the same name is attributed its own id, never the original", async function () {
       const ctx = await loadFixture(fixture);
-      await ctx.registry.connect(ctx.alice).register("Hypelys", "https://hypelys.example", ctx.alice.address, ctx.alice.address, MAX_POLICY);
+      await ctx.registry.connect(ctx.alice).register("Provenalt", "https://provenalt.example", ctx.alice.address, ctx.alice.address, MAX_POLICY);
       const { ev } = await doLaunch(ctx, ctx.alice, params(ctx.creator.address));
       expect(ev.args.integratorId).to.equal(2n);
     });

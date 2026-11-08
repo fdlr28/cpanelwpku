@@ -31,7 +31,7 @@ async function main() {
   const registry = await ethers.getContractAt("IntegratorRegistry", d.registry, me);
   const ok = (b) => (b ? "✓" : "✗ (waiting for the timelock batch)");
   console.log(`HypelysRouter owner : ${await router.owner()} ${ok((await router.owner()) === me.address)}`);
-  console.log(`Hypelys payout      : ${(await registry.getIntegrator(1)).payout}`);
+  console.log(`Provenalt payout    : ${(await registry.getIntegrator(1)).payout}`);
   console.log(`Timelock proposer   : ${ok(await tl.hasRole(await tl.PROPOSER_ROLE(), me.address))}`);
   console.log(`Timelock canceller  : ${ok(await tl.hasRole(await tl.CANCELLER_ROLE(), me.address))}`);
   console.log(`treasury            : ${await config.treasury()}`);

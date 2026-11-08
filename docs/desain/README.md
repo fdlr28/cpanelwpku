@@ -11,9 +11,13 @@ dengan launchpad kita sebagai integrator pertama. Mesin pool mengikuti model Asc
 | [04-review-fase4.md](04-review-fase4.md) | Review internal: skenario serangan, temuan, checklist keamanan, gas |
 | [05-runbook-testnet.md](05-runbook-testnet.md) | Langkah deploy testnet (fase 6) untuk pemilik proyek |
 
-Status (5 Nov 2026): desain revisi 2 disetujui; **fase 1–6 selesai**. Eridanos v2 + Hypelys ter-deploy di Elysium
+Status (5 Nov 2026): desain revisi 2 disetujui; **fase 1–6 selesai**. Eridanos v2 + Provenalt ter-deploy di Elysium
 testnet 99801 dan lulus uji asap 33/33 (alamat di `05-runbook-testnet.md`). Admin testnet dipindah ke dompet pemilik proyek
 `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`; source terverifikasi di explorer (Sourcify Conduit).
 
-Kode: `contracts/v2/` (protokol Eridanos), `contracts/v2/app/` (Hypelys), `sdk/`, `examples/`, `frontend/`,
+Kode: `contracts/v2/` (protokol Eridanos), `contracts/v2/app/` (Provenalt), `sdk/`, `examples/`, `frontend/`,
 test di `test/v2/`.
+
+Nama app: **Provenalt** (sejak 8 Nov 2026; sebelumnya Hypelys). Kontrak router yang sudah ter-deploy tetap bernama
+`HypelysRouter` karena source-nya sudah terverifikasi; yang terlihat pengguna (frontend, profil integrator #1) memakai
+nama Provenalt.

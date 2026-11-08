@@ -2,7 +2,7 @@
 
 Status: **revisi 2, keputusan pemilik proyek sudah dimasukkan (4 Nov 2026)**. Belum ada kode kontrak.
 Target pertama: **Elysium testnet (99801)**.
-Nama: protokol **Eridanos** (lapis protokol), app **Hypelys** (integrator #1). Ditetapkan 4 Nov 2026.
+Nama: protokol **Eridanos** (lapis protokol), app **Provenalt** (integrator #1). Ditetapkan 4 Nov 2026.
 
 Dasar riset: `01-riset-model-acuan.md` (Doppler, Bankr, Ascend dari sumber asli) dan
 `../riset-launchpad-elysium.md` (launchpad yang sudah ada di Elysium).

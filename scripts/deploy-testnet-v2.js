@@ -1,4 +1,4 @@
-// Phase 6 deploy script for Eridanos v2 + Hypelys on Elysium TESTNET (99801).
+// Phase 6 deploy script for Eridanos v2 + Provenalt on Elysium TESTNET (99801).
 //
 //   Dry run (in-process Hardhat network, no keys, nothing leaves this machine):
 //     npx hardhat run scripts/deploy-testnet-v2.js
@@ -14,8 +14,9 @@
 //   TIMELOCK_PROPOSER Safe multisig that proposes admin changes (default: deployer)
 //   TIMELOCK_DELAY    seconds                                    (default: 3600)
 //   USDC              ERC-20 quote; empty string disables       (default: Elysium testnet USDC)
-//   HYPELYS_OWNER     owner of the Hypelys router               (default: deployer)
-//   HYPELYS_PAYOUT    receives Hypelys' integrator share        (default: deployer)
+//   PROVENALT_OWNER   owner of the Provenalt router (HypelysRouter contract) (default: deployer)
+//   PROVENALT_PAYOUT  receives Provenalt's integrator share     (default: deployer)
+//   APP_URI           website shown in the integrator registry  (default: empty)
 const fs = require("fs");
 const path = require("path");
 const hre = require("hardhat");
@@ -42,8 +43,8 @@ async function main() {
   const proposer = env("TIMELOCK_PROPOSER", me);
   const delay = Number(env("TIMELOCK_DELAY", "3600"));
   const usdcEnv = process.env.USDC === undefined ? (live ? TESTNET_USDC : "mock") : process.env.USDC;
-  const hypelysOwner = env("HYPELYS_OWNER", me);
-  const hypelysPayout = env("HYPELYS_PAYOUT", me);
+  const provenaltOwner = env("PROVENALT_OWNER", me);
+  const provenaltPayout = env("PROVENALT_PAYOUT", me);
 
   console.log(`${live ? "LIVE" : "DRY RUN"} on chain ${chainId} (${network.name}) as ${me}`);
   const startBlock = await ethers.provider.getBlockNumber();
@@ -83,10 +84,10 @@ async function main() {
   }
   await (await registry.setCore(await core.getAddress(), true)).wait();
 
-  // 5. Hypelys router = integrator #1.
+  // 5. Provenalt router = integrator #1.
   const router = await deployAppRouter(hre, stack, {
-    deployer, owner: hypelysOwner, name: "Hypelys", uri: "https://hypelys.app",
-    signer: ethers.ZeroAddress, payout: hypelysPayout,
+    deployer, owner: provenaltOwner, name: "Provenalt", uri: env("APP_URI", ""),
+    signer: ethers.ZeroAddress, payout: provenaltPayout,
     policy: { integratorBps: 3000, maxAllocBps: 2000, maxDevBuyBps: 1000, minCliff: 0, minDuration: 0, devBuyLock: 0 },
   });
 

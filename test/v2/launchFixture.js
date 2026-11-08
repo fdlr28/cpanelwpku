@@ -1,5 +1,5 @@
 // Shared fixture for the Eridanos launch/attack suites: full stack on a canonical v4 PoolManager,
-// HYPE and USDC presets, integrator #1 ("Hypelys"), v4-core test routers.
+// HYPE and USDC presets, integrator #1 ("Provenalt"), v4-core test routers.
 const hre = require("hardhat");
 const { ethers } = hre;
 const { deployEridanos } = require("../../scripts/lib/eridanos");
@@ -41,7 +41,7 @@ async function fixture() {
   await config.setQuote(await usdc.getAddress(), true);
   await config.addCurvePreset(await usdc.getAddress(), USDC_START_TICK, ASCEND_CURVE); // preset 2: USDC
   await registry.setCore(await core.getAddress(), true);
-  await registry.connect(app).register("Hypelys", "https://hypelys.example", appSigner.address, payout.address, MAX_POLICY);
+  await registry.connect(app).register("Provenalt", "https://provenalt.example", appSigner.address, payout.address, MAX_POLICY);
 
   const router = await ethers.deployContract("PoolSwapTest", [await pm.getAddress()]);
   const lpRouter = await ethers.deployContract("PoolModifyLiquidityTest", [await pm.getAddress()]);

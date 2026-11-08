@@ -8,7 +8,7 @@ async function fixture() {
   const [owner, guardian, app, appSigner, payout, core, otherCore, creator, attacker, newAccount] = await ethers.getSigners();
   const registry = await ethers.deployContract("IntegratorRegistry", [owner.address, guardian.address]);
   await registry.connect(owner).setCore(core.address, true);
-  await registry.connect(app).register("Hypelys", "https://hypelys.example", appSigner.address, payout.address, MAX_POLICY);
+  await registry.connect(app).register("Provenalt", "https://provenalt.example", appSigner.address, payout.address, MAX_POLICY);
   return { owner, guardian, app, appSigner, payout, core, otherCore, creator, attacker, newAccount, registry };
 }
 
@@ -49,7 +49,7 @@ describe("v2 phase 2 · IntegratorRegistry", function () {
 
     it("lets a copycat use the same name but never the same id or account", async function () {
       const { registry, attacker } = await loadFixture(fixture);
-      await registry.connect(attacker).register("Hypelys", "", attacker.address, attacker.address, MAX_POLICY);
+      await registry.connect(attacker).register("Provenalt", "", attacker.address, attacker.address, MAX_POLICY);
       expect(await registry.integratorOf(attacker.address)).to.equal(2n);
       expect((await registry.getIntegrator(1)).name).to.equal((await registry.getIntegrator(2)).name);
       expect((await registry.getIntegrator(1)).account).to.not.equal(attacker.address);

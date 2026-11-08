@@ -110,11 +110,12 @@ Kalau nanti ada DEX V2-compatible resmi di Elysium, cukup isi `DEX_FACTORY` dan 
 
 ### Hosting frontend di cPanel
 
-Jalankan `bash scripts/package-frontend.sh` → `dist/hypelys-frontend.zip` (isi: `index.html`, `app.js`,
-`style.css`, `config.js`, `eridanos-sdk.js`, `vendor/`). Di cPanel: File Manager → buka folder tujuan (subdomain
-sendiri, atau subfolder seperti `public_html/hypelys`) → Upload zip → klik kanan → Extract. Jangan ekstrak ke root
-`public_html` bila di sana ada WordPress: `index.html` akan menimpa halaman depan WordPress. Tidak perlu Node.js di
-server; semuanya statis dan ethers.js sudah dibundel di `vendor/`.
+Jalankan `bash scripts/package-frontend.sh` → `dist/provenalt-frontend.zip`, berisi satu folder `provenalt/`
+(`index.html`, `app.js`, `style.css`, `config.js`, `eridanos-sdk.js`, `vendor/`). Di cPanel: File Manager → folder
+home → Upload zip → klik kanan → Extract, lalu jadikan `/home/<user>/provenalt` document root domain/subdomain-nya
+(Domains → Create A New Domain). Bisa juga diunggah ke hosting statis seperti Cloudflare Pages atau Netlify.
+Jangan taruh isinya di root `public_html` bila di sana ada WordPress: `index.html` akan menimpa halaman depan
+WordPress. Tidak perlu Node.js di server; semuanya statis dan ethers.js sudah dibundel di `vendor/`.
 
 ## Data jaringan (dari docs resmi Elysium)
 

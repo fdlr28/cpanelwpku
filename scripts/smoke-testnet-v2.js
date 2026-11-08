@@ -1,8 +1,8 @@
-// Phase 6 smoke test against a live Eridanos v2 + Hypelys deployment (deployments/<network>-v2.json).
+// Phase 6 smoke test against a live Eridanos v2 + Provenalt deployment (deployments/<network>-v2.json).
 // Uses tiny HYPE amounts. Only 99801 (testnet) and 31337 (local) are accepted.
 //   CONFIRM=yes npx hardhat run scripts/smoke-testnet-v2.js --network elysiumTestnet
 //
-// Covers: mode A (Hypelys router, instant + vesting allocation, dev buy), mode C (direct, dev buy),
+// Covers: mode A (Provenalt router, instant + vesting allocation, dev buy), mode C (direct, dev buy),
 // mode B (signed intent), a USDC launch, buys inside/after the anti-sniper window, a sell inside the
 // window (token surcharge → burned at collect), collect, creator/integrator/protocol claims, vesting
 // release, and a few must-revert checks (staticCall, no gas).
@@ -59,10 +59,10 @@ async function main() {
   await reverts("dev buy 11% rejected", () => router.launch.staticCall(base({ devBuyTokens: (SUPPLY * 11n) / 100n, maxDevBuyQuote: 10n ** 15n }), { value: 10n ** 15n }), "DevBuyNotAllowed");
   await reverts("unknown preset rejected", () => core.launch.staticCall(base({ presetId: 99 })));
 
-  // ---------------------------------------------------------------- mode A via Hypelys
+  // ---------------------------------------------------------------- mode A via Provenalt
   const devA = 10n ** 22n; // 0.001% of supply
   const maxA = ethers.parseEther("0.002");
-  const pA = base({ name: "Smoke Hypelys A", symbol: "SMKA", allocations: [{ recipient: me.address, bps: 300 }, { recipient: other, bps: 200 }], cliff: 0, duration: 0, devBuyTokens: devA, maxDevBuyQuote: maxA });
+  const pA = base({ name: "Smoke Provenalt A", symbol: "SMKA", allocations: [{ recipient: me.address, bps: 300 }, { recipient: other, bps: 200 }], cliff: 0, duration: 0, devBuyTokens: devA, maxDevBuyQuote: maxA });
   // Two allocations with duration 0 → instant. Use a separate vesting launch below for cliff/duration.
   const predA = await router.predictToken(me.address, pA);
   const balBeforeA = await ethers.provider.getBalance(me);
@@ -118,7 +118,7 @@ async function main() {
   await send("claimCreator", dist.claimCreator(poolA));
   check("claimCreator clears creator balance", (await dist.creatorOwed(poolA, ethers.ZeroAddress)) === 0n);
   await send("claimIntegrator", dist.claimIntegrator(1, ethers.ZeroAddress));
-  check("claimIntegrator pays Hypelys payout", (await dist.integratorOwed(1, ethers.ZeroAddress)) === 0n);
+  check("claimIntegrator pays Provenalt payout", (await dist.integratorOwed(1, ethers.ZeroAddress)) === 0n);
 
   // ---------------------------------------------------------------- mode C: direct, dev buy, sell inside window
   const devC = 10n ** 22n;

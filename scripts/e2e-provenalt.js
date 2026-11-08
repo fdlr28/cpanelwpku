@@ -1,5 +1,5 @@
-// Browser E2E for the Hypelys frontend (local node + deploy-local-v2 + static server on :8090).
-// Usage: NODE_PATH=$(npm root -g) node scripts/e2e-hypelys.js <screenshot-dir>
+// Browser E2E for the Provenalt frontend (local node + deploy-local-v2 + static server on :8090).
+// Usage: NODE_PATH=$(npm root -g) node scripts/e2e-provenalt.js <screenshot-dir>
 const { chromium } = require('playwright');
 const fs = require('fs');
 const SP = process.argv[2];

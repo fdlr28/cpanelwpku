@@ -14,7 +14,7 @@ Tanggal: 4 Nov 2026. Lingkup: kontrak v2 di `contracts/v2/` (commit fase 3) terh
 | Skenario | Hasil |
 |---|---|
 | Pemanggil tak terdaftar mencoba mendapat atribusi integrator | Jatuh ke mode C (`integratorId = 0`) |
-| Peniru mendaftar dengan nama sama ("Hypelys") | Mendapat id sendiri (2), tidak pernah id 1 |
+| Peniru mendaftar dengan nama sama ("Provenalt") | Mendapat id sendiri (2), tidak pernah id 1 |
 | Replay `LaunchIntent` untuk peluncuran kedua | `NonceAlreadyUsed` |
 | Core palsu memakai intent | `NotCore` |
 | Alokasi > 20% dipecah ke beberapa penerima; dev buy > 10% | `AllocationNotAllowed`, `DevBuyNotAllowed` |
