@@ -5,10 +5,10 @@ Branch kerja: **`claude/hopeful-pascal-icu4bu`** di `fdlr28/cpanelwpku`.
 
 ## 1. Melanjutkan di Mac
 
-Repo sudah ada di Mac pemilik proyek: **`~/Downloads/cpanelwpku`** (berisi `.env` dengan `PRIVATE_KEY` dompet admin).
+Repo sudah ada di Mac pemilik proyek: **`~/factory-detector/cpanelwpku/cpanelwpku`** (berisi `.env` dengan `PRIVATE_KEY` dompet admin).
 
 ```bash
-cd ~/Downloads/cpanelwpku
+cd ~/factory-detector/cpanelwpku/cpanelwpku
 git pull origin claude/hopeful-pascal-icu4bu
 npm install
 claude
@@ -68,7 +68,7 @@ Live: **`https://provenalt-indexer-production.up.railway.app`** (`/health`, `/to
 Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (akun `provenalt`), project `cpanelwpku`.
 
 * Deploy lewat **Vercel CLI dari Mac**, dari folder `frontend/` (bukan root repo, supaya `.env` tidak ikut):
-  `cd ~/Downloads/cpanelwpku && git pull origin claude/hopeful-pascal-icu4bu && cd frontend && npx vercel --prod`.
+  `cd ~/factory-detector/cpanelwpku/cpanelwpku && git pull origin claude/hopeful-pascal-icu4bu && cd frontend && npx vercel --prod`.
   Project tidak terhubung ke Git (sambungan ke repo `Provenalt/cpanelwpku` milik akun GitHub lain dilepas karena repo
   itu tidak berisi pekerjaan ini). Root Directory project kosong.
 * `frontend/vercel.json`: header keamanan (larang iframe, nosniff, referrer policy). `frontend/.vercelignore`: tidak
