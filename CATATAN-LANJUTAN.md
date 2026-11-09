@@ -63,23 +63,19 @@ Live: **`https://provenalt-indexer-production.up.railway.app`** (`/health`, `/to
 * Project lama di workspace yang sama, **jangan diubah tanpa izin**: `passionate-truth` (service `provenalt` dari repo
   `Provenalt/provenalt`, deploy terakhir FAILED) dan `gracious-harmony` (Postgres yang belum pernah jalan).
 
-### 3b. Website di Vercel (tertunda, 9 Nov 2026)
+### 3b. Website di Vercel (9 Nov 2026)
 
-Keputusan pemilik proyek: website di **Vercel** (bukan cPanel). Sudah disiapkan: `frontend/vercel.json` (header
-keamanan, larang iframe), `frontend/.vercelignore`, dan `scripts/deploy-vercel.js` (deploy lewat REST API).
+Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (akun `provenalt`), project `cpanelwpku`.
 
-Percobaan dari sesi cloud gagal: token Vercel akun `provenalt` (team default `team_nrL2QRjbDcRh3RO9ws52ns0v`)
-hanya bisa membaca; membuat project ditolak (403 *"You don't have permission to create the project"*), dan `/v2/user`
-menandai token `limited: true`. Vercel CLI gagal dengan "token is not valid" karena tidak bisa membaca detail team.
-
-Pilihan:
-* **Dashboard (tanpa token):** vercel.com → Add New → Project → import `fdlr28/cpanelwpku` → Root Directory `frontend`,
-  Framework "Other", tanpa build command → Production Branch `claude/hopeful-pascal-icu4bu` → Deploy → Settings →
-  Domains: `provenalt.xyz`.
-* **Skrip:** token baru dengan Scope = team akun (Full Account, tanpa batasan), lalu
-  `VERCEL_TOKEN=... VERCEL_TEAM_ID=team_nrL2QRjbDcRh3RO9ws52ns0v DOMAIN=provenalt.xyz node scripts/deploy-vercel.js`.
-
-Setelah itu atur DNS `provenalt.xyz` di registrar sesuai instruksi Vercel.
+* Deploy lewat **Vercel CLI dari Mac**, dari folder `frontend/` (bukan root repo, supaya `.env` tidak ikut):
+  `cd ~/Downloads/cpanelwpku && git pull origin claude/hopeful-pascal-icu4bu && cd frontend && npx vercel --prod`.
+  Project tidak terhubung ke Git (sambungan ke repo `Provenalt/cpanelwpku` milik akun GitHub lain dilepas karena repo
+  itu tidak berisi pekerjaan ini). Root Directory project kosong.
+* `frontend/vercel.json`: header keamanan (larang iframe, nosniff, referrer policy). `frontend/.vercelignore`: tidak
+  mengunggah `config.local.js`, `legacy/`, `.vercel/`, `.env*`, `.gitignore`.
+* Token Vercel yang disimpan di environment cloud hanya bisa membaca (403 saat membuat project), jadi deploy dari sesi
+  cloud tidak dipakai; `scripts/deploy-vercel.js` tersedia untuk token dengan izin penuh.
+* Berikutnya: domain `provenalt.xyz` di Vercel (*Settings → Domains*) lalu DNS di registrar.
 
 ### 3b-alt. Website di cPanel (alternatif)
 
