@@ -46,7 +46,7 @@
       "function paused() view returns (bool)",
       `event Launched(uint256 indexed launchId, address indexed token, uint32 indexed integratorId, ${LAUNCH_RECORD} record, uint16 coreVersion)`,
     ],
-    HypelysRouter: [
+    ProvenaltRouter: [
       `function launch(${LAUNCH_PARAMS} p) payable returns (address token, bytes32 poolId)`,
       `function predictToken(address user, ${LAUNCH_PARAMS} p) view returns (address)`,
       "function buy(address token, uint256 amountIn, uint256 minOut, uint256 deadline) payable returns (uint256)",
@@ -54,7 +54,7 @@
       "function integratorId() view returns (uint32)",
     ],
     CurveHook: [
-      "function poolInfo(bytes32 poolId) view returns (tuple(address token,address quote,bool tokenIs0,uint40 launchedAt) info, tuple(address currency0,address currency1,uint24 fee,int24 tickSpacing,address hooks) key, tuple(int24 tickLower,int24 tickUpper)[] bands)",
+      "function poolInfo(bytes32 poolId) view returns (tuple(address token,address quote,bool tokenIs0,uint40 launchedAt) info, tuple(address currency0,address currency1,address hooks,address poolManager,uint24 fee,bytes32 parameters) key, tuple(int24 tickLower,int24 tickUpper)[] bands)",
       "function spot(bytes32 poolId) view returns (uint160 sqrtPriceX96, int24 tick)",
       "function currentFee(bytes32 poolId) view returns (uint24)",
       "function collect(bytes32 poolId) returns (uint256 tokenFees, uint256 quoteFees)",

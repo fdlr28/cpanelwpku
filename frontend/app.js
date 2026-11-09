@@ -45,7 +45,7 @@
   const read = new ThrottledProvider(CFG.rpcUrl, CFG.chainId);
   const C = (name, address, runner = read) => new ethers.Contract(address, SDK.ABI[name], runner);
   const core = C("LaunchCore", CFG.core);
-  const router = C("HypelysRouter", CFG.router);
+  const router = C("ProvenaltRouter", CFG.router);
   const hook = C("CurveHook", CFG.hook);
   const distributor = C("FeeDistributor", CFG.distributor);
   const registry = C("IntegratorRegistry", CFG.registry);

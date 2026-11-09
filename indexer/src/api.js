@@ -45,9 +45,9 @@ const clampInt = (v, def, min, max) => {
 
 function createApi(cfg, pool, indexer) {
   const A = cfg.addresses;
-  const protocolHolders = [ethers.ZeroAddress, DEAD, A.poolManager, A.hook, A.core, A.router, A.vault, A.distributor]
+  const protocolHolders = [ethers.ZeroAddress, DEAD, A.infinityVault, A.poolManager, A.hook, A.core, A.router, A.vault, A.distributor]
     .filter(Boolean).map((a) => a.toLowerCase());
-  const labels = new Map([[A.poolManager, "pool (PoolManager)"], [A.hook, "hook"], [DEAD, "burned"], [A.vault, "vesting vault"],
+  const labels = new Map([[A.infinityVault, "pools (vault)"], [A.poolManager, "pool manager"], [A.hook, "hook"], [DEAD, "burned"], [A.vault, "vesting vault"],
     [A.core, "launch core"], [A.router, "app router"], [A.distributor, "fee distributor"]].filter(([a]) => a));
 
   let quoteCache = new Map();

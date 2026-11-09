@@ -31,6 +31,7 @@ async function main() {
   const addresses = {
     chainId: Number((await ethers.provider.getNetwork()).chainId),
     poolManager: await stack.pm.getAddress(),
+    infinityVault: await stack.infVault.getAddress(),
     core: await core.getAddress(),
     router: await router.getAddress(),
     hook: await stack.hook.getAddress(),

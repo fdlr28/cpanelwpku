@@ -26,6 +26,7 @@ function load() {
     addresses: {
       poolManager: lc(d.poolManager), core: lc(d.core), hook: lc(d.hook), router: lc(d.router),
       registry: lc(d.registry), distributor: lc(d.distributor), vault: lc(d.vault), usdc: lc(d.usdc),
+      infinityVault: lc(d.infinityVault), // holds the pools' tokens (PancakeSwap Infinity)
     },
     startBlock: int("START_BLOCK", Number(d.deployBlock || 0)),
     // Launches left out of listings and stats (e.g. test launches); their detail endpoints still work.
