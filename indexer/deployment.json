@@ -1,0 +1,16 @@
+{
+  "network": "elysiumTestnet",
+  "chainId": 99801,
+  "poolManager": "0xD02875d7Ea89e7e1f61512066828196c09FBD58d",
+  "core": "0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E",
+  "hook": "0x9bcFA072d4d0cfA213bEb83242BcA5c1d50328cc",
+  "router": "0x7389E762b0b63d8A60D307554abA27D074762e4a",
+  "registry": "0xB340bD11629fAd01a2D14d58057209c8F1512Ede",
+  "distributor": "0xa175683c380D15B2E3e49753fa048Dca05774495",
+  "vault": "0xf8C1554E691F45877731fD72a25df658465512b3",
+  "config": "0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3",
+  "usdc": "0x7D29d8047B905000459c0E80c34a26CeedcB47b2",
+  "deployBlock": 23833762,
+  "rpcUrl": "https://testnet-rpc.elysium.kinetiq.xyz",
+  "_source": "Copied from deployments/elysiumTestnet-v2.json (regenerate: node indexer/scripts/copy-deployment.js)"
+}

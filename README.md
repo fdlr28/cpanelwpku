@@ -117,6 +117,13 @@ home → Upload zip → klik kanan → Extract, lalu jadikan `/home/<user>/prove
 Jangan taruh isinya di root `public_html` bila di sana ada WordPress: `index.html` akan menimpa halaman depan
 WordPress. Tidak perlu Node.js di server; semuanya statis dan ethers.js sudah dibundel di `vendor/`.
 
+### Indexer (opsional, untuk Railway)
+
+`indexer/` berisi indexer + REST API (Node + Postgres) untuk daftar token yang bisa diurutkan dan dicari, grafik
+harga, riwayat trade, dan holder. Panduan deploy ke Railway: [`indexer/README.md`](indexer/README.md). Setelah
+deploy, buat paket website dengan `INDEXER_URL=https://<indexer>.up.railway.app bash scripts/package-frontend.sh`.
+Tanpa indexer, website tetap jalan dengan membaca chain langsung.
+
 ## Data jaringan (dari docs resmi Elysium)
 
 Sumber: [elysium.kinetiq.xyz/docs](https://elysium.kinetiq.xyz/docs) (diperbarui 20 Okt – 2 Nov 2026).

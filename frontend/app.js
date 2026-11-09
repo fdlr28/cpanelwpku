@@ -101,6 +101,66 @@
     return img ? `<img class="avatar" src="${esc(img)}" alt="" referrerpolicy="no-referrer" />` : `<div class="avatar">${esc((symbol || "?").slice(0, 3))}</div>`;
   }
 
+  // ------------------------------------------------------------------ indexer (optional, see indexer/)
+  // With CFG.indexerUrl set, lists, charts, trades and holders come from the indexer's API; if it is
+  // unreachable the pages fall back to reading the chain directly.
+  const IDX = (CFG.indexerUrl || "").replace(/\/+$/, "");
+  async function idx(path) {
+    if (!IDX) return null;
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 8000);
+    try {
+      const r = await fetch(IDX + path, { signal: ctl.signal });
+      return r.ok ? await r.json() : null;
+    } catch { return null; } finally { clearTimeout(timer); }
+  }
+  const cs = (a) => { try { return ethers.getAddress(a); } catch { return a; } };
+  const fnum = (x, dp = 4) => {
+    const n = Number(x);
+    if (!Number.isFinite(n)) return "–";
+    if (n === 0) return "0";
+    if (Math.abs(n) < 1e-6) return n.toExponential(2);
+    return n.toLocaleString("en-US", { maximumFractionDigits: dp });
+  };
+  const ago = (ts) => {
+    const s = Math.max(0, Math.floor((Date.now() - new Date(ts).getTime()) / 1000));
+    if (s < 60) return `${s} dtk lalu`;
+    if (s < 3600) return `${Math.floor(s / 60)} mnt lalu`;
+    if (s < 86400) return `${Math.floor(s / 3600)} jam lalu`;
+    return `${Math.floor(s / 86400)} hari lalu`;
+  };
+  const exLink = (kind, v, text) => (CFG.explorer ? `<a class="mono" href="${esc(CFG.explorer)}/${kind}/${esc(v)}" target="_blank" rel="noopener">${text}</a>` : `<span class="mono">${text}</span>`);
+  const change = (pctv) => (pctv == null ? "" : `<span class="${pctv >= 0 ? "pos" : "neg"}">${pctv >= 0 ? "+" : ""}${pctv.toFixed(2)}%</span>`);
+  const idxIntegrator = (it) => (it ? `#${it.id} ${esc(it.name || "?")} <span class="mono">${short(cs(it.account))}</span>${it.verified ? '<span class="tag">verified</span>' : ""}` : "tanpa integrator");
+
+  /** Candlestick chart as inline SVG (no library). */
+  function candleSvg(candles) {
+    if (!candles.length) return `<div class="empty small">Belum ada trade.</div>`;
+    const W = 800, H = 260, padR = 78, padY = 14;
+    const hi = Math.max(...candles.map((c) => c.high)), lo = Math.min(...candles.map((c) => c.low));
+    const span = hi - lo || hi * 0.02 || 1;
+    const y = (v) => padY + (hi - v) / span * (H - 2 * padY);
+    const step = (W - padR) / Math.max(candles.length, 20);
+    const bw = Math.max(2, step * 0.65);
+    let g = "";
+    candles.forEach((c, i) => {
+      const x = i * step + step / 2;
+      const up = c.close >= c.open;
+      const col = up ? "var(--green)" : "var(--red)";
+      const top = y(Math.max(c.open, c.close)), bot = y(Math.min(c.open, c.close));
+      g += `<line x1="${x}" x2="${x}" y1="${y(c.high)}" y2="${y(c.low)}" stroke="${col}" stroke-width="1"/>`
+        + `<rect x="${x - bw / 2}" y="${top}" width="${bw}" height="${Math.max(1, bot - top)}" fill="${col}"/>`;
+    });
+    const axisNum = (v) => (Math.abs(v) < 1e-3 ? v.toExponential(3) : v.toPrecision(5));
+    const label = (v) => `<text x="${W - padR + 6}" y="${y(v) + 4}" class="axis">${axisNum(Number(v))}</text>`;
+    const t0 = new Date(candles[0].t), t1 = new Date(candles[candles.length - 1].t);
+    const tl = (d) => d.toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+    return `<svg class="chart" viewBox="0 0 ${W} ${H + 18}" preserveAspectRatio="none" role="img" aria-label="grafik harga">
+      <line x1="0" x2="${W - padR}" y1="${y(hi)}" y2="${y(hi)}" class="grid"/><line x1="0" x2="${W - padR}" y1="${y(lo)}" y2="${y(lo)}" class="grid"/>
+      ${g}${label(hi)}${label(lo)}${hi !== lo ? label((hi + lo) / 2) : ""}
+      <text x="2" y="${H + 14}" class="axis">${tl(t0)}</text><text x="${W - padR}" y="${H + 14}" class="axis" text-anchor="end">${tl(t1)}</text></svg>`;
+  }
+
   /** Token price in quote units (human) from the pool's sqrt price. */
   function priceOf(sqrtPriceX96, tokenIs0, qDec) {
     const r = Number(sqrtPriceX96) / 2 ** 96;
@@ -171,8 +231,14 @@
   }
 
   // ------------------------------------------------------------------ list
+  let listSort = "new";
+  let listQuery = "";
   async function viewList() {
     app.innerHTML = `<div class="empty">Memuat…</div>`;
+    if (IDX) {
+      const data = await idx(`/tokens?limit=60&sort=${listSort}${listQuery ? "&q=" + encodeURIComponent(listQuery) : ""}`);
+      if (data) return renderIndexedList(data.tokens);
+    }
     const launches = (await SDK.listLaunches(read, CFG.core, { fromBlock: CFG.deployBlock || 0 })).reverse().slice(0, 60);
     if (!launches.length) {
       app.innerHTML = `<div class="empty">Belum ada token. <a class="btn btn-primary" href="#/create">Luncurkan yang pertama</a></div>`;
@@ -195,6 +261,29 @@
         <div class="muted small">via ${await integratorLabel(l.integratorId)}</div></div></a>`;
     }));
     app.innerHTML = `<h2>Token terbaru</h2><div class="grid">${cards.join("")}</div>`;
+  }
+
+  function renderIndexedList(tokens) {
+    const sorts = [["new", "Terbaru"], ["mcap", "Market cap"], ["volume", "Volume 24j"], ["trades", "Trade"]];
+    const cards = tokens.map((t) => {
+      const allocTag = t.allocation.bps === 0 ? "" : t.allocation.instant
+        ? `<span class="tag bad">alokasi ${pct(t.allocation.bps)} instan</span>` : `<span class="tag warn">alokasi ${pct(t.allocation.bps)} vesting</span>`;
+      const devTag = Number(t.devBuy.tokens) > 0 ? `<span class="tag warn">dev buy ${SDK.supplyPct(ethers.parseUnits(t.devBuy.tokens, 18))}</span>` : "";
+      return `<a class="card" href="#/token/${esc(ethers.getAddress(t.address))}">${avatar({ image: t.image }, t.symbol)}
+        <div style="min-width:0"><b>${esc(t.name)}</b> <span class="muted">$${esc(t.symbol)}</span>${allocTag}${devTag}
+        <div class="muted small">MC ≈ ${fnum(t.marketCap, 2)} ${esc(t.quote.symbol)} ${change(t.priceChange24h)}</div>
+        <div class="muted small">Vol 24j ${fnum(t.volume24h, 2)} ${esc(t.quote.symbol)} · ${t.holders} holder · ${t.tradesTotal} trade</div>
+        <div class="muted small">via ${idxIntegrator(t.integrator)} · ${ago(t.launchedAt)}</div></div></a>`;
+    });
+    app.innerHTML = `<div class="toolbar"><h2>Token</h2>
+        <div class="seg">${sorts.map(([k, l]) => `<button class="btn${k === listSort ? " active" : ""}" data-sort="${k}">${l}</button>`).join("")}</div>
+        <input id="search" placeholder="Cari nama, simbol, atau alamat" value="${esc(listQuery)}" /></div>
+      ${tokens.length ? `<div class="grid">${cards.join("")}</div>`
+        : `<div class="empty">${listQuery ? "Tidak ada token yang cocok." : `Belum ada token. <a class="btn btn-primary" href="#/create">Luncurkan yang pertama</a>`}</div>`}`;
+    document.querySelectorAll(".seg [data-sort]").forEach((b) => (b.onclick = () => { listSort = b.dataset.sort; viewList(); }));
+    const search = $("#search");
+    let timer;
+    search.oninput = () => { clearTimeout(timer); timer = setTimeout(() => { listQuery = search.value.trim(); viewList().then(() => { const i = $("#search"); i.focus(); i.setSelectionRange(i.value.length, i.value.length); }); }, 350); };
   }
 
   // ------------------------------------------------------------------ create
@@ -315,12 +404,51 @@
         <p class="muted small">Slippage ${Number(SLIPPAGE_BPS) / 100}%. ${account ? `Saldo: ${num(bal)} ${esc(symbol)}` : "Hubungkan dompet untuk trading."}</p>
         ${isCreator ? `<hr style="border-color:var(--border)"/><p class="small">Fee creator: ${num(owedQ, qd)} ${esc(qs)} + ${num(owedTok)} ${esc(symbol)}</p>
           <button id="claimBtn" class="btn" style="width:100%" ${owedQ + owedTok === 0n ? "disabled" : ""}>Klaim fee creator</button>` : ""}
-      </div></div></div>`;
+      </div></div></div>
+      ${IDX ? `<div id="idxPanels" class="panel" style="margin-top:16px"><div class="empty small">Memuat grafik…</div></div>` : ""}`;
 
+    if (IDX) loadIndexed(token, symbol, qs);
     $("#collectBtn").onclick = () => send(() => hook.connect(need()).collect(poolId), () => viewToken(token));
     const claim = $("#claimBtn");
     if (claim) claim.onclick = () => send(() => distributor.connect(need()).claimCreator(poolId), () => viewToken(token));
     bindTrade(token, symbol, q, qs, qd);
+  }
+
+  async function loadIndexed(token, symbol, qs) {
+    const box = $("#idxPanels");
+    const addr = token.toLowerCase();
+    const [trades, holders] = await Promise.all([idx(`/tokens/${addr}/trades?limit=30`), idx(`/tokens/${addr}/holders?limit=10`)]);
+    if (!box || !document.body.contains(box)) return;
+    if (!trades) return (box.innerHTML = `<div class="muted small">Grafik dan riwayat trade tidak tersedia (indexer tidak bisa dihubungi).</div>`);
+    const intervals = [["1m", "1m"], ["5m", "5m"], ["1h", "1j"], ["1d", "1h"]];
+    const rows = trades.trades.map((t) => {
+      const buy = t.side === "buy";
+      const tok = t.userAmountIn != null ? (buy ? t.userAmountOut : t.userAmountIn) : t.tokenAmount;
+      const quo = t.userAmountIn != null ? (buy ? t.userAmountIn : t.userAmountOut) : t.quoteAmount;
+      const label = t.kind === "devbuy" ? "Dev buy" : buy ? "Beli" : "Jual";
+      return `<tr><td>${ago(t.ts)}</td><td class="${buy ? "pos" : "neg"}">${label}</td><td>${exLink("address", t.trader, short(cs(t.trader)))}</td>
+        <td>${fnum(tok, 2)} ${esc(symbol)}</td><td>${fnum(quo, 6)} ${esc(qs)}</td><td>${exLink("tx", t.tx, "tx")}</td></tr>`;
+    }).join("");
+    const hrows = (holders?.top || []).map((h) => `<tr><td>${exLink("address", h.address, short(cs(h.address)))}${h.label ? ` <span class="muted small">${esc(h.label)}</span>` : ""}</td>
+        <td>${fnum(h.balance, 2)}</td><td>${h.supplyPct.toFixed(2)}%</td></tr>`).join("");
+    box.innerHTML = `<div class="toolbar"><h3>Grafik harga (${esc(qs)} per ${esc(symbol)})</h3>
+        <div class="seg">${intervals.map(([k, l], i) => `<button class="btn${i === 1 ? " active" : ""}" data-iv="${k}">${l}</button>`).join("")}</div></div>
+      <div id="chartBox"><div class="empty small">Memuat…</div></div>
+      <div class="two-col" style="margin-top:12px"><div><h3>Trade terbaru</h3>
+        ${rows ? `<table><tr><th>Waktu</th><th>Jenis</th><th>Trader</th><th>Token</th><th>${esc(qs)}</th><th></th></tr>${rows}</table>` : `<div class="muted small">Belum ada trade.</div>`}</div>
+        <div><h3>Holder (${holders ? holders.holders : "?"})</h3>
+        ${hrows ? `<table><tr><th>Alamat</th><th>Saldo</th><th>%</th></tr>${hrows}</table>` : `<div class="muted small">–</div>`}
+        <p class="muted small">Jumlah holder tidak menghitung kontrak protokol (pool, hook, vault, alamat burn).</p></div></div>`;
+    const draw = async (iv) => {
+      const c = await idx(`/tokens/${addr}/candles?interval=${iv}&limit=120`);
+      const el = $("#chartBox");
+      if (el) el.innerHTML = c ? candleSvg(c.candles) : `<div class="muted small">Grafik tidak tersedia.</div>`;
+    };
+    box.querySelectorAll("[data-iv]").forEach((b) => (b.onclick = () => {
+      box.querySelectorAll("[data-iv]").forEach((x) => x.classList.toggle("active", x === b));
+      draw(b.dataset.iv);
+    }));
+    draw("5m");
   }
 
   function bindTrade(token, symbol, q, qs, qd) {

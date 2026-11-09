@@ -238,6 +238,23 @@ Catatan dan sisa pekerjaan:
   * Dev buy di bawah 0,01% supply tampil "<0.01%" (sebelumnya "0.00%").
   Paket unggah: `bash scripts/package-frontend.sh` → `dist/provenalt-frontend.zip`.
 
+### Indexer (9 Nov 2026)
+
+`indexer/`: layanan Node (sinkronisasi + REST API) dengan Postgres, untuk di-deploy ke Railway (panduan di
+`indexer/README.md`). Mengindeks `Launched`, `Initialize`/`Swap` PoolManager, `Swapped` router app, `FeesSplit`, event
+registry, dan `Transfer` setiap token; tiap rentang blok ditulis dalam satu transaksi database bersama kursornya, dan
+insert idempoten. Frontend memakai API bila `indexerUrl` diisi (daftar yang bisa diurutkan/dicari, grafik candle,
+riwayat trade dengan trader asli, holder) dan kembali membaca chain langsung bila indexer tak terjangkau.
+
+Uji:
+* `indexer/test/e2e.js` di chain lokal (5 peluncuran, HYPE + USDC): 19/19. Saldo tiap holder = `balanceOf`, satu baris
+  per event `Swap`, arah/trader/jumlah = event router, harga terakhir = spot pool, dev buy, idempotensi, semua endpoint.
+* Terhadap testnet nyata: mengejar 2,77 juta blok dalam dua request `eth_getLogs`; data cocok dengan hasil uji USDC.
+* Simulasi build Railway (hanya folder `indexer/`, `npm ci` + `npm start`): berhasil; menemukan bug cache quote di
+  API (simbol USDC "?") yang sudah diperbaiki dan kini diuji.
+
+Belum: deploy ke Railway (butuh akun Railway pemilik proyek). Penanganan reorg hanya lewat `CONFIRMATIONS`.
+
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 
 Butuh persetujuan terpisah:

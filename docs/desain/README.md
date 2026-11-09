@@ -16,7 +16,7 @@ testnet 99801 dan lulus uji asap 33/33 (HYPE) dan 15/15 (USDC) (alamat di `05-ru
 `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`; source terverifikasi di explorer (Sourcify Conduit).
 
 Kode: `contracts/v2/` (protokol Eridanos), `contracts/v2/app/` (Provenalt), `sdk/`, `examples/`, `frontend/`,
-test di `test/v2/`.
+`indexer/` (indexer + API untuk Railway), test di `test/v2/`.
 
 Nama app: **Provenalt** (sejak 8 Nov 2026; sebelumnya Hypelys). Kontrak router yang sudah ter-deploy tetap bernama
 `HypelysRouter` karena source-nya sudah terverifikasi; yang terlihat pengguna (frontend, profil integrator #1) memakai
