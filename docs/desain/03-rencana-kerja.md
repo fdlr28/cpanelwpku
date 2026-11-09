@@ -263,4 +263,5 @@ Butuh persetujuan terpisah:
 * pilihan PoolManager: deployment resmi Uniswap V4 bila sudah ada, atau keputusan lisensi (`02 §5.1`);
 * nyalakan mode allowlist bila diperlukan;
 * tinjau ulang batas alokasi instan (`02 §4.2`);
-* multisig produksi, jeda Timelock 48 jam.
+* ~~multisig produksi~~ — **diputuskan 9 Nov 2026: tanpa Safe multisig**, admin satu dompet pemilik proyek; jeda
+  Timelock 48 jam tetap.

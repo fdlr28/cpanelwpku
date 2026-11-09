@@ -79,6 +79,18 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
   `config.local.js` tidak terunggah (404); daftar token, grafik, trade dan holder tampil tanpa error di browser.
 * Berikutnya: domain `provenalt.xyz` di Vercel (*Settings → Domains*) lalu DNS di registrar.
 
+### 3d. Rencana mainnet (status 9 Nov 2026)
+
+* Keputusan pemilik proyek: **tanpa Safe multisig**. Admin mainnet = satu dompet milik pemilik (seperti testnet:
+  proposer/canceller Timelock, treasury, guardian, owner router). Saran yang tetap berlaku: dompet itu di hardware
+  wallet, kunci tidak disimpan di `.env`/cloud, dan jeda Timelock mainnet 48 jam sesuai desain.
+* Penghalang yang belum selesai: (1) lisensi BUSL-1.1 Uniswap v4-core sampai 2027-06-15, jadi mainnet memakai
+  PoolManager resmi Uniswap di Elysium begitu tersedia (belum ada per 9 Nov 2026) atau butuh *Additional Use Grant*;
+  (2) audit eksternal belum dilakukan.
+* Indexer testnet sengaja **tidak dihapus**: provenalt.xyz bergantung padanya. Saat kontrak mainnet ada, service
+  Railway yang sama diarahkan ke mainnet (database baru, `indexer/deployment.json` mainnet).
+* Kontrak Safe 1.3.0 ada di Elysium mainnet dan testnet (dicek on-chain), bila kelak berubah pikiran.
+
 ### 3c. Pembaruan website (9 Nov 2026)
 
 Permintaan pemilik proyek, sudah dikerjakan dan **live di https://provenalt.xyz** (deploy dari Mac 9 Nov 2026; domain
