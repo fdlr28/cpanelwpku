@@ -11,3 +11,5 @@ tools/onchain/*.json
 deployments/localhost*
 dist/
 frontend/.vercel
+.env*.local
+.vercel
