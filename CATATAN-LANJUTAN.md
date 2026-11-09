@@ -81,7 +81,9 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
 
 ### 3c. Pembaruan website (9 Nov 2026)
 
-Permintaan pemilik proyek, sudah dikerjakan (perlu `npx vercel --prod` dari Mac agar tampil di provenalt.xyz):
+Permintaan pemilik proyek, sudah dikerjakan dan **live di https://provenalt.xyz** (deploy dari Mac 9 Nov 2026; domain
+Namecheap → Vercel, HTTPS + HSTS aktif; `cpanelwpku.vercel.app` dialihkan ke provenalt.xyz). Dicek di browser: UI
+Inggris tanpa kata "Eridanos", upload gambar dari origin provenalt.xyz berhasil, estimasi dev buy tampil, tanpa error:
 * UI dalam **bahasa Inggris**; kata "Eridanos" tidak tampil lagi (sumber peluncuran: "via Provenalt", "via app #N",
   "direct launch"); label **Testnet** di header; link **X https://x.com/provenalt** di header dan footer.
 * **Upload gambar** di form peluncuran: diperkecil ke 512 px di browser lalu diunggah ke indexer (`POST /upload`,
