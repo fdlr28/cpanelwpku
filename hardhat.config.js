@@ -50,6 +50,12 @@ module.exports = {
       chainId: 99801,
       accounts,
     },
+    hyperevmTestnet: {
+      // Elysium's parent chain: token deposits to Elysium start here (scripts/bridge-usdc-to-elysium.js).
+      url: process.env.HYPEREVM_TESTNET_RPC || "https://rpc.hyperliquid-testnet.xyz/evm",
+      chainId: 998,
+      accounts,
+    },
     elysium: {
       // Mainnet chain ID is published at launch (https://elysium.kinetiq.xyz/docs/connecting-to-elysium).
       url: process.env.ELYSIUM_RPC || "",

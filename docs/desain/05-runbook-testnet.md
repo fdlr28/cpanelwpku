@@ -118,4 +118,13 @@ faucet Hyperliquid:
 2. HyperEVM → Elysium: bridge UI `https://testnet.elysium.kinetiq.xyz/bridge`, atau manual: `approve` ke standard gateway
    `0x792487eF5E423104bec94e8c58E814e5E0450cEA`, lalu `outboundTransfer` di router HyperEVM
    `0x1aAE2caD8B0249905492087EF230FcCEa3707C45` dengan HYPE untuk biaya pengiriman (lihat docs Elysium
-   "Bridging HyperEVM tokens to Elysium"). Sampai di Elysium ±1 menit.
+   "Bridging HyperEVM tokens to Elysium"). Sampai di Elysium ±1 menit. Skrip untuk jalur manual (dompet pemegang
+   USDC di HyperEVM):
+
+```bash
+CONFIRM=yes npx hardhat run scripts/bridge-usdc-to-elysium.js --network hyperevmTestnet
+```
+
+   Default 5 USDC (`AMOUNT`), penerima dompet yang sama (`RECIPIENT`); biaya pengiriman 0,00046 HYPE, kelebihannya
+   dikembalikan di Elysium. Disimulasikan tanpa kunci (eth_call dari alamat pemilik): `approve` dan `outboundTransfer`
+   lolos.
