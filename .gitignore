@@ -10,3 +10,4 @@ frontend/config.local.js
 tools/onchain/*.json
 deployments/localhost*
 dist/
+frontend/.vercel
