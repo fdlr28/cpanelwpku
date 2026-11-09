@@ -106,3 +106,16 @@ CONFIRM=yes npx hardhat run scripts/set-app-profile.js --network elysiumTestnet
 
 Default `APP_NAME=Provenalt`; isi `APP_URI` bila domain sudah ada.
 Sudah dijalankan 9 Nov 2026 (tx `0x51a76a45…78f0`): integrator #1 kini "Provenalt".
+URI diisi `https://provenalt.xyz` (tx `0x5564ce8e…e074`).
+
+### USDC testnet untuk uji
+
+USDC Elysium testnet (`0x7D29…47b2`, 6 desimal) adalah representasi bridge kanonik dari USDC HyperEVM testnet
+`0x2B3370eE501B4a559b57D449569354196457D8Ab` (dicek: `calculateL2TokenAddress` di router HyperEVM). Jalur dari saldo
+faucet Hyperliquid:
+
+1. HyperCore → HyperEVM: transfer USDC spot ke EVM di app Hyperliquid testnet.
+2. HyperEVM → Elysium: bridge UI `https://testnet.elysium.kinetiq.xyz/bridge`, atau manual: `approve` ke standard gateway
+   `0x792487eF5E423104bec94e8c58E814e5E0450cEA`, lalu `outboundTransfer` di router HyperEVM
+   `0x1aAE2caD8B0249905492087EF230FcCEa3707C45` dengan HYPE untuk biaya pengiriman (lihat docs Elysium
+   "Bridging HyperEVM tokens to Elysium"). Sampai di Elysium ±1 menit.
