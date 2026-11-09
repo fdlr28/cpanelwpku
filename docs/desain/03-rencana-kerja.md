@@ -34,7 +34,8 @@ Catatan: nama berawalan "Elys…" bisa tertukar dengan Elys Network dan Elysium 
 **8 Nov 2026: app diganti nama menjadi Provenalt** atas permintaan pemilik proyek. Cek nama: npm kosong, pencarian
 web tidak menemukan proyek bernama sama, GitHub 1 repo (`Provenalt/provenalt`, tanpa deskripsi). Kontrak yang sudah
 ter-deploy tetap bernama `HypelysRouter` (source terverifikasi tidak boleh berubah); profil integrator #1 di registry
-diganti lewat `scripts/set-app-profile.js` oleh owner router.
+diganti lewat `scripts/set-app-profile.js` oleh owner router: ✅ 9 Nov 2026, tx
+`0x51a76a45bd7ee3c5574436f00d5ab405ce3c5cec50831340b453035aed8178f0` (blok 26475165), nama "Provenalt", uri kosong.
 
 ## Fase 0 · Persetujuan desain
 

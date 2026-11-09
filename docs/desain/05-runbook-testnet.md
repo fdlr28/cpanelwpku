@@ -105,3 +105,4 @@ CONFIRM=yes npx hardhat run scripts/set-app-profile.js --network elysiumTestnet
 ```
 
 Default `APP_NAME=Provenalt`; isi `APP_URI` bila domain sudah ada.
+Sudah dijalankan 9 Nov 2026 (tx `0x51a76a45…78f0`): integrator #1 kini "Provenalt".
