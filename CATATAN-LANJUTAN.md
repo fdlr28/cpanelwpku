@@ -79,6 +79,19 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
   `config.local.js` tidak terunggah (404); daftar token, grafik, trade dan holder tampil tanpa error di browser.
 * Berikutnya: domain `provenalt.xyz` di Vercel (*Settings → Domains*) lalu DNS di registrar.
 
+### 3c. Pembaruan website (9 Nov 2026)
+
+Permintaan pemilik proyek, sudah dikerjakan (perlu `npx vercel --prod` dari Mac agar tampil di provenalt.xyz):
+* UI dalam **bahasa Inggris**; kata "Eridanos" tidak tampil lagi (sumber peluncuran: "via Provenalt", "via app #N",
+  "direct launch"); label **Testnet** di header; link **X https://x.com/provenalt** di header dan footer.
+* **Upload gambar** di form peluncuran: diperkecil ke 512 px di browser lalu diunggah ke indexer (`POST /upload`,
+  hanya dari origin website, PNG/JPEG/WebP/GIF, maks 1 MB). Masih bisa menempel URL gambar.
+* **Dev buy** cukup pilih None/1%/2,5%/5%/10%; biaya dihitung dari kurva (`SDK.estimateBuyCost`, cocok dengan dev buy
+  nyata) dan batas dana dikirim otomatis (+1%, sisa dikembalikan). Kolom "dana maks" dihapus.
+* Kolom alokasi creator, cliff dan vesting **disembunyikan** (hanya UI; kontrak tetap mendukung, website mengirim 0).
+* Indexer Railway sudah di-deploy ulang dengan endpoint upload (variabel `PUBLIC_URL`, `UPLOAD_ORIGINS`).
+* Uji: E2E browser lokal tanpa indexer dan dengan indexer (termasuk upload) lulus; e2e indexer 25/25; 112 test kontrak.
+
 ### 3b-alt. Website di cPanel (alternatif)
 
 1. `bash scripts/package-frontend.sh` (sudah memakai indexer Railway lewat `frontend/config.js`).

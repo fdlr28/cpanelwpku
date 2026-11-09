@@ -1,25 +1,29 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Provenalt</title>
+  <meta name="description" content="Provenalt: fair token launches on Elysium. Fixed supply, no minting, 1% fee forever." />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
-    <a href="#/" class="brand">Provenalt <span class="muted small">di atas Eridanos</span></a>
+    <a href="#/" class="brand">Provenalt <span class="badge" title="Elysium testnet: tokens and funds here have no real value">Testnet</span></a>
     <nav>
-      <a href="#/">Token</a>
-      <a href="#/create" class="btn btn-primary">+ Luncurkan</a>
-      <button id="connectBtn" class="btn">Hubungkan dompet</button>
+      <a href="#/">Tokens</a>
+      <a href="https://x.com/provenalt" class="xlink" target="_blank" rel="noopener" aria-label="Provenalt on X" title="Provenalt on X">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+      </a>
+      <a href="#/create" class="btn btn-primary">+ Launch</a>
+      <button id="connectBtn" class="btn">Connect wallet</button>
     </nav>
   </header>
   <div id="banner" class="banner hidden"></div>
   <main id="app"></main>
   <footer class="footer">
-    Peluncuran lewat protokol Eridanos (Uniswap v4). Fee 1% selamanya; 10 detik pertama ada fee anti-sniper 90%→1%.
-    <span id="netInfo"></span>
+    Fixed supply, no minting, 1% trading fee forever. A 90%→1% anti-sniper fee applies during the first 10 seconds.<br />
+    <span id="netInfo"></span> · <a href="https://x.com/provenalt" target="_blank" rel="noopener">X @provenalt</a>
   </footer>
   <script src="vendor/ethers.umd.min.js"></script>
   <script src="eridanos-sdk.js"></script>

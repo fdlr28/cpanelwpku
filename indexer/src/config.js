@@ -41,6 +41,13 @@ function load() {
     minStep: int("MIN_STEP", 1_000),
     rpcConcurrency: int("RPC_CONCURRENCY", 3),
     rpcMinIntervalMs: int("RPC_MIN_INTERVAL_MS", 120),
+    // Token images uploaded from the website (POST /upload), stored in Postgres and served at /images/<sha256>.
+    publicUrl: (process.env.PUBLIC_URL || "").replace(/\/+$/, ""),
+    uploadsEnabled: process.env.UPLOADS !== "false",
+    uploadOrigins: (process.env.UPLOAD_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean),
+    maxUploadBytes: int("MAX_UPLOAD_BYTES", 1_000_000),
+    uploadsPerHour: int("UPLOADS_PER_HOUR", 30),
+    maxImageStorageBytes: int("MAX_IMAGE_STORAGE_BYTES", 1_000_000_000),
     syncEnabled: process.env.SYNC !== "false",
     apiEnabled: process.env.API !== "false",
   };

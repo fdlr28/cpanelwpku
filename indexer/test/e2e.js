@@ -157,6 +157,29 @@ async function main() {
   const bad2 = await get("/tokens?sort=nope");
   check("unknown token → 404, bad parameter → 400", bad.status === 404 && bad2.status === 400);
 
+  // ---------------------------------------------------------------- image uploads
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  const post = (body, type) => fetch(base + "/upload", { method: "POST", headers: { "content-type": type }, body });
+  const up = await post(png, "image/png");
+  const upBody = await up.json();
+  check("POST /upload stores a PNG and returns its URL", up.status === 201 && /\/images\/[0-9a-f]{64}\.png$/.test(upBody.url), upBody.url);
+  const imgPath = new URL(upBody.url).pathname;
+  const got = await fetch(base + imgPath);
+  const gotBytes = Buffer.from(await got.arrayBuffer());
+  check("GET /images/:hash serves the same bytes with safe headers", got.status === 200 && gotBytes.equals(png)
+    && got.headers.get("content-type") === "image/png" && got.headers.get("x-content-type-options") === "nosniff"
+    && /sandbox/.test(got.headers.get("content-security-policy") || ""));
+  const dup = await (await post(png, "image/png")).json();
+  check("same image uploaded twice → same URL", dup.url === upBody.url);
+  const svg = await post('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>', "image/svg+xml");
+  const fake = await post(Buffer.from("not an image at all"), "image/png");
+  check("SVG and non-images are refused (415)", svg.status === 415 && fake.status === 415);
+  const big = Buffer.concat([png.subarray(0, 8), Buffer.alloc(cfg.maxUploadBytes + 10)]);
+  const tooBig = await post(big, "image/png");
+  check("oversized upload refused (413)", tooBig.status === 413);
+  const missing = await fetch(base + "/images/" + "0".repeat(64) + ".png");
+  check("unknown image → 404", missing.status === 404);
+
   server.close();
   await pool.end();
   const failed = results.filter((x) => !x).length;

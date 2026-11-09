@@ -131,6 +131,14 @@ create table if not exists fees (
   primary key (tx, log_index)
 );
 create index if not exists fees_pool_idx on fees (pool_id);
+
+create table if not exists images (
+  sha256 text primary key,
+  mime text not null,
+  size integer not null,
+  bytes bytea not null,
+  created_at timestamptz not null default now()
+);
 `;
 
 function makePool(cfg) {

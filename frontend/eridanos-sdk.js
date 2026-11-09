@@ -8,6 +8,7 @@
  *   listLaunches(provider, core, ...) → decoded `Launched` events
  *   scheduleFee / surchargeExactIn    → anti-sniper fee math (pips)
  *   describeSupply(record)            → human-readable disclosure of creator allocation + dev buy
+ *   estimateBuyCost(preset, pool, n)  → quote needed to buy n tokens from a fresh pool (dev buy sizing)
  */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory(require("ethers"));
@@ -17,6 +18,7 @@
   const { ethers } = ethersLib.ethers ? ethersLib : { ethers: ethersLib };
 
   const SUPPLY = 10n ** 27n;
+  const BPS = 10_000n;
   const PIPS = 1_000_000n;
   const BASE_FEE = 10_000n; // 1%
   const START_FEE = 900_000n; // 90%
@@ -180,21 +182,60 @@
   }
 
   function describeSupply(r) {
-    const pct = (bps) => (Number(bps) / 100).toFixed(2) + "%";
-    const days = (s) => (Number(s) / 86400).toFixed(Number(s) % 86400 ? 2 : 0) + " hari";
+    const pct = (bps) => `${+(Number(bps) / 100).toFixed(2)}%`;
+    const days = (s) => {
+      const d = Number(s) / 86400;
+      return `${d.toFixed(Number(s) % 86400 ? 2 : 0)} day${d === 1 ? "" : "s"}`;
+    };
     const lines = [];
-    if (Number(r.allocBps) === 0) lines.push("Alokasi creator: 0%");
-    else if (r.instantAllocation) lines.push(`Alokasi creator: ${pct(r.allocBps)} — INSTAN (cair saat peluncuran)`);
-    else lines.push(`Alokasi creator: ${pct(r.allocBps)} — cliff ${days(r.cliff)}, vesting ${days(r.duration)}`);
+    if (Number(r.allocBps) === 0) lines.push("Creator allocation: 0%");
+    else if (r.instantAllocation) lines.push(`Creator allocation: ${pct(r.allocBps)} — UNLOCKED at launch`);
+    else lines.push(`Creator allocation: ${pct(r.allocBps)} — ${days(r.cliff)} cliff, ${days(r.duration)} vesting`);
     const dev = BigInt(r.devBuyTokens);
-    if (dev === 0n) lines.push("Dev buy: tidak ada");
-    else lines.push(`Dev buy: ${supplyPct(dev)} supply${Number(r.devBuyLock) ? `, dikunci ${days(r.devBuyLock)}` : ""}`);
-    lines.push(`Fee dasar 1%: protokol ${pct(r.protocolBps)} · integrator ${pct(r.integratorBps)} · creator ${pct(r.creatorBps)}`);
+    if (dev === 0n) lines.push("Dev buy: none");
+    else lines.push(`Dev buy: ${supplyPct(dev)} of supply${Number(r.devBuyLock) ? `, locked for ${days(r.devBuyLock)}` : ""}`);
+    lines.push(`1% trading fee split: protocol ${pct(r.protocolBps)} · app ${pct(r.integratorBps)} · creator ${pct(r.creatorBps)}`);
     return lines;
+  }
+
+  /**
+   * Quote (raw units, rounded up) needed to buy exactly `tokens` (raw) from a freshly launched pool, LP fee
+   * included. Replays the preset's single-sided bands (CurveMath/CurveHook seeding) in canonical tick space,
+   * where the token is priced in quote and every band starts out holding only the token.
+   *   preset: { startTick, bands: [{ offsetLower, offsetUpper, bps }] }  (ProtocolConfig.preset)
+   *   poolTokens: tokens placed in the pool (supply minus creator allocations)
+   * Float math: accurate to ~1e-12 relative, so add a small buffer when using it as a maximum.
+   */
+  function estimateBuyCost(preset, poolTokens, tokens, feePips = BASE_FEE) {
+    let rem = Number(BigInt(tokens));
+    if (rem <= 0) return 0n;
+    const pool = BigInt(poolTokens);
+    const bands = preset.bands;
+    const start = Number(preset.startTick);
+    const sqrtAt = (tick) => Math.pow(1.0001, tick / 2);
+    let assigned = 0n;
+    let cost = 0;
+    for (let i = 0; i < bands.length && rem > 0; i++) {
+      const b = bands[i];
+      const amountBig = i === bands.length - 1 ? pool - assigned : (pool * BigInt(b.bps)) / BPS;
+      assigned += amountBig;
+      const amount = Number(amountBig);
+      const sa = sqrtAt(start + Number(b.offsetLower));
+      const sb = sqrtAt(start + Number(b.offsetUpper));
+      const L = (amount * sa * sb) / (sb - sa); // amount0 = L (sb − sa) / (sa sb)
+      const take = Math.min(rem, amount);
+      const s1 = 1 / (1 / sa - take / L); // price after removing `take` tokens from the band
+      cost += L * (s1 - sa); // amount1 = L (s1 − sa)
+      rem -= take;
+    }
+    if (rem > 0) throw new Error("buy exceeds the curve");
+    const withFee = cost / (1 - Number(feePips) / Number(PIPS));
+    return BigInt(Math.ceil(withFee));
   }
 
   return {
     SUPPLY, PIPS, BASE_FEE, START_FEE, DECAY_SECONDS, ABI, INTENT_TYPES, LAUNCH_PARAMS, LAUNCH_RECORD,
     normalizeParams, hashLaunchParams, signLaunchIntent, listLaunches, scheduleFee, surchargeExactIn, describeSupply, supplyPct,
+    estimateBuyCost,
   };
 });

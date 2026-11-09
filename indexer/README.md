@@ -71,6 +71,10 @@ idempoten), tetapi saling berebut kursor.
 | `RPC_CONCURRENCY` / `RPC_MIN_INTERVAL_MS` | `3` / `120` | pembatas request ke RPC |
 | `DATABASE_SSL` | kosong | `true` untuk Postgres publik dengan TLS terverifikasi; `no-verify` hanya untuk sertifikat self-signed |
 | `SYNC` / `API` | `true` | `false` untuk mematikan salah satunya |
+| `PUBLIC_URL` | dari header `Host` | URL publik indexer, untuk URL gambar (Railway: `https://<nama>.up.railway.app`) |
+| `UPLOAD_ORIGINS` | kosong (semua) | daftar origin website yang boleh upload, dipisah koma |
+| `UPLOADS` | `true` | `false` mematikan upload |
+| `MAX_UPLOAD_BYTES` / `UPLOADS_PER_HOUR` / `MAX_IMAGE_STORAGE_BYTES` | `1000000` / `30` / `1000000000` | batas upload |
 
 Database dikunci ke satu chain dan satu `LaunchCore` (tabel `meta`). Untuk deployment kontrak baru, pakai database baru.
 
@@ -89,6 +93,13 @@ Harga = quote per token; market cap = harga × 1.000.000.000.
 | `/tokens/:address/holders?limit=` | jumlah holder + holder terbesar (kontrak protokol diberi label dan tidak dihitung) |
 | `/integrators` | integrator terdaftar |
 | `/stats` | total token, trade, trader, volume 24 jam per quote |
+| `POST /upload` | gambar token (body mentah PNG/JPEG/WebP/GIF, maks 1 MB) → `{ url, sha256, mime, size }`. Dipakai form peluncuran website |
+| `/images/:sha256[.ext]` | gambar yang diunggah (cache permanen, `nosniff`, CSP `sandbox`) |
+
+Upload: format dikenali dari isi file (bukan header), SVG ditolak (bisa berisi script), maks `UPLOADS_PER_HOUR` per IP,
+total penyimpanan dibatasi `MAX_IMAGE_STORAGE_BYTES`, dan bila `UPLOAD_ORIGINS` diisi hanya website itu yang boleh
+mengunggah. Gambar disimpan di Postgres (tabel `images`) dan alamatnya berbasis hash isi. Konten unggahan pengguna
+tidak dimoderasi otomatis.
 
 Urutan `mcap`/`volume` membandingkan angka mentah, jadi hanya bermakna dalam satu quote (pakai `quote=`).
 

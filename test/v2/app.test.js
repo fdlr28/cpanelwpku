@@ -138,7 +138,7 @@ describe("v2 phase 5 · Provenalt app layer", function () {
       expect(last.integratorId).to.equal(1);
       expect(Number(last.record.attribution)).to.equal(2);
       const lines = sdk.describeSupply(last.record);
-      expect(lines[0]).to.equal("Alokasi creator: 20.00% — INSTAN (cair saat peluncuran)");
+      expect(lines[0]).to.equal("Creator allocation: 20% — UNLOCKED at launch");
     });
 
     it("computes the same surcharge as the hook", async function () {
