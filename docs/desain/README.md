@@ -12,7 +12,7 @@ dengan launchpad kita sebagai integrator pertama. Mesin pool mengikuti model Asc
 | [05-runbook-testnet.md](05-runbook-testnet.md) | Langkah deploy testnet (fase 6) untuk pemilik proyek |
 
 Status (5 Nov 2026): desain revisi 2 disetujui; **fase 1–6 selesai**. Eridanos v2 + Provenalt ter-deploy di Elysium
-testnet 99801 dan lulus uji asap 33/33 (alamat di `05-runbook-testnet.md`). Admin testnet dipindah ke dompet pemilik proyek
+testnet 99801 dan lulus uji asap 33/33 (HYPE) dan 15/15 (USDC) (alamat di `05-runbook-testnet.md`). Admin testnet dipindah ke dompet pemilik proyek
 `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`; source terverifikasi di explorer (Sourcify Conduit).
 
 Kode: `contracts/v2/` (protokol Eridanos), `contracts/v2/app/` (Provenalt), `sdk/`, `examples/`, `frontend/`,

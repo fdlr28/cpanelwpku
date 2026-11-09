@@ -223,9 +223,12 @@ Catatan dan sisa pekerjaan:
   `scripts/verify-sourcify.js` memverifikasi 14/14: 9 kontrak protokol + HookDeployer `exact_match`, PoolManager
   `match` (v4-core dikompilasi dengan `bytecodeHash: none`, jadi tidak ada hash metadata untuk *exact match*), dan 4
   token uji. Hasil di `deployments/elysiumTestnet-v2.json` (`verification`). Token baru: jalankan ulang skrip.
-* USDC: `scripts/smoke-usdc-v2.js` (launch + dev buy, beli di dalam/luar jendela, jual, collect, tiga klaim; ±2,1 USDC)
-  lulus 15/15 di node lokal dengan `MockUSDC` 6 desimal. Di testnet dijalankan pemilik proyek dengan dompetnya
-  (yang memegang USDC); hasil tertulis di `deployments/elysiumTestnet-v2-smoke-usdc.json`.
+* ✅ USDC (9 Nov 2026): `scripts/smoke-usdc-v2.js` **15/15 lulus di testnet**, dijalankan pemilik proyek dengan
+  dompetnya. Launch #5 (`0xB01F…2f09`) dengan dev buy 0,01% (0,799 USDC, sisa dikembalikan); beli di jendela (t+2 dtk)
+  kena surcharge USDC sesuai rumus SDK; beli setelah jendela tanpa surcharge; jual; `collect` (surcharge USDC ke
+  protokol, tidak dibakar); klaim creator/integrator/protokol dicek on-chain. USDC didapat lewat bridge kanonik
+  HyperEVM → Elysium dengan `scripts/bridge-usdc-to-elysium.js` (5 USDC, tiba ±1 menit). Hasil:
+  `deployments/elysiumTestnet-v2-smoke-usdc.json`. Token #5 terverifikasi di Sourcify (total 15/15).
 * Frontend: `frontend/config.js` berisi alamat testnet dan explorer Conduit. Diuji di Chromium terhadap testnet: daftar
   token dan halaman token tampil tanpa error. Perbaikan yang ditemukan saat uji:
   * RPC publik membatasi request beruntun (error -32017). `app.js` kini memakai provider dengan antrean (tanpa batch

@@ -63,7 +63,7 @@
   },
   "verification": {
     "server": "https://contracts.conduit.xyz",
-    "checkedAt": "2026-11-05T08:07:34.024Z",
+    "checkedAt": "2026-11-09T04:01:26.605Z",
     "contracts": {
       "0xD02875d7Ea89e7e1f61512066828196c09FBD58d": {
         "label": "PoolManager",
@@ -119,6 +119,10 @@
       },
       "0x13aCae05DF01026AbEf8A48425D41F6955f05C90": {
         "label": "EridanosToken #4",
+        "match": "exact_match"
+      },
+      "0xB01FaeaBb8cfa9e6E9f15E52FAaeDCeF45F12f09": {
+        "label": "EridanosToken #5",
         "match": "exact_match"
       }
     }

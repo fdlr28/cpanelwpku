@@ -1,0 +1,51 @@
+{
+  "network": "elysiumTestnet",
+  "chainId": 99801,
+  "ranAt": "2026-11-09",
+  "ranBy": "project owner (own wallet, own key)",
+  "wallet": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+  "script": "scripts/smoke-usdc-v2.js",
+  "result": "15/15 checks passed",
+  "launch": {
+    "launchId": 5,
+    "token": "0xB01FaeaBb8cfa9e6E9f15E52FAaeDCeF45F12f09",
+    "tx": "0xb9490675f0018ef10d2fe7d41d9e744b0748d2d2b62b20dc8c4487031cf16aaf",
+    "block": 26504327,
+    "integratorId": 1,
+    "quote": "USDC 0x7D29d8047B905000459c0E80c34a26CeedcB47b2",
+    "allocBps": 200,
+    "devBuyTokens": "100000",
+    "devBuyQuoteSpentUSDC": "0.799433",
+    "maxDevBuyQuoteUSDC": "1.0"
+  },
+  "reported": {
+    "buyInWindow": "t+2s, surcharge 0.359595 USDC (matches SDK formula)",
+    "buyAfterWindow": "no surcharge; 62522.17 vs 17559.26 tokens in-window for 0.5 USDC",
+    "sell": "0.245038 USDC",
+    "collect": "0.014399 USDC + 312.61 tokens LP fees; USDC surcharge 0.359595 to protocol (not burned)",
+    "netUSDC": "-1.180401",
+    "hypeForGas": "0.000452825171273098"
+  },
+  "claimsVerifiedOnChain": {
+    "creatorUSDC": {
+      "amount": "0.007201",
+      "tx": "0x6a18cb282b89a044416436aec3b89cdd14bc0a80f68163f5d6c87399084c544a"
+    },
+    "integratorUSDC": {
+      "amount": "0.004319",
+      "tx": "0xee90e0856999473aba3256249410ce6dc239d99d5b27e3fbe22eb4decc0f0819"
+    },
+    "protocolUSDC": {
+      "amount": "0.362474",
+      "tx": "0xe782956f56458bb26bb8f50c624124a4eddfaf8af584564bc9c724fc3d05c5bb"
+    }
+  },
+  "bridgeBeforeTest": {
+    "script": "scripts/bridge-usdc-to-elysium.js",
+    "amountUSDC": "5",
+    "approveTx": "0x77fa5e4f9e31e798df4e459a4f36a8f39bd2b0cdf1cc60b806318dae16ac3c31",
+    "depositTx": "0x04d206c62b33cacc722da08d41b0cecf351b0463e99e1233bacf8ef346bc8457",
+    "hyperevmBlock": 69126595,
+    "arrived": "\u22481 minute"
+  }
+}

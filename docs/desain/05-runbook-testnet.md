@@ -87,7 +87,7 @@ Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan P
 (`scripts/handover-admin.js`): proposer/canceller Timelock, treasury, guardian, payout Provenalt, dan owner
 `HypelysRouter` (diterima lewat `scripts/accept-router-ownership.js`). Serah terima selesai 5 Nov 2026. Deployer sementara `0x0bC67Dea…F322` tidak
 memegang peran lagi. Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
-`deployments/elysiumTestnet-v2-smoke.json` (33/33). Source terverifikasi di Sourcify Conduit (14/14).
+`deployments/elysiumTestnet-v2-smoke.json` (33/33). Source terverifikasi di Sourcify Conduit (15/15). Uji USDC 15/15 (`deployments/elysiumTestnet-v2-smoke-usdc.json`).
 
 ### Mengelola protokol dari dompet admin
 
