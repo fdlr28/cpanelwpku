@@ -253,7 +253,8 @@ Uji:
 * Simulasi build Railway (hanya folder `indexer/`, `npm ci` + `npm start`): berhasil; menemukan bug cache quote di
   API (simbol USDC "?") yang sudah diperbaiki dan kini diuji.
 
-Belum: deploy ke Railway (butuh akun Railway pemilik proyek). Penanganan reorg hanya lewat `CONFIRMATIONS`.
+✅ Live di Railway (9 Nov 2026): `https://provenalt-indexer-production.up.railway.app` (project `provenalt-indexer`, Postgres Railway). Sinkronisasi
+awal ±7 detik; website memakai API ini. Penanganan reorg hanya lewat `CONFIRMATIONS`.
 
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 

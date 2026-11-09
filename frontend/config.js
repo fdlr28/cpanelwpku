@@ -16,7 +16,7 @@ window.PROVENALT_CONFIG = window.PROVENALT_CONFIG || {
   vault: "0xf8C1554E691F45877731fD72a25df658465512b3",
   usdc: "0x7D29d8047B905000459c0E80c34a26CeedcB47b2",
   // Indexer API (indexer/, e.g. on Railway). Empty: the site reads the chain directly (no charts/trade history).
-  indexerUrl: "",
+  indexerUrl: "https://provenalt-indexer-production.up.railway.app",
   deployBlock: 23833762,
   quoteSymbols: { "0x0000000000000000000000000000000000000000": "HYPE", "0x7D29d8047B905000459c0E80c34a26CeedcB47b2": "USDC" },
   quoteDecimals: { "0x0000000000000000000000000000000000000000": 18, "0x7D29d8047B905000459c0E80c34a26CeedcB47b2": 6 },

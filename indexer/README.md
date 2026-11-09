@@ -7,6 +7,8 @@ dan dicari, grafik harga (candle), riwayat trade dengan alamat trader, holder, v
 Kontrak tidak perlu diubah: indexer hanya membaca event yang sudah ada. Satu proses Node menjalankan sinkronisasi
 dan API sekaligus. Dependensi: `ethers` dan `pg`; tanpa langkah build.
 
+Deployment aktif (testnet): **https://provenalt-indexer-production.up.railway.app** — project Railway `provenalt-indexer`.
+
 ## Yang diindeks
 
 | Sumber | Event | Dipakai untuk |

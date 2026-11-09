@@ -128,3 +128,7 @@ CONFIRM=yes npx hardhat run scripts/bridge-usdc-to-elysium.js --network hyperevm
    Default 5 USDC (`AMOUNT`), penerima dompet yang sama (`RECIPIENT`); biaya pengiriman 0,00046 HYPE, kelebihannya
    dikembalikan di Elysium. Disimulasikan tanpa kunci (eth_call dari alamat pemilik): `approve` dan `outboundTransfer`
    lolos.
+
+### Indexer
+
+Live di Railway: `https://provenalt-indexer-production.up.railway.app` (panduan dan cara update: `indexer/README.md`, `CATATAN-LANJUTAN.md`).

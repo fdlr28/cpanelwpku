@@ -14,7 +14,7 @@ npm install
 claude
 ```
 
-Lalu tulis ke Claude, misalnya: *"Baca CATATAN-LANJUTAN.md, lalu lanjutkan deploy indexer ke Railway."*
+Lalu tulis ke Claude, misalnya: *"Baca CATATAN-LANJUTAN.md, lalu lanjutkan unggah website."*
 `CLAUDE.md` dibaca otomatis dan berisi konteks proyek serta batasannya (testnet saja, jangan sentuh private key).
 
 ## 2. Yang sudah selesai
@@ -44,45 +44,28 @@ Lalu tulis ke Claude, misalnya: *"Baca CATATAN-LANJUTAN.md, lalu lanjutkan deplo
 * **Nama app Provenalt** di registry (integrator #1, situs `https://provenalt.xyz`).
 * **Frontend** `frontend/` siap unggah (`bash scripts/package-frontend.sh` → `dist/provenalt-frontend.zip`, isi folder
   `provenalt/`). Teruji terhadap testnet.
-* **Indexer** `indexer/` selesai dan teruji (e2e 19/19 di chain lokal, berjalan terhadap testnet nyata, simulasi build
-  Railway berhasil). Panduan: `indexer/README.md`.
+* **Indexer** `indexer/` selesai, teruji (e2e 19/19), dan **live di Railway**: `https://provenalt-indexer-production.up.railway.app`.
 
 ## 3. Pekerjaan berikutnya
 
-### 3a. Deploy indexer ke Railway (tertunda)
+### 3a. Indexer di Railway ✅ (9 Nov 2026)
 
-Percobaan dari sesi cloud (9 Nov 2026) gagal di langkah pertama: **"Your trial has expired. Please select a plan to
-continue using Railway."** Pemilik proyek perlu memilih plan dulu (mis. Hobby) di Railway, workspace
-"provenalt's Projects" (akun `aurinlynadya@gmail.com`). Belum ada yang dibuat di Railway oleh sesi itu.
+Live: **`https://provenalt-indexer-production.up.railway.app`** (`/health`, `/tokens`, …; lihat `indexer/README.md`).
 
-Project lama di workspace yang sama, **jangan diubah tanpa izin**: `passionate-truth` (service `provenalt` dari repo
-`Provenalt/provenalt`, deploy terakhir FAILED) dan `gracious-harmony` (Postgres yang belum pernah jalan).
-
-Setelah plan aktif, dari Mac (Railway CLI: `npm i -g @railway/cli` atau `brew install railway`):
-
-```bash
-railway login
-cd ~/Downloads/cpanelwpku/indexer
-railway init --name provenalt-indexer --workspace "provenalt's Projects"
-railway add --database postgres
-railway add --service provenalt-indexer --variables 'DATABASE_URL=${{Postgres.DATABASE_URL}}'
-railway up --service provenalt-indexer --detach
-railway domain --service provenalt-indexer
-```
-
-`railway up` mengunggah isi folder `indexer/` (tanpa `node_modules`, lihat `.railwayignore`), jadi tidak perlu
-menghubungkan GitHub. Untuk update berikutnya cukup `railway up --service provenalt-indexer --detach` lagi.
-Opsional di dashboard service: *Healthcheck Path* `/health`. Satu replika saja.
-
-Cek: `https://<domain>.up.railway.app/health` → `"ok": true`, `indexedBlock` mendekati `headBlock`;
-`/tokens` berisi 5 token (launch #1–#5).
-
-Catatan: sesi cloud lama menyimpan token Railway di environment cloud `cpanelwpku`. Bila melanjutkan di sesi cloud
-itu, deploy bisa langsung dijalankan dari sana setelah plan aktif.
+* Railway workspace "provenalt's Projects" (akun `aurinlynadya@gmail.com`), project **`provenalt-indexer`**
+  (id `67e60f97-1386-474c-a4c7-a9f9d677fc5f`), environment `production`, service `provenalt-indexer` + `Postgres`.
+  Variabel: `DATABASE_URL=${{Postgres.DATABASE_URL}}` (RPC default: publik testnet). Healthcheck `/health`, 1 replika,
+  restart on failure.
+* Kode diunggah dari folder `indexer/` dengan `railway up` (tidak terhubung ke GitHub). **Untuk update:** dari folder
+  `indexer/`, `railway link` (pilih project `provenalt-indexer`) sekali, lalu `railway up --service provenalt-indexer --detach`.
+* Diverifikasi: sinkronisasi 5 peluncuran ±7 detik setelah start, mengikuti chain dengan jeda 20 blok; API publik
+  (HTTPS, CORS `*`) sama dengan hasil uji lokal; website memakai API ini (`frontend/config.js` `indexerUrl`).
+* Project lama di workspace yang sama, **jangan diubah tanpa izin**: `passionate-truth` (service `provenalt` dari repo
+  `Provenalt/provenalt`, deploy terakhir FAILED) dan `gracious-harmony` (Postgres yang belum pernah jalan).
 
 ### 3b. Website
 
-1. Setelah indexer jalan: `INDEXER_URL=https://<domain>.up.railway.app bash scripts/package-frontend.sh`.
+1. `bash scripts/package-frontend.sh` (sudah memakai indexer Railway lewat `frontend/config.js`).
 2. Unggah `dist/provenalt-frontend.zip` ke `provenalt.xyz`: cPanel (Domains → Create A New Domain dengan document
    root sendiri, ekstrak zip di home lalu arahkan document root ke folder `provenalt`; jangan di root `public_html`
    yang berisi WordPress), atau hosting statis (Cloudflare Pages / Netlify). Pastikan HTTPS aktif (AutoSSL).
