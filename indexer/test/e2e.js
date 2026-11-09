@@ -157,6 +157,19 @@ async function main() {
   const bad2 = await get("/tokens?sort=nope");
   check("unknown token → 404, bad parameter → 400", bad.status === 404 && bad2.status === 400);
 
+  // ---------------------------------------------------------------- hidden tokens
+  const hideMe = tokens[0].address;
+  const hiddenApi = createApi({ ...cfg, hiddenTokens: [hideMe] }, pool, indexer);
+  await new Promise((r) => hiddenApi.listen(0, "127.0.0.1", r));
+  const hb = `http://127.0.0.1:${hiddenApi.address().port}`;
+  const hl = await (await fetch(hb + "/tokens?limit=100")).json();
+  const hs = await (await fetch(hb + "/stats")).json();
+  const hdet = await fetch(hb + `/tokens/${hideMe}`);
+  check("hidden tokens: left out of /tokens and /stats, detail still served",
+    hl.tokens.length === launchCount - 1 && !hl.tokens.some((x) => x.address === hideMe) && hs.tokens === launchCount - 1 && hdet.status === 200,
+    `${hl.tokens.length} listed, stats ${hs.tokens}`);
+  hiddenApi.close();
+
   // ---------------------------------------------------------------- image uploads
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
   const post = (body, type) => fetch(base + "/upload", { method: "POST", headers: { "content-type": type }, body });

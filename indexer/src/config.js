@@ -28,6 +28,9 @@ function load() {
       registry: lc(d.registry), distributor: lc(d.distributor), vault: lc(d.vault), usdc: lc(d.usdc),
     },
     startBlock: int("START_BLOCK", Number(d.deployBlock || 0)),
+    // Launches left out of listings and stats (e.g. test launches); their detail endpoints still work.
+    hiddenTokens: (process.env.HIDDEN_TOKENS !== undefined ? process.env.HIDDEN_TOKENS.split(",") : d.hiddenTokens || [])
+      .map((a) => String(a).trim().toLowerCase()).filter((a) => /^0x[0-9a-f]{40}$/.test(a)),
     rpcUrl: process.env.RPC_URL || d.rpcUrl || "",
     databaseUrl,
     // Railway's private network (postgres.railway.internal) needs no TLS. For a public endpoint set

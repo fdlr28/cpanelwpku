@@ -92,6 +92,9 @@ Inggris tanpa kata "Eridanos", upload gambar dari origin provenalt.xyz berhasil,
   nyata) dan batas dana dikirim otomatis (+1%, sisa dikembalikan). Kolom "dana maks" dihapus.
 * Kolom alokasi creator, cliff dan vesting **disembunyikan** (hanya UI; kontrak tetap mendukung, website mengirim 0).
 * Indexer Railway sudah di-deploy ulang dengan endpoint upload (variabel `PUBLIC_URL`, `UPLOAD_ORIGINS`).
+* **Token uji asap disembunyikan** dari daftar dan statistik (5 alamat di `indexer/deployment.json` `hiddenTokens`,
+  bisa ditimpa variabel `HIDDEN_TOKENS`; cadangan yang sama di `frontend/config.js` `hiddenTokens`). Halaman detailnya
+  tetap bisa dibuka lewat link langsung. Live di indexer Railway; daftar di provenalt.xyz kini kosong.
 * Uji: E2E browser lokal tanpa indexer dan dengan indexer (termasuk upload) lulus; e2e indexer 25/25; 112 test kontrak.
 
 ### 3b-alt. Website di cPanel (alternatif)

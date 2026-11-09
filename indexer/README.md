@@ -71,6 +71,7 @@ idempoten), tetapi saling berebut kursor.
 | `RPC_CONCURRENCY` / `RPC_MIN_INTERVAL_MS` | `3` / `120` | pembatas request ke RPC |
 | `DATABASE_SSL` | kosong | `true` untuk Postgres publik dengan TLS terverifikasi; `no-verify` hanya untuk sertifikat self-signed |
 | `SYNC` / `API` | `true` | `false` untuk mematikan salah satunya |
+| `HIDDEN_TOKENS` | `hiddenTokens` di `deployment.json` | alamat token (dipisah koma) yang tidak tampil di `/tokens`, `/stats` dan hitungan `/integrators`; `/tokens/:address` tetap melayani |
 | `PUBLIC_URL` | dari header `Host` | URL publik indexer, untuk URL gambar (Railway: `https://<nama>.up.railway.app`) |
 | `UPLOAD_ORIGINS` | kosong (semua) | daftar origin website yang boleh upload, dipisah koma |
 | `UPLOADS` | `true` | `false` mematikan upload |

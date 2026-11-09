@@ -101,10 +101,13 @@ function createApi(cfg, pool, indexer) {
     };
   }
 
+  const hidden = cfg.hiddenTokens || [];
+
   async function listTokens(qs) {
     const where = [];
     const params = [protocolHolders];
     const add = (sql, v) => { params.push(v); where.push(sql.replace("?", `$${params.length}`)); };
+    if (hidden.length) add("t.address <> all(?::text[])", hidden);
     if (qs.get("quote")) {
       const q = qs.get("quote").toLowerCase();
       if (q === "hype") add("t.quote = ?", ethers.ZeroAddress);
@@ -227,18 +230,20 @@ function createApi(cfg, pool, indexer) {
 
   async function integrators() {
     const { rows } = await pool.query(
-      `select i.*, (select count(*) from tokens t where t.integrator_id = i.id) as launches from integrators i order by i.id`);
+      `select i.*, (select count(*) from tokens t where t.integrator_id = i.id and t.address <> all($1::text[])) as launches
+       from integrators i order by i.id`, [hidden]);
     return { integrators: rows.map((r) => ({ id: r.id, name: r.name, uri: r.uri, account: r.account, payout: r.payout,
       verified: r.verified, suspended: r.suspended, launches: Number(r.launches) })) };
   }
 
   async function stats() {
     const { rows: [t] } = await pool.query(
-      `select (select count(*) from tokens) as tokens, (select count(*) from swaps) as trades,
-              (select count(distinct coalesce(trader, sender)) from swaps) as traders`);
+      `select (select count(*) from tokens where address <> all($1::text[])) as tokens,
+              (select count(*) from swaps where token <> all($1::text[])) as trades,
+              (select count(distinct coalesce(trader, sender)) from swaps where token <> all($1::text[])) as traders`, [hidden]);
     const { rows: v } = await pool.query(
       `select t.quote, sum(s.quote_amount) as volume, count(*) as trades from swaps s join tokens t on t.address = s.token
-       where s.ts > now() - interval '24 hours' group by t.quote`);
+       where s.ts > now() - interval '24 hours' and s.token <> all($1::text[]) group by t.quote`, [hidden]);
     const Q = await quotes(v.map((r) => r.quote));
     return {
       tokens: Number(t.tokens), trades: Number(t.trades), traders: Number(t.traders),

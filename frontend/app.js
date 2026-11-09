@@ -115,6 +115,8 @@
     } catch { return null; } finally { clearTimeout(timer); }
   }
   const cs = (a) => { try { return ethers.getAddress(a); } catch { return a; } };
+  const HIDDEN = new Set((CFG.hiddenTokens || []).map((a) => String(a).toLowerCase()));
+  const isHidden = (a) => HIDDEN.has(String(a).toLowerCase());
   const fnum = (x, dp = 4) => {
     const n = Number(x);
     if (!Number.isFinite(n)) return "–";
@@ -236,9 +238,10 @@
     if (ourId === null) { try { ourId = Number(await router.integratorId()); } catch { ourId = -1; } }
     if (IDX) {
       const data = await idx(`/tokens?limit=60&sort=${listSort}${listQuery ? "&q=" + encodeURIComponent(listQuery) : ""}`);
-      if (data) return renderIndexedList(data.tokens);
+      if (data) return renderIndexedList(data.tokens.filter((t) => !isHidden(t.address)));
     }
-    const launches = (await SDK.listLaunches(read, CFG.core, { fromBlock: CFG.deployBlock || 0 })).reverse().slice(0, 60);
+    const launches = (await SDK.listLaunches(read, CFG.core, { fromBlock: CFG.deployBlock || 0 }))
+      .filter((l) => !isHidden(l.token)).reverse().slice(0, 60);
     if (!launches.length) {
       app.innerHTML = `<div class="empty">No tokens yet. <a class="btn btn-primary" href="#/create">Launch the first one</a></div>`;
       return;

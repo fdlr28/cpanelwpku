@@ -12,5 +12,13 @@
   "usdc": "0x7D29d8047B905000459c0E80c34a26CeedcB47b2",
   "deployBlock": 23833762,
   "rpcUrl": "https://testnet-rpc.elysium.kinetiq.xyz",
-  "_source": "Copied from deployments/elysiumTestnet-v2.json (regenerate: node indexer/scripts/copy-deployment.js)"
+  "_source": "Copied from deployments/elysiumTestnet-v2.json (regenerate: node indexer/scripts/copy-deployment.js)",
+  "hiddenTokens": [
+    "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466",
+    "0x18c65497279384d32183026B2aF84b7eC5bF2De2",
+    "0xD4CcABb5C6D77677932E8ab7f6802A0Abcb43C8F",
+    "0x13aCae05DF01026AbEf8A48425D41F6955f05C90",
+    "0xB01FaeaBb8cfa9e6E9f15E52FAaeDCeF45F12f09"
+  ],
+  "_hiddenTokens": "Launches kept out of /tokens, /stats and /integrators counts (phase-6 smoke tests). Detail endpoints still serve them."
 }

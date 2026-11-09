@@ -17,6 +17,14 @@ window.PROVENALT_CONFIG = window.PROVENALT_CONFIG || {
   usdc: "0x7D29d8047B905000459c0E80c34a26CeedcB47b2",
   // Indexer API (indexer/, e.g. on Railway). Empty: the site reads the chain directly (no charts/trade history).
   indexerUrl: "https://provenalt-indexer-production.up.railway.app",
+  // Launches kept out of the token list (phase-6 smoke tests). Their pages still open by direct link.
+  hiddenTokens: [
+    "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466",
+    "0x18c65497279384d32183026B2aF84b7eC5bF2De2",
+    "0xD4CcABb5C6D77677932E8ab7f6802A0Abcb43C8F",
+    "0x13aCae05DF01026AbEf8A48425D41F6955f05C90",
+    "0xB01FaeaBb8cfa9e6E9f15E52FAaeDCeF45F12f09",
+  ],
   deployBlock: 23833762,
   quoteSymbols: { "0x0000000000000000000000000000000000000000": "HYPE", "0x7D29d8047B905000459c0E80c34a26CeedcB47b2": "USDC" },
   quoteDecimals: { "0x0000000000000000000000000000000000000000": 18, "0x7D29d8047B905000459c0E80c34a26CeedcB47b2": 6 },
