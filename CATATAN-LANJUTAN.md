@@ -63,7 +63,25 @@ Live: **`https://provenalt-indexer-production.up.railway.app`** (`/health`, `/to
 * Project lama di workspace yang sama, **jangan diubah tanpa izin**: `passionate-truth` (service `provenalt` dari repo
   `Provenalt/provenalt`, deploy terakhir FAILED) dan `gracious-harmony` (Postgres yang belum pernah jalan).
 
-### 3b. Website
+### 3b. Website di Vercel (tertunda, 9 Nov 2026)
+
+Keputusan pemilik proyek: website di **Vercel** (bukan cPanel). Sudah disiapkan: `frontend/vercel.json` (header
+keamanan, larang iframe), `frontend/.vercelignore`, dan `scripts/deploy-vercel.js` (deploy lewat REST API).
+
+Percobaan dari sesi cloud gagal: token Vercel akun `provenalt` (team default `team_nrL2QRjbDcRh3RO9ws52ns0v`)
+hanya bisa membaca; membuat project ditolak (403 *"You don't have permission to create the project"*), dan `/v2/user`
+menandai token `limited: true`. Vercel CLI gagal dengan "token is not valid" karena tidak bisa membaca detail team.
+
+Pilihan:
+* **Dashboard (tanpa token):** vercel.com → Add New → Project → import `fdlr28/cpanelwpku` → Root Directory `frontend`,
+  Framework "Other", tanpa build command → Production Branch `claude/hopeful-pascal-icu4bu` → Deploy → Settings →
+  Domains: `provenalt.xyz`.
+* **Skrip:** token baru dengan Scope = team akun (Full Account, tanpa batasan), lalu
+  `VERCEL_TOKEN=... VERCEL_TEAM_ID=team_nrL2QRjbDcRh3RO9ws52ns0v DOMAIN=provenalt.xyz node scripts/deploy-vercel.js`.
+
+Setelah itu atur DNS `provenalt.xyz` di registrar sesuai instruksi Vercel.
+
+### 3b-alt. Website di cPanel (alternatif)
 
 1. `bash scripts/package-frontend.sh` (sudah memakai indexer Railway lewat `frontend/config.js`).
 2. Unggah `dist/provenalt-frontend.zip` ke `provenalt.xyz`: cPanel (Domains → Create A New Domain dengan document
