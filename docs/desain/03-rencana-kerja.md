@@ -33,7 +33,8 @@ Catatan: nama berawalan "Elys…" bisa tertukar dengan Elys Network dan Elysium 
 
 **8 Nov 2026: app diganti nama menjadi Provenalt** atas permintaan pemilik proyek. Cek nama: npm kosong, pencarian
 web tidak menemukan proyek bernama sama, GitHub 1 repo (`Provenalt/provenalt`, tanpa deskripsi). Kontrak yang sudah
-ter-deploy tetap bernama `HypelysRouter` (source terverifikasi tidak boleh berubah); profil integrator #1 di registry
+ter-deploy saat itu tetap bernama `HypelysRouter` (source terverifikasi tidak boleh berubah; sejak deploy ulang di atas
+Infinity 9 Nov 2026 kontraknya bernama `ProvenaltRouter`); profil integrator #1 di registry
 diganti lewat `scripts/set-app-profile.js` oleh owner router: ✅ 9 Nov 2026, tx
 `0x51a76a45bd7ee3c5574436f00d5ab405ce3c5cec50831340b453035aed8178f0` (blok 26475165), nama "Provenalt", uri kosong.
 
@@ -256,11 +257,27 @@ Uji:
 ✅ Live di Railway (9 Nov 2026): `https://provenalt-indexer-production.up.railway.app` (project `provenalt-indexer`, Postgres Railway). Sinkronisasi
 awal ±7 detik; website memakai API ini. Penanganan reorg hanya lewat `CONFIRMATIONS`.
 
+## Fase 6b · Pindah ke PancakeSwap Infinity CL (9 Nov 2026) ✅
+
+Alasan: lisensi BUSL-1.1 Uniswap v4-core menghalangi mainnet (`02 §5.1`, revisi 9 Nov 2026).
+
+* `contracts/vendor/infinity/` (infinity-core `3c5ef1b`, GPL-2.0-or-later, tanpa test dan pool-bin). CurveHook,
+  LaunchCore, ProtocolConfig, CurveMath dan router (`ProvenaltRouter`, dulu `HypelysRouter`) di-port; lisensi kontrak
+  protokol menjadi GPL-2.0-or-later. Mock v4 dan hook mining dihapus; `scripts/lib/infinity.js` dan
+  `contracts/v2/mocks/InfinityTestRouters.sol` menggantikannya.
+* SDK (`PoolKey` Infinity), frontend, indexer (event `Initialize`/`Swap` CLPoolManager, Vault sebagai pemegang token
+  pool) ikut diperbarui. Indexer bisa pindah deployment tanpa database baru: `RESET_DB_FOR_DEPLOYMENT=<chainId>:<core>`
+  menghapus data chain lama sekali (gambar upload tetap).
+* Uji: 112 test; lokal: uji asap HYPE 33/33, USDC 15/15, e2e indexer, E2E browser.
+* Testnet: deploy ulang 9 Nov 2026 (blok 26697151, 0,0023 HYPE), admin langsung ke dompet pemilik lewat satu batch
+  Timelock (`ADMIN=`), uji asap 33/33, Sourcify 14/14, indexer Railway dipindah, website diuji di browser. Alamat di
+  `05-runbook-testnet.md`; deployment Uniswap v4 lama di `deployments/legacy-uniswapv4/`.
+
 ## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
 
 Butuh persetujuan terpisah:
 * audit eksternal;
-* pilihan PoolManager: deployment resmi Uniswap V4 bila sudah ada, atau keputusan lisensi (`02 §5.1`);
+* ~~pilihan PoolManager~~ — **diputuskan 9 Nov 2026: Vault + CLPoolManager PancakeSwap Infinity sendiri (GPL)**;
 * nyalakan mode allowlist bila diperlukan;
 * tinjau ulang batas alokasi instan (`02 §4.2`);
 * ~~multisig produksi~~ — **diputuskan 9 Nov 2026: tanpa Safe multisig**, admin satu dompet pemilik proyek; jeda

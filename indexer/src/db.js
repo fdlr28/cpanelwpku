@@ -149,14 +149,31 @@ function makePool(cfg) {
   });
 }
 
-/** Creates the schema and pins the database to one chain + deployment, so a misconfigured env can't mix data. */
+// Tables filled from the chain. Uploaded images are not chain data and survive a reset.
+const CHAIN_TABLES = ["sync_state", "quotes", "integrators", "tokens", "swaps", "transfers", "balances", "fees"];
+
+/** Identifies the deployment a database is pinned to: "<chainId>:<core address>". */
+const deploymentId = (cfg) => `${cfg.chainId}:${cfg.addresses.core}`;
+
+/**
+ * Creates the schema and pins the database to one chain + deployment, so a misconfigured env can't mix data.
+ * Moving to a new deployment wipes the chain tables only when RESET_DB_FOR_DEPLOYMENT names that new deployment
+ * exactly, so the setting can stay in place afterwards: it does nothing once the database holds that deployment.
+ */
 async function migrate(pool, cfg) {
   await pool.query(SCHEMA);
-  const id = `${cfg.chainId}:${cfg.addresses.core}`;
+  const id = deploymentId(cfg);
   const { rows } = await pool.query("select value from meta where key = 'deployment'");
   if (!rows.length) await pool.query("insert into meta (key, value) values ('deployment', $1)", [id]);
   else if (rows[0].value !== id) {
-    throw new Error(`database holds data for ${rows[0].value}, not ${id}; use a fresh database (or drop its tables)`);
+    if (cfg.resetDbForDeployment !== id) {
+      throw new Error(`database holds data for ${rows[0].value}, not ${id}; set RESET_DB_FOR_DEPLOYMENT=${id} to wipe its chain data and re-index (uploaded images are kept), or use a fresh database`);
+    }
+    await tx(pool, async (c) => {
+      await c.query(`truncate ${CHAIN_TABLES.join(", ")}`);
+      await c.query("update meta set value = $1 where key = 'deployment'", [id]);
+    });
+    console.log(`[indexer] database moved from ${rows[0].value} to ${id}: chain data wiped, re-indexing (images kept)`);
   }
 }
 
@@ -175,4 +192,4 @@ async function tx(pool, fn) {
   }
 }
 
-module.exports = { makePool, migrate, tx };
+module.exports = { makePool, migrate, tx, deploymentId, CHAIN_TABLES };

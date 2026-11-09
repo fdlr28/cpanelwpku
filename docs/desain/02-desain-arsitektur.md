@@ -13,7 +13,7 @@ Dasar riset: `01-riset-model-acuan.md` (Doppler, Bankr, Ascend dari sumber asli)
 
 | # | Topik | Keputusan | Alasan pemilik proyek |
 |---|---|---|---|
-| D1 | Mesin pool | Uniswap V4. Di testnet memakai PoolManager sendiri. **Alamat PoolManager = parameter deploy (immutable), tidak di-hardcode**, agar di mainnet bisa memakai deployment resmi Uniswap V4 bila Uniswap masuk Elysium. Tidak menumpang PoolManager launchpad lain | Mainnet Elysium sudah punya 2.674 pool V4 dan 0 pool Infinity, jadi aggregator dan bot sudah punya adaptor V4. Owner PoolManager milik pihak lain bisa mengatur protocol fee di pool kita |
+| D1 | Mesin pool | **Revisi 9 Nov 2026: PancakeSwap Infinity CL (GPL-2.0-or-later), Vault + CLPoolManager sendiri** (§5.1). Semula: Uniswap V4. Di testnet memakai PoolManager sendiri. **Alamat PoolManager = parameter deploy (immutable), tidak di-hardcode**, agar di mainnet bisa memakai deployment resmi Uniswap V4 bila Uniswap masuk Elysium. Tidak menumpang PoolManager launchpad lain | Mainnet Elysium sudah punya 2.674 pool V4 dan 0 pool Infinity, jadi aggregator dan bot sudah punya adaptor V4. Owner PoolManager milik pihak lain bisa mengatur protocol fee di pool kita |
 | D2 | Bagi hasil fee | Protokol **tetap 20%** di semua kasus. Tanpa integrator: 20 / 0 / 80. Dengan integrator: integrator mengambil dari porsi creator, maks 30% (batas kontrak): 20 / ≤ 30 / ≥ 50. Nilai integrator tercatat on-chain per peluncuran | Bila tanpa integrator protokol mendapat 50% sementara pendaftaran integrator bebas, setiap creator akan mendaftarkan dirinya sendiri; angka 50/0/50 tidak akan terpakai dan menyesatkan |
 | D3 | Fee anti-sniper | 90% → 1% dalam 10 detik. (a) Dihitung dengan `block.timestamp`, bukan `block.number`. (b) **Kelebihan di atas 1% masuk 100% ke protokol atau dibakar**, tidak dibagi ke creator/integrator. (c) Dev buy di transaksi peluncuran bebas fee anti-sniper, dibatasi persentase supply | (b) Kalau dibagi, creator bisa membeli tokennya sendiri di detik pertama dan mendapat kembali sebagian fee-nya, sehingga anti-sniper tidak berlaku baginya |
 | D4 | Kebijakan supply | Alokasi creator maks **20%**; cliff minimum **0 hari**; vesting minimum **0 hari** (**alokasi instan diizinkan**); dev buy maks **10%** | Dikonfirmasi pemilik proyek saat ditanya tentang pertentangan dengan "tanpa alokasi instan" (lihat §4.2) |
@@ -53,7 +53,7 @@ flowchart TB
     CH["CurveHook<br/>hook V4 + pemilik LP"]
     FD["FeeDistributor"]
   end
-  PM["Uniswap V4 PoolManager<br/>alamat = parameter deploy"]
+  PM["Infinity CLPoolManager + Vault<br/>alamat = parameter deploy"]
   TL["Timelock + Safe multisig"]
 
   UI --> AR --> LC
@@ -206,7 +206,29 @@ Invarian yang diuji:
 
 ## 5. Mesin pool model Ascend
 
-### 5.1 Keputusan: Uniswap V4, alamat PoolManager sebagai parameter
+### 5.1 Keputusan: PancakeSwap Infinity CL (revisi 9 Nov 2026), alamat pool manager sebagai parameter
+
+**Revisi 9 Nov 2026.** Pemilik proyek ingin ke mainnet sekarang. Uniswap v4-core berlisensi BUSL-1.1 sampai
+2027-06-15: memakai PoolManager hasil deploy sendiri di produksi butuh *Additional Use Grant* atau lisensi komersial,
+dan Uniswap belum men-deploy v4 resmi di Elysium. Karena itu mesin pool diganti ke **PancakeSwap Infinity CL**
+(`github.com/pancakeswap/infinity-core`, commit `3c5ef1b`, GPL-2.0-or-later; di-vendor di `contracts/vendor/infinity`
+dengan `LICENSE` dan `NOTICE.md`). Infinity memakai model yang sama dengan v4 (Vault singleton + `lock`, hook dengan
+*return delta*, fee dinamis, klaim ERC-6909), jadi logika kurva, fee, surcharge dan dev buy tidak berubah. Perbedaan
+yang berlaku:
+
+* Izin hook dibaca dari bitmap `getHooksRegistrationBitmap()` (CurveHook `0x0CC5`) dan disimpan di `PoolKey.parameters`
+  bersama tick spacing; alamat hook tidak perlu di-*mine* lagi (`HookDeployer` dan `hookMiner.js` dihapus).
+* `PoolKey{currency0, currency1, hooks, poolManager, fee, parameters}`; token pool disimpan di **Vault**, bukan di
+  pool manager.
+* Owner CLPoolManager bisa `pause()` swap semua pool dan menunjuk protocol fee controller (fee protokol Infinity
+  hingga 0,4%). Karena kita men-deploy sendiri, owner = Timelock dan fee controller tidak dipasang; jadi kewenangan
+  itu hanya bisa dipakai lewat jeda Timelock dan terlihat di chain sebelum berlaku.
+* Belum ada adaptor aggregator untuk Infinity di Elysium; trading lewat router Provenalt (atau router integrator).
+
+Uji setelah port: 112 test, uji asap lokal HYPE 33/33 dan USDC 15/15, e2e indexer, E2E browser; deploy ulang testnet
+9 Nov 2026 lulus uji asap 33/33 (`05-runbook-testnet.md`). Uraian di bawah ini adalah keputusan awal (revisi 2).
+
+#### Keputusan awal (revisi 2): Uniswap V4
 
 | Pilihan | Untuk | Melawan |
 |---|---|---|
@@ -224,7 +246,7 @@ initcode memuat alamat PoolManager.
 | Jaringan | PoolManager yang dipakai |
 |---|---|
 | Testnet 99801 | Deploy sendiri dari artifact kanonik (penggunaan non-produksi diizinkan BUSL). Setelah deploy: `protocolFeeController = 0`, owner dipindah ke Timelock |
-| Mainnet (butuh persetujuan terpisah) | (1) Deployment resmi Uniswap V4 bila sudah ada di Elysium; atau (2) deploy sendiri setelah dapat *Additional Use Grant* / lewat 2027-06-15 |
+| Mainnet (butuh persetujuan terpisah) | (1) Deployment resmi Uniswap V4 bila sudah ada di Elysium; atau (2) deploy sendiri setelah dapat *Additional Use Grant* / lewat 2027-06-15. **Diganti 9 Nov 2026: Vault + CLPoolManager Infinity sendiri (GPL), owner = Timelock** |
 
 ### 5.2 PoolKey dan izin hook
 
@@ -428,7 +450,7 @@ flowchart LR
 | 6 | `CurveHook` | Protokol | Hook V4; buat pool, tanam band, fee dasar + surcharge, blok likuiditas luar, `collect`; pemilik posisi LP. PoolManager = parameter konstruktor | Tidak ada (hanya `LaunchCore` yang boleh `seed`) |
 | 7 | `FeeDistributor` | Protokol | Akuntansi `owed` per pool/peran; klaim; pengalihan peran creator; terima surcharge protokol | Tidak ada |
 | 8 | `TimelockController` + Safe | Tata kelola | Pemilik admin; jeda wajib | Multisig |
-| 9 | `PoolManager` (V4 kanonik) | Infrastruktur | AMM singleton | Testnet: owner → Timelock, fee controller = 0 |
+| 9 | `Vault` + `CLPoolManager` (PancakeSwap Infinity, sejak 9 Nov 2026; semula PoolManager V4) | Infrastruktur | AMM singleton | Owner → Timelock (Vault lewat `acceptOwnership`), fee controller tidak dipasang |
 | 10 | Router swap + `V4Quoter` | Infrastruktur | Swap & kuotasi (periphery resmi atau router minimal) | Tidak ada |
 | 11 | `AppRouter` | App | Integrator #1: launch atas nama pengguna, helper swap | Tidak ada |
 | 12 | Frontend, indexer, SDK | App | UI, data, integrasi pihak ketiga | — |
@@ -484,7 +506,8 @@ Bukan konstanta: alamat `PoolManager` (parameter konstruktor immutable), quote d
 |---|---|
 | Creator memegang hingga 30% supply sejak awal (alokasi instan 20% + dev buy 10%) | Batas keras kontrak, pengungkapan di event dan getter, tampilan wajib di UI, integrator bisa memperketat (§4.2) |
 | Bila nanti memakai PoolManager resmi Uniswap: owner-nya bisa mengaktifkan fee protokol ≤ 0,1% | Diterima; tidak ada pause di V4 |
-| Lisensi BUSL v4-core untuk produksi | Mainnet butuh keputusan terpisah (§5.1) |
+| Lisensi BUSL v4-core untuk produksi | Selesai 9 Nov 2026: pindah ke PancakeSwap Infinity CL (GPL-2.0-or-later), §5.1 |
+| Owner CLPoolManager Infinity bisa mem-pause swap semua pool | Owner = Timelock (jeda terlihat di chain); guardian tidak memegang kewenangan ini |
 | Spam pendaftaran integrator / nama tiruan | Nama tidak unik, `verified` via Timelock, UI menampilkan id, mode allowlist untuk mainnet |
 | Sniper dalam detik pertama | Surcharge hingga 89% ke protokol/dibakar; dev buy dibatasi dan tercatat |
 | Kunci signer integrator bocor | Integrator bisa rotasi signer; nonce & `deadline`; dampak terbatas pada atribusi launch baru |

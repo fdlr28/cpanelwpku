@@ -1,0 +1,130 @@
+{
+  "network": "elysiumTestnet",
+  "chainId": 99801,
+  "deployedAt": "2026-11-05T07:04:29.133Z",
+  "deployer": "0x0bC67Dea40a043E62Ffb56e3B76ed127eD14f322",
+  "poolManager": "0xD02875d7Ea89e7e1f61512066828196c09FBD58d",
+  "timelock": "0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07",
+  "timelockDelay": 900,
+  "timelockProposer": "0x0bC67Dea40a043E62Ffb56e3B76ed127eD14f322",
+  "config": "0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3",
+  "registry": "0xB340bD11629fAd01a2D14d58057209c8F1512Ede",
+  "core": "0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E",
+  "hook": "0x9bcFA072d4d0cfA213bEb83242BcA5c1d50328cc",
+  "distributor": "0xa175683c380D15B2E3e49753fa048Dca05774495",
+  "vault": "0xf8C1554E691F45877731fD72a25df658465512b3",
+  "router": "0x7389E762b0b63d8A60D307554abA27D074762e4a",
+  "hookDeployer": "0x6E90FC23B41922feb9fE557c574C81d28b1e58b1",
+  "hookSalt": "0x0000000000000000000000000000000000000000000000000000000000003451",
+  "usdc": "0x7D29d8047B905000459c0E80c34a26CeedcB47b2",
+  "treasury": "0x0bC67Dea40a043E62Ffb56e3B76ed127eD14f322",
+  "guardian": "0x0bC67Dea40a043E62Ffb56e3B76ed127eD14f322",
+  "acceptOwnership": {
+    "targets": [
+      "0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3",
+      "0xB340bD11629fAd01a2D14d58057209c8F1512Ede",
+      "0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E"
+    ],
+    "data": [
+      "0x79ba5097",
+      "0x79ba5097",
+      "0x79ba5097"
+    ],
+    "salt": "0x24bc598400553140c9be0693d728105dc6ded6a730546e07b9baf08cae9c7848",
+    "scheduled": true,
+    "executableAfter": 1793863169,
+    "executed": true
+  },
+  "deployBlock": 23833762,
+  "adminHandover": {
+    "newAdmin": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+    "targets": [
+      "0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07",
+      "0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07",
+      "0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3",
+      "0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3",
+      "0xB340bD11629fAd01a2D14d58057209c8F1512Ede",
+      "0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07",
+      "0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07"
+    ],
+    "data": [
+      "0x2f2ff15db09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc100000000000000000000000078dcee56ad39180added458b8d09d445aabfade1",
+      "0x2f2ff15dfd643c72710c63c0180259aba6b2d05451e3591a24e58b62239378085726f78300000000000000000000000078dcee56ad39180added458b8d09d445aabfade1",
+      "0xf0f4426000000000000000000000000078dcee56ad39180added458b8d09d445aabfade1",
+      "0x8a0dac4a00000000000000000000000078dcee56ad39180added458b8d09d445aabfade1",
+      "0x8a0dac4a00000000000000000000000078dcee56ad39180added458b8d09d445aabfade1",
+      "0xd547741fb09aa5aeb3702cfd50b6b62bc4532604938f21248a27a1d5ca736082b6819cc10000000000000000000000000bc67dea40a043e62ffb56e3b76ed127ed14f322",
+      "0xd547741ffd643c72710c63c0180259aba6b2d05451e3591a24e58b62239378085726f7830000000000000000000000000bc67dea40a043e62ffb56e3b76ed127ed14f322"
+    ],
+    "salt": "0x45a98b69b18ef2a07ef137d3f4d48fb2223451f86aa1e843875b00c5e876c583",
+    "executableAfter": 1793864580,
+    "deactivatedIntegrator": 2,
+    "executed": true
+  },
+  "verification": {
+    "server": "https://contracts.conduit.xyz",
+    "checkedAt": "2026-11-09T04:01:26.605Z",
+    "contracts": {
+      "0xD02875d7Ea89e7e1f61512066828196c09FBD58d": {
+        "label": "PoolManager",
+        "match": "match"
+      },
+      "0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07": {
+        "label": "EridanosTimelock",
+        "match": "exact_match"
+      },
+      "0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3": {
+        "label": "ProtocolConfig",
+        "match": "exact_match"
+      },
+      "0xB340bD11629fAd01a2D14d58057209c8F1512Ede": {
+        "label": "IntegratorRegistry",
+        "match": "exact_match"
+      },
+      "0xf8C1554E691F45877731fD72a25df658465512b3": {
+        "label": "VestingVault",
+        "match": "exact_match"
+      },
+      "0x6E90FC23B41922feb9fE557c574C81d28b1e58b1": {
+        "label": "HookDeployer",
+        "match": "exact_match"
+      },
+      "0x9bcFA072d4d0cfA213bEb83242BcA5c1d50328cc": {
+        "label": "CurveHook",
+        "match": "exact_match"
+      },
+      "0xa175683c380D15B2E3e49753fa048Dca05774495": {
+        "label": "FeeDistributor",
+        "match": "exact_match"
+      },
+      "0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E": {
+        "label": "LaunchCore",
+        "match": "exact_match"
+      },
+      "0x7389E762b0b63d8A60D307554abA27D074762e4a": {
+        "label": "HypelysRouter",
+        "match": "exact_match"
+      },
+      "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466": {
+        "label": "EridanosToken #1",
+        "match": "exact_match"
+      },
+      "0x18c65497279384d32183026B2aF84b7eC5bF2De2": {
+        "label": "EridanosToken #2",
+        "match": "exact_match"
+      },
+      "0xD4CcABb5C6D77677932E8ab7f6802A0Abcb43C8F": {
+        "label": "EridanosToken #3",
+        "match": "exact_match"
+      },
+      "0x13aCae05DF01026AbEf8A48425D41F6955f05C90": {
+        "label": "EridanosToken #4",
+        "match": "exact_match"
+      },
+      "0xB01FaeaBb8cfa9e6E9f15E52FAaeDCeF45F12f09": {
+        "label": "EridanosToken #5",
+        "match": "exact_match"
+      }
+    }
+  }
+}

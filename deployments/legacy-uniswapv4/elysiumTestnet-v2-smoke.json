@@ -1,0 +1,199 @@
+{
+  "network": "elysiumTestnet",
+  "chainId": 99801,
+  "ranAt": "2026-11-05T07:15:25.437Z",
+  "tokens": {
+    "A": "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466",
+    "C": "0x18c65497279384d32183026B2aF84b7eC5bF2De2",
+    "B": "0xD4CcABb5C6D77677932E8ab7f6802A0Abcb43C8F"
+  },
+  "integratorB": 2,
+  "results": [
+    {
+      "name": "allocation 21% rejected",
+      "ok": true,
+      "info": "AllocationNotAllowed"
+    },
+    {
+      "name": "dev buy 11% rejected",
+      "ok": true,
+      "info": "rechecked: reverts DevBuyNotAllowed (0x35aaef0b). First attempt failed with insufficient funds because the test sent value 1 HYPE; script fixed to 0.001 HYPE"
+    },
+    {
+      "name": "unknown preset rejected",
+      "ok": true,
+      "info": "execution reverted 0xdf8b981c000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "mode A: token at predicted address",
+      "ok": true,
+      "info": "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466"
+    },
+    {
+      "name": "mode A: attribution = caller (1), integrator #1",
+      "ok": true,
+      "info": "integratorId=1"
+    },
+    {
+      "name": "mode A: split 20/30/50",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "mode A: instant allocation 5%",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "mode A: creator got 3% + dev buy",
+      "ok": true,
+      "info": "30010000.0"
+    },
+    {
+      "name": "mode A: second recipient got 2%",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "mode A: unused dev-buy HYPE refunded",
+      "ok": true,
+      "info": "spent 0.000303926465108376 of max 0.002"
+    },
+    {
+      "name": "mode A: core holds 0 tokens",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "buy in window pays surcharge in HYPE",
+      "ok": true,
+      "info": "t+3s, fee before tx 81.1%, surcharge 0.000314646464646464 HYPE"
+    },
+    {
+      "name": "fee decayed to 1%",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "buy after window: no surcharge, more tokens",
+      "ok": true,
+      "info": "in-window 6098.448627575212672485 vs after 16450.167010471524473108 tokens"
+    },
+    {
+      "name": "sell returns HYPE",
+      "ok": true,
+      "info": "0.000245028780676922 HYPE"
+    },
+    {
+      "name": "collect moves LP fees",
+      "ok": true,
+      "info": "token 82.250835052357622365, HYPE 0.000009892800004619"
+    },
+    {
+      "name": "creator and integrator owed HYPE",
+      "ok": true,
+      "info": "creator 0.000004946400002311, integrator 0.000002967840001385"
+    },
+    {
+      "name": "claimCreator clears creator balance",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "claimIntegrator pays Hypelys payout",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "mode C: attribution none, integrator 0, split 20/0/80",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "sell in window pays surcharge in token",
+      "ok": true,
+      "info": "t+3s, 6292.929292929292929292 tokens"
+    },
+    {
+      "name": "token surcharge burned at collect (sent to 0x\u2026dEaD)",
+      "ok": true,
+      "info": "dead balance 6292.929292929292932699"
+    },
+    {
+      "name": "mode B: integrator registered",
+      "ok": true,
+      "info": "#2"
+    },
+    {
+      "name": "SDK hashParams == LaunchCore.hashParams",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "mode B: attribution signed (2), split 20/15/65",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "mode B: allocation vested, not instant",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "mode B: intent replay rejected",
+      "ok": true,
+      "info": "execution reverted 0xab5f79e2"
+    },
+    {
+      "name": "vesting: nothing releasable before cliff",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "USDC launch: quote = USDC",
+      "ok": true,
+      "info": "0x13aCae05DF01026AbEf8A48425D41F6955f05C90"
+    },
+    {
+      "name": "vesting: partial release after cliff",
+      "ok": true,
+      "info": "39166666.666666666666666666 of 100000000 tokens"
+    },
+    {
+      "name": "protocol HYPE claimed to treasury",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "supply unchanged SMKA",
+      "ok": true,
+      "info": ""
+    },
+    {
+      "name": "supply unchanged SMKB",
+      "ok": true,
+      "info": ""
+    }
+  ],
+  "txs": {
+    "launchA": "0xc9878bfdd9e62ca958e0174e84489e42ef19de97d8399ca61a02d57d11300e92",
+    "buyInWindow": "0x3315ced6626e863913d513cc2c933b67dc376e9da091fd5f50c9215845557099",
+    "buyAfterWindow": "0x6362f3f610bd0d6c0f06b82eb36380c51b89476d3645125c509bbed38e5eb77d",
+    "approveA": "0x168782e49841b0beda5704db637fea23dbc9dda324bdcad0a8870fe9d035171c",
+    "sellAfterWindow": "0x4a1b5010089bc19784dc2a84bb627c9a35ff54e3ce37467daba8b28cf0d78624",
+    "collectA": "0xf44fd3ead85429e511788f7b9a48475808e5d7fff57528a6b47268d31ae93142",
+    "claimCreator": "0x59a87cfa6765720eb9d31166e131af4d4814b05deb36d7c756149f0ddbbbdda5",
+    "claimIntegrator": "0xe369a246e9aa8ad34172007ef6515bc82d060bec5ff76a82350582a741faaaef",
+    "launchC": "0x89dc8d510581cfc0d12519b096652eb0aa503f867111865131ab0918e16fe382",
+    "approveC": "0xdc5fb198b1e5aef2d5a2ab9b0c8a86eb272c6db834a17180008f579a3d2e298c",
+    "sellInWindow": "0x3dfccf46cb597d95a1956a96522414fae6fc79ceccf218bc313d748747025660",
+    "collectC": "0x3a46bafe0435e40b42b0741979ef663582323bcc7640abf554e69207bd137d78",
+    "registerB": "0xceb85676cff4204572caa36b755394eaaa005c5da65da4ea7f904440529ab98d",
+    "launchB": "0x6299599b9307656b39dd1d7261be05155b37ab95ffab1682f04674cc9639eb1d",
+    "launchUSDC": "0x0b97859cc79f3b5f06b9ff395a624791a4a1ca9367f6eb036c918c11ad1bf5f7",
+    "vestRelease": "0x543591b7f6298e698efe6d30536ee79812b9528acb92833f2100f2ce5affd619",
+    "claimProtocol": "0x1efe5a45a99f7f7f72a9b1609342593a213e218c593db8e0b5e8233724428002"
+  },
+  "hypeSpent": "0.002258209952079772",
+  "note": "33/33 after recheck of the dev-buy-cap item (see its info)"
+}

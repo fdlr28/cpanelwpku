@@ -34,6 +34,8 @@ function load() {
       .map((a) => String(a).trim().toLowerCase()).filter((a) => /^0x[0-9a-f]{40}$/.test(a)),
     rpcUrl: process.env.RPC_URL || d.rpcUrl || "",
     databaseUrl,
+    // "<chainId>:<core>" of a new deployment: wipes chain data recorded for an older one (see db.migrate).
+    resetDbForDeployment: (process.env.RESET_DB_FOR_DEPLOYMENT || "").trim().toLowerCase() || null,
     // Railway's private network (postgres.railway.internal) needs no TLS. For a public endpoint set
     // DATABASE_SSL=true (verified TLS) or, only for a provider with a self-signed certificate, no-verify.
     databaseSsl: process.env.DATABASE_SSL === "no-verify" ? "no-verify" : process.env.DATABASE_SSL === "true" ? "verify" : null,

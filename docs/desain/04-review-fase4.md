@@ -3,6 +3,11 @@
 Tanggal: 4 Nov 2026. Lingkup: kontrak v2 di `contracts/v2/` (commit fase 3) terhadap checklist
 `02-desain-arsitektur.md` §10. Ini **review internal, bukan audit**; audit eksternal tetap wajib sebelum mainnet.
 
+> **Catatan 9 Nov 2026.** Review ini dibuat untuk versi di atas Uniswap v4. Port ke PancakeSwap Infinity CL
+> (`02 §5.1`) lulus semua test serangan yang sama (112 test), tetapi belum direview ulang secara khusus: akuntansi
+> delta di `CurveHook`, `lockAcquired` (hanya Vault), stub hook yang tidak terdaftar, dan kewenangan `pause()` owner
+> CLPoolManager perlu masuk lingkup audit eksternal.
+
 ## 1. Ringkasan
 
 * 102 test lulus (`npx hardhat test`): 21 kontrak lama, 9 fondasi, 34 fase 2, 21 fase 3, **17 skenario serangan** fase 4.
@@ -44,7 +49,7 @@ Tanggal: 4 Nov 2026. Lingkup: kontrak v2 di `contracts/v2/` (commit fase 3) terh
 | I-3 | Info | Refund dev buy mode A dikirim ke `msg.sender` (router integrator) | `AppRouter` harus meneruskan refund ke pengguna (fase 5) |
 | I-4 | Info | `block.timestamp` Elysium beresolusi 1 detik: ±10 blok pertama berbagi fee 90% | Sesuai desain; diuji sniping di blok yang sama |
 | I-5 | Info | Router uji v4-core (`PoolSwapTest`, `PoolModifyLiquidityTest`, `TestERC20`, lisensi UNLICENSED) hanya dipakai di test | Tidak ikut deploy |
-| I-6 | Info | Owner PoolManager testnet harus dipindah ke Timelock dengan `protocolFeeController = 0` | Bagian skrip deploy fase 6 |
+| I-6 | Info | Owner PoolManager testnet harus dipindah ke Timelock dengan `protocolFeeController = 0` | Bagian skrip deploy fase 6. Sejak 9 Nov 2026 (Infinity): owner CLPoolManager dan Vault → Timelock; owner CLPoolManager bisa `pause()` swap, jadi kewenangan itu hanya lewat jeda Timelock |
 | I-7 | Rendah (fase 5, sudah diperbaiki) | Di mode A semua pengguna router berbagi namespace salt token (`msg.sender` di core = router), sehingga penyerang bisa mendahului salt pengguna dan membuat transaksinya gagal | `HypelysRouter` mengikat salt ke pengguna (`userSalt = keccak(user, salt)`); diuji di `app.test.js`. Router integrator lain sebaiknya melakukan hal yang sama (dicatat di contoh dan SDK) |
 | I-8 | Rendah (fase 5, sudah diperbaiki) | Beli HYPE yang melebihi sisa kurva terisi sebagian; sisa HYPE akan tertahan di router | `HypelysRouter.buy` mengembalikan sisa |
 

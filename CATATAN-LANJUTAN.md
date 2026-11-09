@@ -1,4 +1,4 @@
-# Catatan lanjutan (per 9 Nov 2026)
+# Catatan lanjutan (per 9 Nov 2026, setelah pindah ke PancakeSwap Infinity)
 
 Ringkasan status dan langkah berikutnya, supaya pekerjaan bisa dilanjutkan di sesi baru (mis. Claude Code di Mac).
 Branch kerja: **`claude/hopeful-pascal-icu4bu`** di `fdlr28/cpanelwpku`.
@@ -19,32 +19,41 @@ Lalu tulis ke Claude, misalnya: *"Baca CATATAN-LANJUTAN.md, lalu lanjutkan ungga
 
 ## 2. Yang sudah selesai
 
-* **Kontrak di Elysium testnet (99801)**, deploy 5 Nov 2026, blok 23833762:
+* **Mesin pool diganti ke PancakeSwap Infinity CL** (9 Nov 2026): Uniswap v4-core berlisensi BUSL-1.1 sampai
+  2027-06-15, jadi tidak bisa dipakai di mainnet tanpa izin Uniswap. Infinity (GPL-2.0-or-later) di-vendor di
+  `contracts/vendor/infinity`; semua kontrak, test, skrip, SDK, frontend dan indexer sudah di-port. Detail: `docs/desain/02`
+  §5.1 dan `03` fase 6b.
+* **Kontrak di Elysium testnet (99801)**, deploy ulang 9 Nov 2026 di atas Infinity, blok 26697151:
 
   | Kontrak | Alamat |
   |---|---|
-  | PoolManager (Uniswap v4-core 1.0.2) | `0xD02875d7Ea89e7e1f61512066828196c09FBD58d` |
-  | Timelock (jeda 900 dtk) | `0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07` |
-  | LaunchCore | `0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E` |
-  | CurveHook | `0x9bcFA072d4d0cfA213bEb83242BcA5c1d50328cc` |
-  | IntegratorRegistry | `0xB340bD11629fAd01a2D14d58057209c8F1512Ede` |
-  | ProtocolConfig | `0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3` |
-  | FeeDistributor | `0xa175683c380D15B2E3e49753fa048Dca05774495` |
-  | VestingVault | `0xf8C1554E691F45877731fD72a25df658465512b3` |
-  | Router Provenalt (`HypelysRouter`, integrator #1) | `0x7389E762b0b63d8A60D307554abA27D074762e4a` |
+  | Infinity Vault | `0x88e40DB361BF4502c0d323e6e607F8FF22C90D15` |
+  | Infinity CLPoolManager | `0xba097E61b96e3675cFB860a69ADA85727F99f262` |
+  | Timelock (jeda 900 dtk) | `0xe445040EFfE64F79C3398DC1996b0ECEf03A64Ea` |
+  | LaunchCore | `0xdEb59B67B47B5988AB5897dBd5A203356ABd4A66` |
+  | CurveHook | `0xD17875B985e9c9945913d210f9253C9D11a13CF9` |
+  | IntegratorRegistry | `0xa3fF1Ad25c379Dd234AcaB0963ac0594389f10ef` |
+  | ProtocolConfig | `0x413c7BF2Dc57AEDca3Bc7DE606c23225a4AeA93E` |
+  | FeeDistributor | `0x5464c879772fFe587E1f0e28BC8e4b08EA01d0A8` |
+  | VestingVault | `0xf46d8ade57a0580BbA3fdEbB4E82f5aa6c190883` |
+  | `ProvenaltRouter` (integrator #1) | `0xE46cA91Ee64E07f3F2061D2E046C2f91B223c758` |
   | USDC testnet (quote) | `0x7D29d8047B905000459c0E80c34a26CeedcB47b2` |
 
-  Semua alamat ada di `deployments/elysiumTestnet-v2.json`.
-* **Admin = dompet pemilik `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`**: proposer + canceller Timelock, treasury,
-  guardian, owner router Provenalt, payout integrator #1. Timelock memegang owner config/registry/core/PoolManager.
-  Deployer sementara `0x0bC6…F322` tidak memegang peran apa pun (kuncinya hanya ada di sesi cloud lama).
-* **Uji asap testnet**: HYPE 33/33 (`deployments/elysiumTestnet-v2-smoke.json`), USDC 15/15
-  (`deployments/elysiumTestnet-v2-smoke-usdc.json`).
-* **Source terverifikasi** di explorer (Sourcify Conduit): 15/15 kontrak + token. Token baru: `node scripts/verify-sourcify.js`.
-* **Nama app Provenalt** di registry (integrator #1, situs `https://provenalt.xyz`).
-* **Frontend** `frontend/` siap unggah (`bash scripts/package-frontend.sh` → `dist/provenalt-frontend.zip`, isi folder
-  `provenalt/`). Teruji terhadap testnet.
-* **Indexer** `indexer/` selesai, teruji (e2e 19/19), dan **live di Railway**: `https://provenalt-indexer-production.up.railway.app`.
+  Semua alamat ada di `deployments/elysiumTestnet-v2.json`. Deployment lama (Uniswap v4, 5 Nov 2026) disimpan di
+  `deployments/legacy-uniswapv4/`; token di sana tidak lagi tampil di website.
+* **Admin = dompet pemilik `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`**: satu-satunya proposer + canceller Timelock,
+  treasury, guardian, owner `ProvenaltRouter`, payout integrator #1. Timelock memegang owner config, registry, core,
+  Vault dan CLPoolManager Infinity. Deployer sementara `0x0bC6…F322` tidak memegang peran apa pun; integrator uji #2
+  miliknya dinonaktifkan. Catatan: owner CLPoolManager (Timelock) bisa mem-pause swap, hanya lewat jeda Timelock.
+* **Uji**: 112 test kontrak; uji asap testnet HYPE 33/33 (`deployments/elysiumTestnet-v2-smoke.json`). Uji USDC belum
+  diulang di deployment baru karena deployer tidak memegang USDC: jalankan dari Mac (dompet pemilik memegang ±3,8 USDC):
+  `CONFIRM=yes npx hardhat run scripts/smoke-usdc-v2.js --network elysiumTestnet`.
+* **Source terverifikasi** di explorer (Sourcify Conduit): 14/14 (kontrak + 4 token uji). Token baru:
+  `node scripts/verify-sourcify.js`.
+* **Nama app Provenalt** di registry (integrator #1, situs `https://provenalt.xyz`), diatur saat deploy.
+* **Indexer** di Railway sudah dipindah ke deployment baru (`RESET_DB_FOR_DEPLOYMENT`, gambar upload tetap) dan diuji.
+* **Website**: `frontend/config.js` sudah berisi alamat baru dan diuji di browser terhadap testnet + indexer Railway.
+  **Belum di-deploy ulang ke Vercel**: jalankan dari Mac (lihat 3b).
 
 ## 3. Pekerjaan berikutnya
 
@@ -67,6 +76,8 @@ Live: **`https://provenalt-indexer-production.up.railway.app`** (`/health`, `/to
 
 Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (akun `provenalt`), project `cpanelwpku`.
 
+* **Deploy ulang setelah pindah ke Infinity (perlu dijalankan):** perintah di bawah. Setelah itu provenalt.xyz memakai
+  kontrak baru; daftar token kosong sampai ada peluncuran baru (token uji disembunyikan).
 * Deploy lewat **Vercel CLI dari Mac**, dari folder `frontend/` (bukan root repo, supaya `.env` tidak ikut):
   `cd ~/factory-detector/cpanelwpku/cpanelwpku && git pull origin claude/hopeful-pascal-icu4bu && cd frontend && npx vercel --prod`.
   Project tidak terhubung ke Git (sambungan ke repo `Provenalt/cpanelwpku` milik akun GitHub lain dilepas karena repo
@@ -81,14 +92,16 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
 
 ### 3d. Rencana mainnet (status 9 Nov 2026)
 
-* Keputusan pemilik proyek: **tanpa Safe multisig**. Admin mainnet = satu dompet milik pemilik (seperti testnet:
-  proposer/canceller Timelock, treasury, guardian, owner router). Saran yang tetap berlaku: dompet itu di hardware
-  wallet, kunci tidak disimpan di `.env`/cloud, dan jeda Timelock mainnet 48 jam sesuai desain.
-* Penghalang yang belum selesai: (1) lisensi BUSL-1.1 Uniswap v4-core sampai 2027-06-15, jadi mainnet memakai
-  PoolManager resmi Uniswap di Elysium begitu tersedia (belum ada per 9 Nov 2026) atau butuh *Additional Use Grant*;
-  (2) audit eksternal belum dilakukan.
+* Pemilik proyek meminta mainnet (99901). Keputusan: **tanpa Safe multisig**; admin mainnet = satu dompet milik
+  pemilik (seperti testnet: proposer/canceller Timelock, treasury, guardian, owner router). Saran yang tetap berlaku:
+  dompet itu di hardware wallet, kunci tidak disimpan di `.env`/cloud, jeda Timelock mainnet 48 jam sesuai desain.
+* ✅ Penghalang lisensi selesai: mesin pool kini PancakeSwap Infinity CL (GPL-2.0-or-later), di-deploy sendiri.
+* Belum: skrip deploy mainnet (chain 99901, USDC kanonik mainnet, RPC mainnet, Timelock 48 jam), deployer mainnet
+  berisi HYPE sungguhan (dijalankan dari dompet pemilik di Mac, kunci tidak pernah dibagikan), indexer + website
+  mainnet, dan audit eksternal (disarankan sebelum dana publik masuk).
 * Indexer testnet sengaja **tidak dihapus**: provenalt.xyz bergantung padanya. Saat kontrak mainnet ada, service
-  Railway yang sama diarahkan ke mainnet (database baru, `indexer/deployment.json` mainnet).
+  Railway yang sama diarahkan ke mainnet (`indexer/deployment.json` mainnet + `RESET_DB_FOR_DEPLOYMENT`, atau database
+  baru).
 * Kontrak Safe 1.3.0 ada di Elysium mainnet dan testnet (dicek on-chain), bila kelak berubah pikiran.
 
 ### 3c. Pembaruan website (9 Nov 2026)
@@ -104,7 +117,7 @@ Inggris tanpa kata "Eridanos", upload gambar dari origin provenalt.xyz berhasil,
   nyata) dan batas dana dikirim otomatis (+1%, sisa dikembalikan). Kolom "dana maks" dihapus.
 * Kolom alokasi creator, cliff dan vesting **disembunyikan** (hanya UI; kontrak tetap mendukung, website mengirim 0).
 * Indexer Railway sudah di-deploy ulang dengan endpoint upload (variabel `PUBLIC_URL`, `UPLOAD_ORIGINS`).
-* **Token uji asap disembunyikan** dari daftar dan statistik (5 alamat di `indexer/deployment.json` `hiddenTokens`,
+* **Token uji asap disembunyikan** dari daftar dan statistik (kini 4 token uji deployment Infinity di `indexer/deployment.json` `hiddenTokens`,
   bisa ditimpa variabel `HIDDEN_TOKENS`; cadangan yang sama di `frontend/config.js` `hiddenTokens`). Halaman detailnya
   tetap bisa dibuka lewat link langsung. Live di indexer Railway; daftar di provenalt.xyz kini kosong.
 * Uji: E2E browser lokal tanpa indexer dan dengan indexer (termasuk upload) lulus; e2e indexer 25/25; 112 test kontrak.
@@ -120,9 +133,8 @@ Inggris tanpa kata "Eridanos", upload gambar dari origin provenalt.xyz berhasil,
 ### 3c. Opsional / nanti
 
 * RPC sendiri (mis. Alchemy, dibatasi ke domain) untuk frontend (`frontend/config.js` `rpcUrl`) dan indexer (`RPC_URL`).
-* Sisa saldo: dompet pemilik ±3,8 USDC + token uji di Elysium; deployer sementara ±0,074 HYPE (tidak bisa dipakai lagi).
-* Fase 7 (butuh persetujuan terpisah): audit eksternal, keputusan PoolManager mainnet, multisig, Timelock 48 jam,
-  tinjau ulang batas alokasi instan.
+* Sisa saldo: dompet pemilik ±3,8 USDC + token uji di Elysium; deployer sementara ±0,067 HYPE (kuncinya hanya di sesi cloud).
+* Fase 7: audit eksternal, Timelock 48 jam, tinjau ulang batas alokasi instan (pool engine dan multisig sudah diputuskan).
 
 ## 4. Skrip yang sering dipakai (dari folder repo, dompet pemilik di `.env`)
 

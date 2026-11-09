@@ -14,8 +14,8 @@ Deployment aktif (testnet): **https://provenalt-indexer-production.up.railway.ap
 | Sumber | Event | Dipakai untuk |
 |---|---|---|
 | `LaunchCore` | `Launched` | daftar token, pengungkapan alokasi/dev buy, integrator |
-| `PoolManager` (v4) | `Initialize`, `Swap` | harga, candle, volume, trade (termasuk dev buy) |
-| Router app (`HypelysRouter`) | `Swapped` | alamat trader asli dan jumlah yang dibayar/diterima pengguna |
+| `CLPoolManager` (PancakeSwap Infinity) | `Initialize`, `Swap` | harga, candle, volume, trade (termasuk dev buy) |
+| Router app (`ProvenaltRouter`) | `Swapped` | alamat trader asli dan jumlah yang dibayar/diterima pengguna |
 | `FeeDistributor` | `FeesSplit` | fee terkumpul per token dan pembagiannya |
 | `IntegratorRegistry` | `IntegratorRegistered`, `ProfileUpdated`, `PayoutUpdated`, … | nama integrator |
 | Setiap token yang diluncurkan | `Transfer` | saldo dan jumlah holder |
@@ -71,13 +71,17 @@ idempoten), tetapi saling berebut kursor.
 | `RPC_CONCURRENCY` / `RPC_MIN_INTERVAL_MS` | `3` / `120` | pembatas request ke RPC |
 | `DATABASE_SSL` | kosong | `true` untuk Postgres publik dengan TLS terverifikasi; `no-verify` hanya untuk sertifikat self-signed |
 | `SYNC` / `API` | `true` | `false` untuk mematikan salah satunya |
+| `RESET_DB_FOR_DEPLOYMENT` | kosong | `<chainId>:<alamat core>` deployment baru (huruf kecil): bila database berisi data deployment lain, data chain dihapus sekali lalu diindeks ulang; gambar upload tetap. Aman dibiarkan terpasang |
 | `HIDDEN_TOKENS` | `hiddenTokens` di `deployment.json` | alamat token (dipisah koma) yang tidak tampil di `/tokens`, `/stats` dan hitungan `/integrators`; `/tokens/:address` tetap melayani |
 | `PUBLIC_URL` | dari header `Host` | URL publik indexer, untuk URL gambar (Railway: `https://<nama>.up.railway.app`) |
 | `UPLOAD_ORIGINS` | kosong (semua) | daftar origin website yang boleh upload, dipisah koma |
 | `UPLOADS` | `true` | `false` mematikan upload |
 | `MAX_UPLOAD_BYTES` / `UPLOADS_PER_HOUR` / `MAX_IMAGE_STORAGE_BYTES` | `1000000` / `30` / `1000000000` | batas upload |
 
-Database dikunci ke satu chain dan satu `LaunchCore` (tabel `meta`). Untuk deployment kontrak baru, pakai database baru.
+Database dikunci ke satu chain dan satu `LaunchCore` (tabel `meta`); indexer menolak start bila `deployment.json`
+menunjuk deployment lain. Untuk pindah ke deployment kontrak baru: `node indexer/scripts/copy-deployment.js`, set
+`RESET_DB_FOR_DEPLOYMENT=<chainId>:<core>` (pesan error saat start menyebut nilainya), lalu deploy; atau pakai
+database baru. Dipakai 9 Nov 2026 saat testnet pindah ke PancakeSwap Infinity.
 
 ## API
 

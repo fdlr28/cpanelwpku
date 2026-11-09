@@ -1,7 +1,8 @@
 # 05 · Runbook deploy testnet (fase 6)
 
-Runbook ini ditulis untuk pemilik proyek yang men-deploy dengan kunci sendiri. Deploy pertama (5 Nov 2026) dijalankan
-dari sesi Claude dengan kunci sementara; lihat §Deployment aktif. Skrip menolak chain selain
+Runbook ini ditulis untuk pemilik proyek yang men-deploy dengan kunci sendiri. Deploy pertama (5 Nov 2026, Uniswap v4)
+dan deploy ulang di atas PancakeSwap Infinity CL (9 Nov 2026) dijalankan dari sesi Claude dengan kunci sementara;
+lihat §Deployment aktif. Skrip menolak chain selain
 Elysium testnet (99801) dan jaringan lokal (31337); mainnet tidak didukung.
 
 ## Prasyarat
@@ -11,8 +12,10 @@ Elysium testnet (99801) dan jaringan lokal (31337); mainnet tidak didukung.
 3. `.env` (salin dari `.env.example`):
    * `PRIVATE_KEY` — kunci deployer Anda (jangan pernah di-commit);
    * `ELYSIUM_TESTNET_RPC` — disarankan endpoint Alchemy sendiri;
-   * opsional: `TREASURY`, `GUARDIAN`, `TIMELOCK_PROPOSER` (alamat Safe), `TIMELOCK_DELAY` (detik),
-     `PROVENALT_OWNER`, `PROVENALT_PAYOUT`, `POOL_MANAGER` (bila memakai PoolManager v4 kanonik yang sudah ada).
+   * opsional: `TREASURY`, `GUARDIAN`, `TIMELOCK_PROPOSER`, `TIMELOCK_DELAY` (detik), `ADMIN` (dompet admin akhir:
+     batch Timelock yang sama memberinya peran proposer + canceller dan mencabutnya dari deployer, jadi cukup satu kali
+     tunggu), `PROVENALT_OWNER`, `PROVENALT_PAYOUT`, `APP_URI`, `POOL_MANAGER` (CLPoolManager Infinity yang sudah ada;
+     kosong = deploy Vault + CLPoolManager sendiri dari sumber vendored).
 
 ## Langkah
 
@@ -28,9 +31,10 @@ npx hardhat run scripts/deploy-testnet-v2.js
 CONFIRM=yes npx hardhat run scripts/deploy-testnet-v2.js --network elysiumTestnet
 ```
 
-   Hasil: `deployments/elysiumTestnet-v2.json`. Skrip men-deploy PoolManager kanonik (atau memakai `POOL_MANAGER`),
-   Timelock, seluruh kontrak Eridanos, preset HYPE + USDC, router Provenalt (integrator #1), lalu memindahkan owner
-   ke Timelock. `acceptOwnership` dijadwalkan di Timelock bila deployer adalah proposer.
+   Hasil: `deployments/elysiumTestnet-v2.json`. Skrip men-deploy Vault + CLPoolManager PancakeSwap Infinity (atau
+   memakai `POOL_MANAGER`), Timelock, seluruh kontrak Eridanos, preset HYPE + USDC, router Provenalt (integrator #1),
+   lalu memindahkan owner ke Timelock: CLPoolManager langsung (Ownable satu langkah milik Infinity), config, registry,
+   core dan Vault Infinity lewat `acceptOwnership` yang dijadwalkan di Timelock bila deployer adalah proposer.
 
 3. **Setelah jeda Timelock** (default 1 jam), siapa pun bisa menyelesaikan serah terima:
 
@@ -39,7 +43,8 @@ npx hardhat run scripts/timelock-execute-accept.js --network elysiumTestnet
 ```
 
 4. **Frontend**: salin alamat dari `deployments/elysiumTestnet-v2.json` ke `frontend/config.js`
-   (`core`, `router`, `hook`, `distributor`, `registry`, `config`, `vault`, `poolManager`, `deployBlock`), lalu
+   (`core`, `router`, `hook`, `distributor`, `registry`, `config`, `vault`, `poolManager`, `infinityVault`,
+   `deployBlock`), lalu
    `bash scripts/package-frontend.sh` dan unggah `dist/provenalt-frontend.zip` ke cPanel (File Manager → Upload →
    Extract) di folder subdomain atau subfolder, **bukan** root `public_html` yang berisi WordPress.
 
@@ -68,32 +73,42 @@ NODE_USE_ENV_PROXY=1 node scripts/verify-sourcify.js
 `IntegratorRegistry.setAllowlistEnabled`, `setApproved`, `setVerified`, `setSuspended`, `setCore`;
 `LaunchCore.unpause`. Guardian hanya bisa `pause` (launch baru) dan `pauseRegistration`.
 
-## Deployment aktif (Elysium testnet, 5 Nov 2026)
+## Deployment aktif (Elysium testnet, 9 Nov 2026, PancakeSwap Infinity CL)
 
 | Kontrak | Alamat |
 |---|---|
-| poolManager | `0xD02875d7Ea89e7e1f61512066828196c09FBD58d` |
-| timelock | `0x47Bab40bB879bb6E207Ac6460eD5A874ce47Db07` |
-| config | `0x2F409ccAb0b1d39265a2D28436C7E413E67dd8b3` |
-| registry | `0xB340bD11629fAd01a2D14d58057209c8F1512Ede` |
-| core | `0xEdAc9E32f2dCa8aAF61acB7D6F2a363e283cc08E` |
-| hook | `0x9bcFA072d4d0cfA213bEb83242BcA5c1d50328cc` |
-| distributor | `0xa175683c380D15B2E3e49753fa048Dca05774495` |
-| vault | `0xf8C1554E691F45877731fD72a25df658465512b3` |
-| router | `0x7389E762b0b63d8A60D307554abA27D074762e4a` |
+| infinityVault (Infinity `Vault`) | `0x88e40DB361BF4502c0d323e6e607F8FF22C90D15` |
+| poolManager (Infinity `CLPoolManager`) | `0xba097E61b96e3675cFB860a69ADA85727F99f262` |
+| timelock | `0xe445040EFfE64F79C3398DC1996b0ECEf03A64Ea` |
+| config | `0x413c7BF2Dc57AEDca3Bc7DE606c23225a4AeA93E` |
+| registry | `0xa3fF1Ad25c379Dd234AcaB0963ac0594389f10ef` |
+| core | `0xdEb59B67B47B5988AB5897dBd5A203356ABd4A66` |
+| hook | `0xD17875B985e9c9945913d210f9253C9D11a13CF9` |
+| distributor | `0x5464c879772fFe587E1f0e28BC8e4b08EA01d0A8` |
+| vault (VestingVault) | `0xf46d8ade57a0580BbA3fdEbB4E82f5aa6c190883` |
+| router (`ProvenaltRouter`) | `0xE46cA91Ee64E07f3F2061D2E046C2f91B223c758` |
 | usdc | `0x7D29d8047B905000459c0E80c34a26CeedcB47b2` |
 
-Blok deploy 23833762. Timelock (jeda 900 dtk) owner config, registry, core dan PoolManager. Admin dipindah ke `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`
-(`scripts/handover-admin.js`): proposer/canceller Timelock, treasury, guardian, payout Provenalt, dan owner
-`HypelysRouter` (diterima lewat `scripts/accept-router-ownership.js`). Serah terima selesai 5 Nov 2026. Deployer sementara `0x0bC67Dea…F322` tidak
-memegang peran lagi. Preset 1 = HYPE, preset 2 = USDC. Uji asap: `scripts/smoke-testnet-v2.js`, hasil di
-`deployments/elysiumTestnet-v2-smoke.json` (33/33). Source terverifikasi di Sourcify Conduit (15/15). Uji USDC 15/15 (`deployments/elysiumTestnet-v2-smoke-usdc.json`).
+Blok deploy 26697151, biaya deploy 0,0023 HYPE. Timelock (jeda 900 dtk) owner config, registry, core, Vault Infinity
+dan CLPoolManager. Dompet admin `0x78DceE56aD39180adDed458B8D09D445aAbFAde1` = satu-satunya proposer/canceller
+Timelock, treasury, guardian, owner `ProvenaltRouter` (langsung dari konstruktor) dan payout Provenalt; diatur saat
+deploy (`ADMIN`, `TREASURY`, `GUARDIAN`, `PROVENALT_OWNER`, `PROVENALT_PAYOUT`) dan selesai lewat satu batch Timelock
+(9 Nov 2026). Deployer sementara `0x0bC67Dea…F322` tidak memegang peran lagi; integrator uji #2 miliknya dinonaktifkan.
+Preset 1 = HYPE, preset 2 = USDC. Uji asap HYPE 33/33 (`deployments/elysiumTestnet-v2-smoke.json`). Source
+terverifikasi di Sourcify Conduit 14/14 (kontrak + 4 token uji). Uji USDC (`smoke-usdc-v2.js`) dijalankan dari dompet
+admin karena deployer tidak memegang USDC.
+
+Owner CLPoolManager (Timelock) bisa `pause()` swap di semua pool dan memasang protocol fee controller (tidak dipasang).
+Ini kewenangan yang tidak ada di Uniswap v4; perubahan apa pun tetap harus lewat jeda Timelock.
+
+Deployment lama di atas Uniswap v4 (5 Nov 2026, core `0xEdAc…c08E`) ditinggalkan karena lisensi BUSL-1.1;
+catatannya di `deployments/legacy-uniswapv4/`. Token di sana tetap ada on-chain tetapi tidak lagi tampil di website.
 
 ### Mengelola protokol dari dompet admin
 
 Semua perubahan protokol lewat Timelock: `schedule`/`scheduleBatch` dari dompet admin, tunggu 900 dtk, lalu
 `execute` (siapa pun boleh). Contoh: lihat `scripts/handover-admin.js`. Guardian bisa langsung `LaunchCore.pause()`
-dan `IntegratorRegistry.pauseRegistration()`. Owner `HypelysRouter` bisa langsung `setPayout`, `setSigner`,
+dan `IntegratorRegistry.pauseRegistration()`. Owner `ProvenaltRouter` bisa langsung `setPayout`, `setSigner`,
 `setProfile`, `queuePolicy`. Dompet admin butuh sedikit HYPE di Elysium testnet untuk gas.
 
 ### Nama app di registry

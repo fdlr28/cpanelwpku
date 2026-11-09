@@ -148,7 +148,7 @@ async function main() {
   let idB = await reg.integratorOf(me.address);
   const signerB = ethers.Wallet.createRandom();
   if (idB === 0n) {
-    await send("registerB", reg.register("Eridanos Smoke B", "https://example.invalid/smoke", signerB.address, me.address,
+    await send("registerB", reg.register("Smoke Integrator B", "https://example.invalid/smoke", signerB.address, me.address,
       { integratorBps: 1500, maxAllocBps: 2000, maxDevBuyBps: 1000, minCliff: 0, minDuration: 0, devBuyLock: 0 }));
     idB = await reg.integratorOf(me.address);
   }
@@ -168,11 +168,13 @@ async function main() {
   check("vesting: nothing releasable before cliff", (await vault.releasable(sid)) === 0n);
 
   // ---------------------------------------------------------------- USDC launch (no dev buy: deployer holds no USDC)
+  let tokU = null;
   if (d.usdc) {
     const pU = base({ name: "Smoke USDC", symbol: "SMKU", presetId: 2 });
     const rcU = await send("launchUSDC", core.launch(pU));
     const evU = parse(rcU, core.interface, "Launched")[0];
     check("USDC launch: quote = USDC", evU.args.record.quote.toLowerCase() === d.usdc.toLowerCase(), evU.args.token);
+    tokU = evU.args.token;
   }
 
   // Vesting release after the cliff (anyone may call; tokens go to the beneficiary).
@@ -191,7 +193,7 @@ async function main() {
   const spent = startBal - (await ethers.provider.getBalance(me));
   const failed = results.filter((r) => !r.ok).length;
   console.log(`\n${results.length - failed}/${results.length} checks passed; HYPE spent ${ethers.formatEther(spent)}`);
-  const out = { network: network.name, chainId: Number(chainId), ranAt: new Date().toISOString(), tokens: { A: evA.args.token, C: evC.args.token, B: evB.args.token }, integratorB: Number(idB), results, txs, hypeSpent: ethers.formatEther(spent) };
+  const out = { network: network.name, chainId: Number(chainId), ranAt: new Date().toISOString(), tokens: { A: evA.args.token, C: evC.args.token, B: evB.args.token, ...(tokU ? { U: tokU } : {}) }, integratorB: Number(idB), results, txs, hypeSpent: ethers.formatEther(spent) };
   if (chainId === 99801n) fs.writeFileSync(path.join(__dirname, "..", "deployments", `${network.name}-v2-smoke.json`), JSON.stringify(out, null, 2));
   if (failed) process.exitCode = 1;
 }

@@ -7,25 +7,28 @@ Pemilik proyek menulis dalam bahasa Indonesia; jawab dan tulis dokumen dalam bah
 
 Launchpad token di **Elysium** (L2 Arbitrum Orbit milik Kinetiq, gas HYPE, settle ke HyperEVM):
 
-* **Eridanos**: protokol peluncuran terbuka untuk banyak app (setara Doppler), di atas Uniswap v4 dengan PoolManager sendiri,
+* **Eridanos**: protokol peluncuran terbuka untuk banyak app (setara Doppler), di atas **PancakeSwap Infinity CL**
+  (GPL-2.0-or-later, di-vendor di `contracts/vendor/infinity`; Vault + CLPoolManager sendiri; semula Uniswap v4, diganti
+  9 Nov 2026 karena lisensi BUSL-1.1),
   kurva 15 band ala Ascend, fee 1% (protokol 20% tetap, integrator ≤30% dari bagian creator), anti-sniper 90%→1% dalam 10 detik.
-* **Provenalt**: app launchpad kita, integrator #1 (dulu bernama Hypelys; kontrak router yang ter-deploy tetap bernama
-  `HypelysRouter` karena source-nya sudah terverifikasi).
+* **Provenalt**: app launchpad kita, integrator #1 (dulu bernama Hypelys). Router: `ProvenaltRouter`.
 
 Desain dan keputusan: `docs/desain/` (02 arsitektur, 03 rencana kerja + status, 04 review keamanan, 05 runbook testnet).
 
 ## Batasan dari pemilik proyek
 
-* Target **Elysium testnet 99801** saja. **Jangan deploy ke mainnet.** Skrip menolak chain selain 99801/31337/998.
+* Target **Elysium testnet 99801**; skrip yang ada menolak chain selain 99801/31337/998. Pemilik proyek meminta mainnet
+  (99901) pada 9 Nov 2026 dengan admin satu dompet miliknya (tanpa Safe multisig); skrip mainnet belum ada. Setiap
+  transaksi mainnet tetap butuh konfirmasi eksplisit pemilik untuk langkah itu.
 * **Jangan pakai, minta, cetak, atau commit private key.** `.env` (berisi `PRIVATE_KEY` milik pemilik proyek) tidak
   di-commit dan jangan ditampilkan isinya. Transaksi on-chain dari dompet pemilik dijalankan oleh pemilik sendiri.
-* Mainnet butuh persetujuan terpisah (fase 7: audit eksternal, multisig, Timelock 48 jam).
+* Sebelum mainnet (fase 7): audit eksternal (disarankan, belum dilakukan), Timelock 48 jam, dompet admin di hardware wallet.
 
 ## Struktur
 
 | Folder | Isi |
 |---|---|
-| `contracts/v2/` | protokol Eridanos (Solidity 0.8.26, viaIR, EVM cancun); `app/HypelysRouter.sol` = router Provenalt |
+| `contracts/v2/` | protokol Eridanos (Solidity 0.8.26, viaIR, EVM cancun); `app/ProvenaltRouter.sol` = router Provenalt |
 | `contracts/` (lainnya) | MVP lama (0.8.28), tidak dipakai lagi |
 | `test/v2/` | 112 test Hardhat |
 | `scripts/` | deploy, uji asap testnet, serah terima admin, verifikasi Sourcify, bridge USDC, paket frontend |

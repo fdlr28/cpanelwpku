@@ -1,33 +1,34 @@
 {
   "network": "elysiumTestnet",
   "chainId": 99801,
-  "ranAt": "2026-11-05T07:15:25.437Z",
+  "ranAt": "2026-11-09T13:01:58.717Z",
   "tokens": {
-    "A": "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466",
-    "C": "0x18c65497279384d32183026B2aF84b7eC5bF2De2",
-    "B": "0xD4CcABb5C6D77677932E8ab7f6802A0Abcb43C8F"
+    "A": "0xcF1a6A522aC35d0308Ab287b051F4e062b1fbdA9",
+    "C": "0x1F88Fc246927de4247F7fdAeb7040db5A6B9E53C",
+    "B": "0xaDF0F26722761FDA0bf2DbA1BED8Ab3D6Ab047ec",
+    "U": "0x708313876880ad06C7FC2372A0AE366b34ed1bA9"
   },
   "integratorB": 2,
   "results": [
     {
       "name": "allocation 21% rejected",
       "ok": true,
-      "info": "AllocationNotAllowed"
+      "info": "AllocationNotAllowed execution reverted 0xa9c3e62e"
     },
     {
       "name": "dev buy 11% rejected",
       "ok": true,
-      "info": "rechecked: reverts DevBuyNotAllowed (0x35aaef0b). First attempt failed with insufficient funds because the test sent value 1 HYPE; script fixed to 0.001 HYPE"
+      "info": "DevBuyNotAllowed execution reverted 0x35aaef0b"
     },
     {
       "name": "unknown preset rejected",
       "ok": true,
-      "info": "execution reverted 0xdf8b981c000000000000000000000000000000000000000000000000000"
+      "info": "PresetNotUsable execution reverted 0xdf8b981c000000000000000"
     },
     {
       "name": "mode A: token at predicted address",
       "ok": true,
-      "info": "0xfcFe916481689d43C24ccA33BBaAD51Fc4B15466"
+      "info": "0xcF1a6A522aC35d0308Ab287b051F4e062b1fbdA9"
     },
     {
       "name": "mode A: attribution = caller (1), integrator #1",
@@ -67,7 +68,7 @@
     {
       "name": "buy in window pays surcharge in HYPE",
       "ok": true,
-      "info": "t+3s, fee before tx 81.1%, surcharge 0.000314646464646464 HYPE"
+      "info": "t+4s, fee before tx 72.2%, surcharge 0.000269696969696969 HYPE"
     },
     {
       "name": "fee decayed to 1%",
@@ -77,22 +78,22 @@
     {
       "name": "buy after window: no surcharge, more tokens",
       "ok": true,
-      "info": "in-window 6098.448627575212672485 vs after 16450.167010471524473108 tokens"
+      "info": "in-window 7577.343148779445529387 vs after 16450.076641143297921187 tokens"
     },
     {
       "name": "sell returns HYPE",
       "ok": true,
-      "info": "0.000245028780676922 HYPE"
+      "info": "0.000245028780666537 HYPE"
     },
     {
       "name": "collect moves LP fees",
       "ok": true,
-      "info": "token 82.250835052357622365, HYPE 0.000009892800004619"
+      "info": "token 82.250383205716489605, HYPE 0.000010342294954114"
     },
     {
       "name": "creator and integrator owed HYPE",
       "ok": true,
-      "info": "creator 0.000004946400002311, integrator 0.000002967840001385"
+      "info": "creator 0.000005171147477058, integrator 0.000003102688486234"
     },
     {
       "name": "claimCreator clears creator balance",
@@ -100,7 +101,7 @@
       "info": ""
     },
     {
-      "name": "claimIntegrator pays Hypelys payout",
+      "name": "claimIntegrator pays Provenalt payout",
       "ok": true,
       "info": ""
     },
@@ -142,7 +143,7 @@
     {
       "name": "mode B: intent replay rejected",
       "ok": true,
-      "info": "execution reverted 0xab5f79e2"
+      "info": "IntentMismatch execution reverted 0xab5f79e2"
     },
     {
       "name": "vesting: nothing releasable before cliff",
@@ -152,7 +153,7 @@
     {
       "name": "USDC launch: quote = USDC",
       "ok": true,
-      "info": "0x13aCae05DF01026AbEf8A48425D41F6955f05C90"
+      "info": "0x708313876880ad06C7FC2372A0AE366b34ed1bA9"
     },
     {
       "name": "vesting: partial release after cliff",
@@ -176,24 +177,23 @@
     }
   ],
   "txs": {
-    "launchA": "0xc9878bfdd9e62ca958e0174e84489e42ef19de97d8399ca61a02d57d11300e92",
-    "buyInWindow": "0x3315ced6626e863913d513cc2c933b67dc376e9da091fd5f50c9215845557099",
-    "buyAfterWindow": "0x6362f3f610bd0d6c0f06b82eb36380c51b89476d3645125c509bbed38e5eb77d",
-    "approveA": "0x168782e49841b0beda5704db637fea23dbc9dda324bdcad0a8870fe9d035171c",
-    "sellAfterWindow": "0x4a1b5010089bc19784dc2a84bb627c9a35ff54e3ce37467daba8b28cf0d78624",
-    "collectA": "0xf44fd3ead85429e511788f7b9a48475808e5d7fff57528a6b47268d31ae93142",
-    "claimCreator": "0x59a87cfa6765720eb9d31166e131af4d4814b05deb36d7c756149f0ddbbbdda5",
-    "claimIntegrator": "0xe369a246e9aa8ad34172007ef6515bc82d060bec5ff76a82350582a741faaaef",
-    "launchC": "0x89dc8d510581cfc0d12519b096652eb0aa503f867111865131ab0918e16fe382",
-    "approveC": "0xdc5fb198b1e5aef2d5a2ab9b0c8a86eb272c6db834a17180008f579a3d2e298c",
-    "sellInWindow": "0x3dfccf46cb597d95a1956a96522414fae6fc79ceccf218bc313d748747025660",
-    "collectC": "0x3a46bafe0435e40b42b0741979ef663582323bcc7640abf554e69207bd137d78",
-    "registerB": "0xceb85676cff4204572caa36b755394eaaa005c5da65da4ea7f904440529ab98d",
-    "launchB": "0x6299599b9307656b39dd1d7261be05155b37ab95ffab1682f04674cc9639eb1d",
-    "launchUSDC": "0x0b97859cc79f3b5f06b9ff395a624791a4a1ca9367f6eb036c918c11ad1bf5f7",
-    "vestRelease": "0x543591b7f6298e698efe6d30536ee79812b9528acb92833f2100f2ce5affd619",
-    "claimProtocol": "0x1efe5a45a99f7f7f72a9b1609342593a213e218c593db8e0b5e8233724428002"
+    "launchA": "0xdf8260c6a45ba84b79d37e06a9d1f222127074bcbc77e3e3a70a66b123a2a20a",
+    "buyInWindow": "0xaa8e620d8efeb9e41561fbb95075fe9b8f1eb78501b3a1c7ba795aae6e04ab4e",
+    "buyAfterWindow": "0xcc1ee891df7add68dc5451da9d502141e57ded9edfdde5500c8185f98576a784",
+    "approveA": "0x55c34093076bba4928117773bc2c8bd21610c8467b27929bb2f3626769742758",
+    "sellAfterWindow": "0x15afebc8b9dd5a4fc63780a0620329a1fa14a1dddd7c40b601ab3b28b1403ce9",
+    "collectA": "0xf45429d29abd75e764d2ecd8b7d588cf039d7805d9592aca342459cff51618e8",
+    "claimCreator": "0x113cec4bd20daddff9b1ad023446e78fffa2d42f36cdeb630232951094ab444a",
+    "claimIntegrator": "0x8fe6b34546fb6857cf04091ebcbcb6a4f90e7ee7c6100b31b0494a9f9eed202e",
+    "launchC": "0xed6ffeea46bb6ade279fbd5621c85005fb85e1248064afb5640a6af12a68a2c2",
+    "approveC": "0x9620241113a9ae9ede8baf7a2e5705b2a5aedc3a9cfa8961c29254333e496d0c",
+    "sellInWindow": "0x8a7c649f4108d9747b299cced54ebdcab0fdabd155c19268328638e901855382",
+    "collectC": "0x58748d707c5ad3901faaba8f086e8e954366fe9780e6234be5b94f8a23905084",
+    "registerB": "0x4a81040fa9ce3911c557722524e3ed40a5e1e949e0549565bcb55931699503bf",
+    "launchB": "0x0a8fbc38696cd099665484c74263b21fd6d33bae40a7e357fb517da929231b55",
+    "launchUSDC": "0x845a8e9c0839e2ac060281fcc134a600b1f8f707160806607caf8d7f7a0ca18a",
+    "vestRelease": "0x052349701d081aa46b0ebefc5ad4f022e84f5fe65cda6899910ab3e2c0495052",
+    "claimProtocol": "0xeea9eb63840bf7fe84ba10fcc0e93dcd990fdee7cebda99eac6bdf16548f6e40"
   },
-  "hypeSpent": "0.002258209952079772",
-  "note": "33/33 after recheck of the dev-buy-cap item (see its info)"
+  "hypeSpent": "0.002703437180897273"
 }

@@ -11,7 +11,10 @@
 //   POOL_MANAGER      existing PancakeSwap Infinity CL pool manager to use; empty = deploy vault + pool manager
 //   TREASURY          protocol treasury                         (default: deployer)
 //   GUARDIAN          may pause new launches/registrations      (default: deployer)
-//   TIMELOCK_PROPOSER Safe multisig that proposes admin changes (default: deployer)
+//   TIMELOCK_PROPOSER account that proposes admin changes      (default: deployer)
+//   ADMIN             final admin: when set (and the deployer is the proposer), the acceptOwnership batch also
+//                     grants PROPOSER + CANCELLER to ADMIN and revokes them from the deployer, so one Timelock
+//                     delay completes the whole handover
 //   TIMELOCK_DELAY    seconds                                    (default: 3600)
 //   USDC              ERC-20 quote; empty string disables       (default: Elysium testnet USDC)
 //   PROVENALT_OWNER   owner of the ProvenaltRouter                          (default: deployer)
@@ -45,6 +48,7 @@ async function main() {
   const usdcEnv = process.env.USDC === undefined ? (live ? TESTNET_USDC : "mock") : process.env.USDC;
   const provenaltOwner = env("PROVENALT_OWNER", me);
   const provenaltPayout = env("PROVENALT_PAYOUT", me);
+  const admin = process.env.ADMIN ? ethers.getAddress(process.env.ADMIN) : null;
 
   console.log(`${live ? "LIVE" : "DRY RUN"} on chain ${chainId} (${network.name}) as ${me}`);
   const startBlock = await ethers.provider.getBlockNumber();
@@ -106,8 +110,16 @@ async function main() {
   }
   if ((await infVault.owner()).toLowerCase() === me.toLowerCase()) owned.push(infVault);
   for (const c of owned) await (await c.transferOwnership(tl)).wait();
-  const targets = await Promise.all(owned.map((c) => c.getAddress()));
+  const owners = await Promise.all(owned.map((c) => c.getAddress()));
+  const targets = [...owners];
   const data = targets.map(() => config.interface.encodeFunctionData("acceptOwnership"));
+  if (admin && proposer.toLowerCase() === me.toLowerCase() && admin.toLowerCase() !== me.toLowerCase()) {
+    const [P, C] = [await timelock.PROPOSER_ROLE(), await timelock.CANCELLER_ROLE()];
+    for (const [fn, role, who] of [["grantRole", P, admin], ["grantRole", C, admin], ["revokeRole", P, me], ["revokeRole", C, me]]) {
+      targets.push(tl);
+      data.push(timelock.interface.encodeFunctionData(fn, [role, who]));
+    }
+  }
   const values = targets.map(() => 0);
   const salt = ethers.id(`eridanos-v2-accept-${Date.now()}`);
   let scheduled = false;
@@ -120,10 +132,10 @@ async function main() {
     network: network.name, chainId: Number(chainId), deployedAt: new Date().toISOString(), deployer: me,
     poolEngine: "PancakeSwap Infinity CL (GPL-2.0-or-later)", poolManager: await pm.getAddress(),
     infinityVault: await infVault.getAddress(), timelock: tl, timelockDelay: delay, timelockProposer: proposer,
-    config: targets[0], registry: targets[1], core: targets[2], hook: await hook.getAddress(),
+    timelockAdmin: admin, config: owners[0], registry: owners[1], core: owners[2], hook: await hook.getAddress(),
     distributor: await distributor.getAddress(), vault: await vault.getAddress(), router: await router.getAddress(),
     usdc, treasury, guardian,
-    acceptOwnership: { targets, data, salt, scheduled, executableAfter: scheduled ? (await ethers.provider.getBlock("latest")).timestamp + delay : null },
+    acceptOwnership: { owned: owners, targets, data, salt, scheduled, executableAfter: scheduled ? (await ethers.provider.getBlock("latest")).timestamp + delay : null },
   };
 
   if (!live) {
@@ -133,6 +145,12 @@ async function main() {
     await (await timelock.executeBatch(targets, values, data, ethers.ZeroHash, salt)).wait();
     for (const c of owned) if ((await c.owner()) !== tl) throw new Error(`ownership handover failed for ${await c.getAddress()}`);
     if (pmOwned && (await pm.owner()) !== tl) throw new Error("CL pool manager handover failed");
+    if (admin && targets.length > owners.length) {
+      const [P, C] = [await timelock.PROPOSER_ROLE(), await timelock.CANCELLER_ROLE()];
+      const ok = (await timelock.hasRole(P, admin)) && (await timelock.hasRole(C, admin)) && !(await timelock.hasRole(P, me)) && !(await timelock.hasRole(C, me));
+      if (!ok) throw new Error("timelock role handover failed");
+      console.log(`dry run: ${admin} is now the only Timelock proposer/canceller ✓`);
+    }
     console.log("dry run: timelock now owns config, registry, core, the Infinity vault and the CL pool manager ✓");
   }
 
