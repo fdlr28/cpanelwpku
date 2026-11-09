@@ -75,6 +75,8 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
   mengunggah `config.local.js`, `legacy/`, `.vercel/`, `.env*`, `.gitignore`.
 * Token Vercel yang disimpan di environment cloud hanya bisa membaca (403 saat membuat project), jadi deploy dari sesi
   cloud tidak dipakai; `scripts/deploy-vercel.js` tersedia untuk token dengan izin penuh.
+* Diverifikasi (deploy kedua): memakai indexer Railway, header keamanan aktif, `legacy/`, `.env*`, `.gitignore` dan
+  `config.local.js` tidak terunggah (404); daftar token, grafik, trade dan holder tampil tanpa error di browser.
 * Berikutnya: domain `provenalt.xyz` di Vercel (*Settings → Domains*) lalu DNS di registrar.
 
 ### 3b-alt. Website di cPanel (alternatif)
