@@ -1,11 +1,11 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.26;
 
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
+import {ICLPoolManager} from "../vendor/infinity/src/pool-cl/interfaces/ICLPoolManager.sol";
 import {EridanosConstants as C} from "./libraries/EridanosConstants.sol";
 import {CurveBand} from "./libraries/CurveMath.sol";
 import {EridanosToken} from "./EridanosToken.sol";
@@ -88,7 +88,7 @@ contract LaunchCore is Ownable2Step, ReentrancyGuardTransient {
     event AllocationVested(uint256 indexed launchId, address indexed recipient, uint256 scheduleId, uint256 amount);
     event PausedSet(bool paused);
 
-    IPoolManager public immutable poolManager;
+    ICLPoolManager public immutable poolManager;
     ProtocolConfig public immutable config;
     IntegratorRegistry public immutable registry;
     VestingVault public immutable vault;
@@ -101,7 +101,7 @@ contract LaunchCore is Ownable2Step, ReentrancyGuardTransient {
 
     constructor(
         address owner_,
-        IPoolManager poolManager_,
+        ICLPoolManager poolManager_,
         ProtocolConfig config_,
         IntegratorRegistry registry_,
         VestingVault vault_,

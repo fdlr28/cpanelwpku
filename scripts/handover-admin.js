@@ -3,7 +3,7 @@
 //   NEW_ADMIN=0x... CONFIRM=yes STEP=execute npx hardhat run scripts/handover-admin.js --network elysiumTestnet (step 2, after the delay)
 //
 // Step 1 (deployer, immediate):
-//   * HypelysRouter: setPayout(NEW_ADMIN), transferOwnership(NEW_ADMIN)  → NEW_ADMIN must call acceptOwnership()
+//   * ProvenaltRouter: setPayout(NEW_ADMIN), transferOwnership(NEW_ADMIN)  → NEW_ADMIN must call acceptOwnership()
 //   * integrator records owned directly by the deployer (smoke-test integrators): payout → NEW_ADMIN, deactivated
 //   * Timelock batch scheduled: grant PROPOSER + CANCELLER to NEW_ADMIN, revoke them from the deployer,
 //     ProtocolConfig.setTreasury/setGuardian and IntegratorRegistry.setGuardian → NEW_ADMIN
@@ -25,7 +25,7 @@ async function main() {
   const tl = await at("EridanosTimelock", d.timelock);
   const config = await at("ProtocolConfig", d.config);
   const registry = await at("IntegratorRegistry", d.registry);
-  const router = await at("HypelysRouter", d.router);
+  const router = await at("ProvenaltRouter", d.router);
   const PROPOSER = await tl.PROPOSER_ROLE();
   const CANCELLER = await tl.CANCELLER_ROLE();
   const tlAddr = d.timelock;

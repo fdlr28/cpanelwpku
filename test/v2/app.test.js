@@ -1,4 +1,4 @@
-// Phase 5: Provenalt app layer — HypelysRouter (integrator #1 contract) and the Eridanos SDK.
+// Phase 5: Provenalt app layer — ProvenaltRouter (integrator #1 contract) and the Eridanos SDK.
 const { expect } = require("chai");
 const hre = require("hardhat");
 const { ethers } = hre;
@@ -31,7 +31,7 @@ async function launchVia(ctx, signer, p, value = 0n) {
 }
 
 describe("v2 phase 5 · Provenalt app layer", function () {
-  describe("HypelysRouter", function () {
+  describe("ProvenaltRouter", function () {
     it("registers itself as an integrator and attributes launches to itself (mode A)", async function () {
       const ctx = await loadFixture(appFixture);
       const id = await ctx.router.integratorId();

@@ -28,7 +28,7 @@ async function main() {
   const hook = await at("CurveHook", d.hook);
   const dist = await at("FeeDistributor", d.distributor);
   const config = await at("ProtocolConfig", d.config);
-  const router = await at("HypelysRouter", d.router);
+  const router = await at("ProvenaltRouter", d.router);
   const usdc = new ethers.Contract(d.usdc, ERC20_ABI, me);
   const dec = Number(await usdc.decimals());
   const U = (x) => ethers.parseUnits(x, dec);

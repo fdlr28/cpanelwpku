@@ -1,4 +1,4 @@
-// Phase 6 deploy script for Eridanos v2 + Provenalt on Elysium TESTNET (99801).
+// Phase 6 deploy script for Eridanos v2 (on PancakeSwap Infinity) + Provenalt on Elysium TESTNET (99801).
 //
 //   Dry run (in-process Hardhat network, no keys, nothing leaves this machine):
 //     npx hardhat run scripts/deploy-testnet-v2.js
@@ -8,20 +8,20 @@
 // Refuses any chain other than 99801 (testnet) and 31337 (local) — mainnet is out of scope.
 //
 // Environment (all optional except PRIVATE_KEY for live runs):
-//   POOL_MANAGER      existing canonical v4 PoolManager to use (checked byte-for-byte); empty = deploy one
+//   POOL_MANAGER      existing PancakeSwap Infinity CL pool manager to use; empty = deploy vault + pool manager
 //   TREASURY          protocol treasury                         (default: deployer)
 //   GUARDIAN          may pause new launches/registrations      (default: deployer)
 //   TIMELOCK_PROPOSER Safe multisig that proposes admin changes (default: deployer)
 //   TIMELOCK_DELAY    seconds                                    (default: 3600)
 //   USDC              ERC-20 quote; empty string disables       (default: Elysium testnet USDC)
-//   PROVENALT_OWNER   owner of the Provenalt router (HypelysRouter contract) (default: deployer)
+//   PROVENALT_OWNER   owner of the ProvenaltRouter                          (default: deployer)
 //   PROVENALT_PAYOUT  receives Provenalt's integrator share     (default: deployer)
 //   APP_URI           website shown in the integrator registry  (default: empty)
 const fs = require("fs");
 const path = require("path");
 const hre = require("hardhat");
 const { deployEridanos, deployAppRouter } = require("./lib/eridanos");
-const { deployPoolManager, isCanonicalPoolManager, POOL_MANAGER_ARTIFACT } = require("./lib/v4");
+const { deployInfinity } = require("./lib/infinity");
 const { ASCEND_SHAPE, HYPE_START_TICK, USDC_START_TICK, buildPresetFromCurve } = require("./lib/presets");
 
 const TESTNET_USDC = "0x7D29d8047B905000459c0E80c34a26CeedcB47b2";
@@ -51,17 +51,18 @@ async function main() {
   const startBalance = await ethers.provider.getBalance(me);
   console.log(`balance ${ethers.formatEther(await ethers.provider.getBalance(me))} HYPE`);
 
-  // 1. PoolManager: reuse a canonical one (e.g. an official Uniswap deployment) or deploy our own.
+  // 1. Pool engine: PancakeSwap Infinity (GPL-2.0-or-later). Reuse an existing CL pool manager or deploy
+  //    our own vault + CL pool manager from the vendored sources.
   let pm;
+  let infVault;
   if (process.env.POOL_MANAGER) {
-    pm = new ethers.Contract(process.env.POOL_MANAGER, POOL_MANAGER_ARTIFACT.abi, deployer);
-    if (!(await isCanonicalPoolManager(ethers.provider, process.env.POOL_MANAGER))) {
-      throw new Error("POOL_MANAGER is not the canonical v4-core 1.0.2 PoolManager bytecode.");
-    }
-    console.log(`using PoolManager ${process.env.POOL_MANAGER} (owner ${await pm.owner()})`);
+    pm = await ethers.getContractAt("CLPoolManager", process.env.POOL_MANAGER, deployer);
+    infVault = await ethers.getContractAt("Vault", await pm.vault(), deployer);
+    if (!(await infVault.isAppRegistered(process.env.POOL_MANAGER))) throw new Error("POOL_MANAGER is not registered on its vault");
+    console.log(`using CL pool manager ${process.env.POOL_MANAGER} (vault ${await infVault.getAddress()})`);
   } else {
-    pm = await deployPoolManager(deployer, me);
-    console.log(`deployed PoolManager ${await pm.getAddress()}`);
+    ({ vault: infVault, poolManager: pm } = await deployInfinity(hre, deployer));
+    console.log(`deployed Infinity vault ${await infVault.getAddress()} and CL pool manager ${await pm.getAddress()}`);
   }
 
   // 2. Timelock.
@@ -94,8 +95,18 @@ async function main() {
   // 6. Hand admin over to the Timelock. Ownable2Step contracts need acceptOwnership from the Timelock,
   //    scheduled here (the deployer must be the proposer) and executable by anyone after the delay.
   const tl = await timelock.getAddress();
-  for (const c of [config, registry, core]) await (await c.transferOwnership(tl)).wait();
-  const targets = [await config.getAddress(), await registry.getAddress(), await core.getAddress()];
+  // The Infinity contracts we deployed go to the Timelock as well: the CL pool manager's owner can pause pools
+  // and set a protocol fee controller (left unset); the vault's owner registers apps. The pool manager uses
+  // Infinity's single-step Ownable (effective at once); the vault is Ownable2Step (accepted below).
+  const owned = [config, registry, core];
+  const pmOwned = (await pm.owner()).toLowerCase() === me.toLowerCase();
+  if (pmOwned) {
+    if ((await pm.protocolFeeController()) !== ethers.ZeroAddress) throw new Error("unexpected protocol fee controller");
+    await (await pm.transferOwnership(tl)).wait();
+  }
+  if ((await infVault.owner()).toLowerCase() === me.toLowerCase()) owned.push(infVault);
+  for (const c of owned) await (await c.transferOwnership(tl)).wait();
+  const targets = await Promise.all(owned.map((c) => c.getAddress()));
   const data = targets.map(() => config.interface.encodeFunctionData("acceptOwnership"));
   const values = targets.map(() => 0);
   const salt = ethers.id(`eridanos-v2-accept-${Date.now()}`);
@@ -104,19 +115,14 @@ async function main() {
     await (await timelock.scheduleBatch(targets, values, data, ethers.ZeroHash, salt, delay)).wait();
     scheduled = true;
   }
-  // PoolManager (if we deployed it): protocol fee controller stays unset, ownership to the Timelock.
-  const pmOwned = (await pm.owner()).toLowerCase() === me.toLowerCase();
-  if (pmOwned) {
-    if ((await pm.protocolFeeController()) !== ethers.ZeroAddress) throw new Error("unexpected protocol fee controller");
-    await (await pm.transferOwnership(tl)).wait();
-  }
 
   const out = {
     network: network.name, chainId: Number(chainId), deployedAt: new Date().toISOString(), deployer: me,
-    poolManager: await pm.getAddress(), timelock: tl, timelockDelay: delay, timelockProposer: proposer,
+    poolEngine: "PancakeSwap Infinity CL (GPL-2.0-or-later)", poolManager: await pm.getAddress(),
+    infinityVault: await infVault.getAddress(), timelock: tl, timelockDelay: delay, timelockProposer: proposer,
     config: targets[0], registry: targets[1], core: targets[2], hook: await hook.getAddress(),
     distributor: await distributor.getAddress(), vault: await vault.getAddress(), router: await router.getAddress(),
-    hookDeployer: await stack.hookDeployer.getAddress(), hookSalt: stack.hookSalt, usdc, treasury, guardian,
+    usdc, treasury, guardian,
     acceptOwnership: { targets, data, salt, scheduled, executableAfter: scheduled ? (await ethers.provider.getBlock("latest")).timestamp + delay : null },
   };
 
@@ -125,9 +131,9 @@ async function main() {
     await hre.network.provider.send("evm_increaseTime", [delay]);
     await hre.network.provider.send("evm_mine", []);
     await (await timelock.executeBatch(targets, values, data, ethers.ZeroHash, salt)).wait();
-    for (const c of [config, registry, core]) if ((await c.owner()) !== tl) throw new Error("ownership handover failed");
-    if ((await pm.owner()) !== tl) throw new Error("PoolManager handover failed");
-    console.log("dry run: timelock now owns config, registry, core and PoolManager ✓");
+    for (const c of owned) if ((await c.owner()) !== tl) throw new Error(`ownership handover failed for ${await c.getAddress()}`);
+    if (pmOwned && (await pm.owner()) !== tl) throw new Error("CL pool manager handover failed");
+    console.log("dry run: timelock now owns config, registry, core, the Infinity vault and the CL pool manager ✓");
   }
 
   if (!live) {

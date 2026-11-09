@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.26;
 
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
-import {Pool} from "@uniswap/v4-core/src/libraries/Pool.sol";
+import {TickMath} from "../vendor/infinity/src/pool-cl/libraries/TickMath.sol";
+import {Tick} from "../vendor/infinity/src/pool-cl/libraries/Tick.sol";
 import {EridanosConstants as C} from "./libraries/EridanosConstants.sol";
 import {CurveBand, CurveMath} from "./libraries/CurveMath.sol";
 
@@ -153,7 +153,7 @@ contract ProtocolConfig is Ownable2Step {
 
     /// @dev Per-band liquidity check for both token orderings at the maximum pool amount (full supply).
     function _checkLiquidity(int24 startTick, CurveBand[] calldata bands) internal pure {
-        uint128 maxLiquidity = Pool.tickSpacingToMaxLiquidityPerTick(C.TICK_SPACING);
+        uint128 maxLiquidity = Tick.tickSpacingToMaxLiquidityPerTick(C.TICK_SPACING);
         uint256 prev0;
         uint256 prev1;
         int24 prevUpper;

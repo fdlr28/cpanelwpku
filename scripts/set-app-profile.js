@@ -18,7 +18,7 @@ async function main() {
   const name = process.env.APP_NAME || "Provenalt";
   const uri = process.env.APP_URI || "";
 
-  const router = await ethers.getContractAt("HypelysRouter", d.router, me);
+  const router = await ethers.getContractAt("ProvenaltRouter", d.router, me);
   const registry = await ethers.getContractAt("IntegratorRegistry", d.registry, me);
   const owner = await router.owner();
   if (owner !== me.address) throw new Error(`this wallet (${me.address}) is not the router owner (${owner})`);

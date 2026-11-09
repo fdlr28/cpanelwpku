@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.26;
 
-import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
-import {FullMath} from "@uniswap/v4-core/src/libraries/FullMath.sol";
+import {TickMath} from "../../vendor/infinity/src/pool-cl/libraries/TickMath.sol";
+import {FullMath} from "../../vendor/infinity/src/pool-cl/libraries/FullMath.sol";
 
 /// @notice One band of a single-sided curve, in canonical tick space (token priced in quote, price rising
 ///         with the offset). See ProtocolConfig for validation rules.
@@ -26,7 +26,7 @@ library CurveMath {
         if (!tokenIs0) (tickLower, tickUpper) = (-tickUpper, -tickLower);
     }
 
-    /// @notice Liquidity that places `amount` tokens single-sided in the band (v4 periphery LiquidityAmounts
+    /// @notice Liquidity that places `amount` tokens single-sided in the band (v3/v4 periphery LiquidityAmounts
     ///         math). Returns 0 instead of truncating when the result does not fit in uint128.
     function bandLiquidity(bool tokenIs0, int24 startTick, CurveBand memory b, uint256 amount)
         internal
@@ -34,8 +34,8 @@ library CurveMath {
         returns (uint256 liquidity)
     {
         (int24 lo, int24 up) = bandTicks(tokenIs0, startTick, b);
-        uint256 sqrtA = TickMath.getSqrtPriceAtTick(lo);
-        uint256 sqrtB = TickMath.getSqrtPriceAtTick(up);
+        uint256 sqrtA = TickMath.getSqrtRatioAtTick(lo);
+        uint256 sqrtB = TickMath.getSqrtRatioAtTick(up);
         if (tokenIs0) {
             // amount0 = L · (sqrtB − sqrtA) · Q96 / (sqrtA · sqrtB)
             liquidity = FullMath.mulDiv(amount, FullMath.mulDiv(sqrtA, sqrtB, 1 << 96), sqrtB - sqrtA);

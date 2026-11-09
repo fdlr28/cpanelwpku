@@ -27,7 +27,7 @@ async function main() {
   const dist = await at("FeeDistributor", d.distributor);
   const reg = await at("IntegratorRegistry", d.registry);
   const vault = await at("VestingVault", d.vault);
-  const router = await at("HypelysRouter", d.router);
+  const router = await at("ProvenaltRouter", d.router);
   const results = [];
   const txs = {};
   const check = (name, ok, info = "") => { results.push({ name, ok: !!ok, info: String(info) }); console.log(`${ok ? "✓" : "✗"} ${name}${info !== "" ? " — " + info : ""}`); };

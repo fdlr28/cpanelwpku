@@ -1,43 +1,45 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.26;
 
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuardTransient} from "@openzeppelin/contracts/utils/ReentrancyGuardTransient.sol";
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {IUnlockCallback} from "@uniswap/v4-core/src/interfaces/callback/IUnlockCallback.sol";
-import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
-import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
-import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
-import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
-import {SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
+import {IVault} from "../../vendor/infinity/src/interfaces/IVault.sol";
+import {ILockCallback} from "../../vendor/infinity/src/interfaces/ILockCallback.sol";
+import {ICLPoolManager} from "../../vendor/infinity/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {TickMath} from "../../vendor/infinity/src/pool-cl/libraries/TickMath.sol";
+import {PoolKey} from "../../vendor/infinity/src/types/PoolKey.sol";
+import {Currency, CurrencyLibrary} from "../../vendor/infinity/src/types/Currency.sol";
+import {BalanceDelta} from "../../vendor/infinity/src/types/BalanceDelta.sol";
 import {LaunchCore} from "../LaunchCore.sol";
 import {CurveHook} from "../CurveHook.sol";
 import {ProtocolConfig} from "../ProtocolConfig.sol";
 import {IntegratorRegistry} from "../IntegratorRegistry.sol";
 import {CurveBand} from "../libraries/CurveMath.sol";
 
-/// @title HypelysRouter
-/// @notice The Hypelys app's on-chain entry point and its integrator account in the Eridanos registry
+/// @title ProvenaltRouter
+/// @notice The Provenalt app's on-chain entry point and its integrator account in the Eridanos registry
 ///         (integrator #1, mode A). Any other app can deploy its own instance and register the same way.
 ///
 ///         - `launch`: the caller is always the creator; the token salt is bound to the caller so nobody can
 ///           front-run a user's salt through the shared router; unspent dev-buy quote is returned to the user.
-///         - `buy` / `sell`: exact-input swaps through the Uniswap v4 PoolManager with slippage and deadline.
+///         - `buy` / `sell`: exact-input swaps through the PancakeSwap Infinity CL pool manager (inside a vault
+///           lock) with slippage and deadline.
 ///           No price limit is set, so swaps fill completely (the anti-sniper surcharge is computed on the
 ///           specified input — review finding R-2).
 ///         - The owner can only manage this router's own registry record (payout, signer, policy, profile,
 ///           activity, account move). There is no function that moves user funds or calls arbitrary targets.
-contract HypelysRouter is IUnlockCallback, Ownable2Step, ReentrancyGuardTransient {
+contract ProvenaltRouter is ILockCallback, Ownable2Step, ReentrancyGuardTransient {
     using SafeERC20 for IERC20;
+    using CurrencyLibrary for Currency;
 
     error CreatorMustBeCaller();
     error UnknownToken();
     error Expired();
     error Slippage(uint256 out, uint256 minOut);
     error WrongValue();
-    error NotPoolManager();
+    error NotVault();
     error NativeTransferFailed();
 
     event LaunchedVia(address indexed token, bytes32 indexed poolId, address indexed creator);
@@ -52,7 +54,8 @@ contract HypelysRouter is IUnlockCallback, Ownable2Step, ReentrancyGuardTransien
     }
 
     LaunchCore public immutable core;
-    IPoolManager public immutable poolManager;
+    ICLPoolManager public immutable poolManager;
+    IVault public immutable vault;
     CurveHook public immutable hook;
     ProtocolConfig public immutable config;
     IntegratorRegistry public immutable registry;
@@ -69,6 +72,7 @@ contract HypelysRouter is IUnlockCallback, Ownable2Step, ReentrancyGuardTransien
     ) Ownable(owner_) {
         core = core_;
         poolManager = core_.poolManager();
+        vault = poolManager.vault();
         hook = core_.hook();
         config = core_.config();
         registry = core_.registry();
@@ -76,7 +80,7 @@ contract HypelysRouter is IUnlockCallback, Ownable2Step, ReentrancyGuardTransien
         integratorId = registry.register(name, uri, signer, payout, policy);
     }
 
-    /// @notice Receives dev-buy refunds from the hook and native swap outputs from the PoolManager.
+    /// @notice Receives dev-buy refunds from the hook and native swap outputs from the vault.
     receive() external payable {}
 
     // ===================================================================================== launch
@@ -145,17 +149,17 @@ contract HypelysRouter is IUnlockCallback, Ownable2Step, ReentrancyGuardTransien
         emit Swapped(token, msg.sender, false, owed, out);
     }
 
-    function unlockCallback(bytes calldata raw) external returns (bytes memory) {
-        if (msg.sender != address(poolManager)) revert NotPoolManager();
+    function lockAcquired(bytes calldata raw) external returns (bytes memory) {
+        if (msg.sender != address(vault)) revert NotVault();
         SwapData memory d = abi.decode(raw, (SwapData));
         (CurveHook.PoolInfo memory info, PoolKey memory key,) = hook.poolInfo(d.poolId);
         bool zeroForOne = d.buy ? !info.tokenIs0 : info.tokenIs0;
         BalanceDelta delta = poolManager.swap(
             key,
-            SwapParams({
+            ICLPoolManager.SwapParams({
                 zeroForOne: zeroForOne,
                 amountSpecified: -int256(d.amountIn),
-                sqrtPriceLimitX96: zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1
+                sqrtPriceLimitX96: zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1
             }),
             ""
         );
@@ -164,14 +168,14 @@ contract HypelysRouter is IUnlockCallback, Ownable2Step, ReentrancyGuardTransien
         uint256 owed = uint256(uint128(-inDelta));
         uint256 out = uint256(uint128(outDelta));
 
-        if (input.isAddressZero()) {
-            poolManager.settle{value: owed}();
+        if (input.isNative()) {
+            vault.settle{value: owed}();
         } else {
-            poolManager.sync(input);
-            IERC20(Currency.unwrap(input)).safeTransferFrom(d.payer, address(poolManager), owed);
-            poolManager.settle();
+            vault.sync(input);
+            IERC20(Currency.unwrap(input)).safeTransferFrom(d.payer, address(vault), owed);
+            vault.settle();
         }
-        poolManager.take(output, d.recipient, out);
+        vault.take(output, d.recipient, out);
         return abi.encode(out, owed);
     }
 
@@ -211,7 +215,7 @@ contract HypelysRouter is IUnlockCallback, Ownable2Step, ReentrancyGuardTransien
     }
 
     function _swap(SwapData memory d, uint256 minOut) internal returns (uint256 out, uint256 owed) {
-        (out, owed) = abi.decode(poolManager.unlock(abi.encode(d)), (uint256, uint256));
+        (out, owed) = abi.decode(vault.lock(abi.encode(d)), (uint256, uint256));
         if (out < minOut) revert Slippage(out, minOut);
     }
 

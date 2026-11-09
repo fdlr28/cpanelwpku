@@ -1,4 +1,4 @@
-// Phase 3: LaunchCore + CurveHook + FeeDistributor on a canonical Uniswap v4 PoolManager.
+// Phase 3: LaunchCore + CurveHook + FeeDistributor on a PancakeSwap Infinity vault + CL pool manager.
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { loadFixture, time } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
@@ -19,7 +19,7 @@ describe("v2 phase 3 · launch, curve, fees", function () {
       expect([r.protocolBps, r.integratorBps, r.creatorBps]).to.deep.equal([2000n, 0n, 8000n]);
       expect(r.poolTokens).to.equal(SUPPLY);
 
-      const pmBal = await token.balanceOf(await ctx.pm.getAddress());
+      const pmBal = await token.balanceOf(await ctx.infVault.getAddress()); // Infinity: pool tokens sit in the vault
       const dust = await token.balanceOf(DEAD);
       expect(pmBal + dust).to.equal(SUPPLY);
       expect(dust).to.be.lt(1_000_000n); // rounding of 15 band amounts, burned
@@ -311,7 +311,7 @@ describe("v2 phase 3 · launch, curve, fees", function () {
       await expect(ctx.pm.initialize(other, 2n ** 96n)).to.be.reverted;
       await ctx.usdc.connect(ctx.alice).approve(await ctx.lpRouter.getAddress(), ethers.MaxUint256);
       const lp = { tickLower: -887200, tickUpper: 887200, liquidityDelta: 10n ** 18n, salt: ethers.ZeroHash };
-      await expect(ctx.lpRouter.connect(ctx.alice)["modifyLiquidity((address,address,uint24,int24,address),(int24,int24,int256,bytes32),bytes)"](key, lp, "0x", { value: E(1) })).to.be.reverted;
+      await expect(ctx.lpRouter.connect(ctx.alice).modifyLiquidity(key, lp, "0x", { value: E(1) })).to.be.reverted;
     });
 
     it("never decreases band liquidity across trading and collects", async function () {
@@ -329,7 +329,7 @@ describe("v2 phase 3 · launch, curve, fees", function () {
       for (let i = 0; i < ASCEND_CURVE.length; i++) expect(await ctx.hook.bandLiquidity(poolId, i)).to.equal(before[i]);
     });
 
-    it("conserves supply: PoolManager + holders + vault + burned dust = 1e27", async function () {
+    it("conserves supply: Infinity vault + holders + vesting vault + burned dust = 1e27", async function () {
       const ctx = await loadFixture(fixture);
       const p = params(ctx.creator.address, { allocations: [{ recipient: ctx.creator.address, bps: 1000 }], cliff: 0, duration: 400 * DAY, devBuyTokens: E(5_000_000), maxDevBuyQuote: E(20) });
       const { poolId, launchedAt, token } = await doLaunch(ctx, ctx.user, p, E(20));
@@ -338,7 +338,7 @@ describe("v2 phase 3 · launch, curve, fees", function () {
       await token.connect(ctx.alice).approve(await ctx.router.getAddress(), ethers.MaxUint256);
       await swap(ctx, ctx.alice, poolId, { buy: false, amount: (await token.balanceOf(ctx.alice.address)) / 4n });
       await ctx.hook.collect(poolId);
-      const holders = [ctx.pm, ctx.vault, ctx.distributor, ctx.hook, ctx.core].map((c) => c.getAddress());
+      const holders = [ctx.infVault, ctx.vault, ctx.distributor, ctx.hook, ctx.core].map((c) => c.getAddress());
       let sum = 0n;
       for (const a of [...(await Promise.all(holders)), ctx.creator.address, ctx.alice.address, DEAD]) sum += await token.balanceOf(a);
       expect(sum).to.equal(SUPPLY);

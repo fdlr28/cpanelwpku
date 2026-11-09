@@ -1,31 +1,25 @@
-// Deploys and wires the full Eridanos v2 stack. Used by tests and (later) by the testnet deploy script.
+// Deploys and wires the full Eridanos v2 stack on PancakeSwap Infinity. Used by tests and deploy scripts.
 //
-// Order: PoolManager (given or new) → ProtocolConfig → IntegratorRegistry → VestingVault →
-//        CurveHook (CREATE2, mined permission bits) → FeeDistributor → LaunchCore → bind + setCore.
-const { ethers } = require("ethers");
-const { deployPoolManager } = require("./v4");
-const { mineHookSalt } = require("./hookMiner");
+// Order: Infinity vault + CL pool manager (given or new) → ProtocolConfig → IntegratorRegistry → VestingVault →
+//        CurveHook → FeeDistributor → LaunchCore → bind + setCore (by the caller).
+const { deployInfinity } = require("./infinity");
 
 async function deployEridanos(hre, { deployer, owner, treasury, guardian, poolManager } = {}) {
   const signer = deployer;
   const ownerAddr = owner ?? (await signer.getAddress());
-  const pm = poolManager ?? (await deployPoolManager(signer, ownerAddr));
+  let pm = poolManager;
+  let infVault;
+  if (!pm) ({ vault: infVault, poolManager: pm } = await deployInfinity(hre, signer));
+  else infVault = await hre.ethers.getContractAt("Vault", await pm.vault(), signer);
   const pmAddr = await pm.getAddress();
 
   const factory = (name) => hre.ethers.getContractFactory(name, signer);
   const config = await (await factory("ProtocolConfig")).deploy(ownerAddr, treasury, guardian);
   const registry = await (await factory("IntegratorRegistry")).deploy(ownerAddr, guardian);
   const vault = await (await factory("VestingVault")).deploy();
-  const hookDeployer = await (await factory("HookDeployer")).deploy();
-
-  const Hook = await factory("CurveHook");
-  const initCode = ethers.concat([
-    Hook.bytecode,
-    ethers.AbiCoder.defaultAbiCoder().encode(["address", "address"], [pmAddr, await signer.getAddress()]),
-  ]);
-  const { salt, address: hookAddr } = mineHookSalt(await hookDeployer.getAddress(), initCode);
-  await (await hookDeployer.deploy(salt, initCode)).wait();
-  const hook = Hook.attach(hookAddr);
+  const hook = await (await factory("CurveHook")).deploy(pmAddr, await signer.getAddress());
+  await hook.waitForDeployment();
+  const hookAddr = await hook.getAddress();
 
   const distributor = await (await factory("FeeDistributor")).deploy(await registry.getAddress(), await config.getAddress());
   const core = await (await factory("LaunchCore")).deploy(
@@ -40,12 +34,12 @@ async function deployEridanos(hre, { deployer, owner, treasury, guardian, poolMa
   await (await hook.bind(await core.getAddress(), await distributor.getAddress())).wait();
   await (await distributor.bind(await core.getAddress(), hookAddr)).wait();
 
-  return { pm, config, registry, vault, hook, distributor, core, hookDeployer, hookSalt: salt };
+  return { pm, infVault, config, registry, vault, hook, distributor, core };
 }
 
 /** Deploys an app router and registers it as an integrator (it becomes the record's account). */
 async function deployAppRouter(hre, stack, { deployer, owner, name, uri = "", signer, payout, policy }) {
-  const Router = await hre.ethers.getContractFactory("HypelysRouter", deployer);
+  const Router = await hre.ethers.getContractFactory("ProvenaltRouter", deployer);
   const router = await Router.deploy(owner, await stack.core.getAddress(), name, uri, signer, payout, policy);
   await router.waitForDeployment();
   return router;

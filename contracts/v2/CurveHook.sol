@@ -1,21 +1,21 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity 0.8.26;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IPoolManager} from "@uniswap/v4-core/src/interfaces/IPoolManager.sol";
-import {IHooks} from "@uniswap/v4-core/src/interfaces/IHooks.sol";
-import {IUnlockCallback} from "@uniswap/v4-core/src/interfaces/callback/IUnlockCallback.sol";
-import {Hooks} from "@uniswap/v4-core/src/libraries/Hooks.sol";
-import {LPFeeLibrary} from "@uniswap/v4-core/src/libraries/LPFeeLibrary.sol";
-import {TickMath} from "@uniswap/v4-core/src/libraries/TickMath.sol";
-import {StateLibrary} from "@uniswap/v4-core/src/libraries/StateLibrary.sol";
-import {PoolKey} from "@uniswap/v4-core/src/types/PoolKey.sol";
-import {PoolId, PoolIdLibrary} from "@uniswap/v4-core/src/types/PoolId.sol";
-import {Currency} from "@uniswap/v4-core/src/types/Currency.sol";
-import {BalanceDelta} from "@uniswap/v4-core/src/types/BalanceDelta.sol";
-import {BeforeSwapDelta, BeforeSwapDeltaLibrary, toBeforeSwapDelta} from "@uniswap/v4-core/src/types/BeforeSwapDelta.sol";
-import {ModifyLiquidityParams, SwapParams} from "@uniswap/v4-core/src/types/PoolOperation.sol";
+import {IVault} from "../vendor/infinity/src/interfaces/IVault.sol";
+import {IHooks} from "../vendor/infinity/src/interfaces/IHooks.sol";
+import {IPoolManager} from "../vendor/infinity/src/interfaces/IPoolManager.sol";
+import {ILockCallback} from "../vendor/infinity/src/interfaces/ILockCallback.sol";
+import {ICLPoolManager} from "../vendor/infinity/src/pool-cl/interfaces/ICLPoolManager.sol";
+import {ICLHooks} from "../vendor/infinity/src/pool-cl/interfaces/ICLHooks.sol";
+import {LPFeeLibrary} from "../vendor/infinity/src/libraries/LPFeeLibrary.sol";
+import {TickMath} from "../vendor/infinity/src/pool-cl/libraries/TickMath.sol";
+import {PoolKey} from "../vendor/infinity/src/types/PoolKey.sol";
+import {PoolId, PoolIdLibrary} from "../vendor/infinity/src/types/PoolId.sol";
+import {Currency, CurrencyLibrary} from "../vendor/infinity/src/types/Currency.sol";
+import {BalanceDelta} from "../vendor/infinity/src/types/BalanceDelta.sol";
+import {BeforeSwapDelta, BeforeSwapDeltaLibrary, toBeforeSwapDelta} from "../vendor/infinity/src/types/BeforeSwapDelta.sol";
 import {EridanosConstants as C} from "./libraries/EridanosConstants.sol";
 import {CurveHookFlags} from "./libraries/CurveHookFlags.sol";
 import {CurveBand, CurveMath} from "./libraries/CurveMath.sol";
@@ -26,24 +26,25 @@ interface IFeeDistributorHook {
 }
 
 /// @title CurveHook
-/// @notice Uniswap v4 hook, owner of every Eridanos LP position, and fee collector.
+/// @notice PancakeSwap Infinity CL hook, owner of every Eridanos LP position, and fee collector.
 ///
-///  Pool    PoolKey{token/quote, fee = DYNAMIC_FEE_FLAG, tickSpacing = 200, hooks = this}. Only this contract
-///          can create such pools (beforeInitialize) or add liquidity to them (beforeAddLiquidity); v4 skips
-///          the hook when the hook itself is the caller, which is how our own seeding passes.
+///  Pool    PoolKey{token/quote, fee = DYNAMIC_FEE_FLAG, parameters = hook bitmap + tickSpacing 200,
+///          hooks = this, poolManager = the CL pool manager}. Only this contract can create such pools
+///          (beforeInitialize) or add liquidity to them (beforeAddLiquidity); Infinity skips the hook when the
+///          hook itself is the caller, which is how our own seeding passes.
 ///  Curve   The preset's bands are seeded single-sided with the pool's tokens. No code path ever removes
 ///          liquidity: `collect` pokes positions with a zero delta to harvest fees only.
 ///  Fees    base fee 1% for life (LP fee override, also stored for quoters), split by FeeDistributor.
 ///          During the first DECAY_SECONDS after launch (block.timestamp only — on Orbit, block.number is the
 ///          parent chain's) a surcharge brings the total to f(t) = 1% + 89% · (10 − t)/10. The surcharge is
-///          taken from the swap's input via return deltas and held as ERC-6909 claims:
+///          taken from the swap's input via return deltas and held as vault claims:
 ///          in quote → 100% protocol; in token → burned (sent to 0x…dEaD). Never to creator or integrator.
 ///          The dev buy in the launch transaction is executed by this hook, so it skips the surcharge and
 ///          pays the stored 1% LP fee (decision D3c).
-contract CurveHook is IUnlockCallback {
+contract CurveHook is ICLHooks, ILockCallback {
     using SafeERC20 for IERC20;
     using PoolIdLibrary for PoolKey;
-    using StateLibrary for IPoolManager;
+    using CurrencyLibrary for Currency;
 
     struct PoolInfo {
         address token;
@@ -74,11 +75,13 @@ contract CurveHook is IUnlockCallback {
     uint256 private constant PIPS = 1_000_000;
 
     error NotPoolManager();
+    error NotVault();
     error NotCore();
     error NotDeployer();
     error AlreadyBound();
     error ExternalPoolsNotAllowed();
     error ExternalLiquidityNotAllowed();
+    error HookNotImplemented();
     error UnknownPool();
     error PoolAlreadySeeded();
     error InvalidBandLiquidity(uint256 index);
@@ -92,7 +95,8 @@ contract CurveHook is IUnlockCallback {
     event Collected(bytes32 indexed poolId, uint256 tokenFees, uint256 quoteFees);
     event SurchargeFlushed(address indexed currency, uint256 amount, bool burned);
 
-    IPoolManager public immutable poolManager;
+    ICLPoolManager public immutable poolManager;
+    IVault public immutable vault;
     address private immutable _deployer;
     address public core;
     IFeeDistributorHook public distributor;
@@ -101,12 +105,11 @@ contract CurveHook is IUnlockCallback {
     mapping(PoolId => BandTicks[]) internal _bands;
     mapping(PoolId => PoolKey) internal _keys;
 
-    /// @param binder_ The account allowed to call `bind` once. Passed explicitly because the hook is deployed
-    ///        through a CREATE2 deployer (to mine its permission bits), so msg.sender here is that deployer.
-    constructor(IPoolManager poolManager_, address binder_) {
+    /// @param binder_ The account allowed to call `bind` once (core and distributor are deployed after this hook).
+    constructor(ICLPoolManager poolManager_, address binder_) {
         poolManager = poolManager_;
+        vault = poolManager_.vault();
         _deployer = binder_;
-        Hooks.validateHookPermissions(IHooks(address(this)), CurveHookFlags.permissions());
     }
 
     /// @notice One-time wiring (core and distributor need this hook's address, so they come after it).
@@ -122,9 +125,14 @@ contract CurveHook is IUnlockCallback {
         _;
     }
 
-    /// @notice Native HYPE for the dev buy comes from the core; the PoolManager never pays this contract
-    ///         natively except as part of an operation started here.
+    /// @notice Native HYPE for the dev buy comes from the core; the vault never pays this contract natively
+    ///         except as part of an operation started here.
     receive() external payable {}
+
+    /// @inheritdoc IHooks
+    function getHooksRegistrationBitmap() external pure returns (uint16) {
+        return CurveHookFlags.BITMAP;
+    }
 
     // ===================================================================================== launch
 
@@ -140,9 +148,10 @@ contract CurveHook is IUnlockCallback {
         PoolKey memory key = PoolKey({
             currency0: Currency.wrap(tokenIs0 ? p.token : p.quote),
             currency1: Currency.wrap(tokenIs0 ? p.quote : p.token),
+            hooks: IHooks(address(this)),
+            poolManager: IPoolManager(address(poolManager)),
             fee: LPFeeLibrary.DYNAMIC_FEE_FLAG,
-            tickSpacing: C.TICK_SPACING,
-            hooks: IHooks(address(this))
+            parameters: CurveHookFlags.parameters()
         });
         PoolId id = key.toId();
         if (_pools[id].token != address(0)) revert PoolAlreadySeeded();
@@ -155,11 +164,11 @@ contract CurveHook is IUnlockCallback {
             stored.push(BandTicks(lo, up));
         }
 
-        poolManager.initialize(key, TickMath.getSqrtPriceAtTick(CurveMath.startPoolTick(tokenIs0, p.startTick, C.TICK_SPACING)));
+        poolManager.initialize(key, TickMath.getSqrtRatioAtTick(CurveMath.startPoolTick(tokenIs0, p.startTick, C.TICK_SPACING)));
         // Store the base fee: quoters read it, and our own dev buy (which skips beforeSwap) pays it.
         poolManager.updateDynamicLPFee(key, C.BASE_FEE);
 
-        quoteSpent = abi.decode(poolManager.unlock(abi.encode(OP_SEED, abi.encode(key, p, bands))), (uint256));
+        quoteSpent = abi.decode(vault.lock(abi.encode(OP_SEED, abi.encode(key, p, bands))), (uint256));
 
         // Rounding dust of the band amounts is burned rather than kept anywhere.
         uint256 dust = IERC20(p.token).balanceOf(address(this));
@@ -183,7 +192,7 @@ contract CurveHook is IUnlockCallback {
         if (info.token == address(0)) revert UnknownPool();
         uint256 quoteSurcharge;
         (tokenFees, quoteFees, quoteSurcharge) =
-            abi.decode(poolManager.unlock(abi.encode(OP_COLLECT, abi.encode(id))), (uint256, uint256, uint256));
+            abi.decode(vault.lock(abi.encode(OP_COLLECT, abi.encode(id))), (uint256, uint256, uint256));
         distributor.credit(poolId, tokenFees, quoteFees);
         distributor.creditSurcharge(info.quote, quoteSurcharge);
         emit Collected(poolId, tokenFees, quoteFees);
@@ -203,9 +212,10 @@ contract CurveHook is IUnlockCallback {
         return _surchargeRate(info.launchedAt);
     }
 
-    // ===================================================================================== v4 callbacks
+    // ===================================================================================== vault callback
 
-    function unlockCallback(bytes calldata raw) external onlyPoolManager returns (bytes memory) {
+    function lockAcquired(bytes calldata raw) external returns (bytes memory) {
+        if (msg.sender != address(vault)) revert NotVault();
         (uint8 op, bytes memory data) = abi.decode(raw, (uint8, bytes));
         if (op == OP_SEED) {
             (PoolKey memory key, SeedParams memory p, CurveBand[] memory bands) =
@@ -215,12 +225,14 @@ contract CurveHook is IUnlockCallback {
         return _collectCallback(abi.decode(data, (PoolId)));
     }
 
+    // ===================================================================================== hook callbacks
+
     function beforeInitialize(address, PoolKey calldata, uint160) external view onlyPoolManager returns (bytes4) {
         // Reached only when someone other than this hook initialises a pool that names it.
         revert ExternalPoolsNotAllowed();
     }
 
-    function beforeAddLiquidity(address, PoolKey calldata, ModifyLiquidityParams calldata, bytes calldata)
+    function beforeAddLiquidity(address, PoolKey calldata, ICLPoolManager.ModifyLiquidityParams calldata, bytes calldata)
         external
         view
         onlyPoolManager
@@ -230,7 +242,7 @@ contract CurveHook is IUnlockCallback {
         revert ExternalLiquidityNotAllowed();
     }
 
-    function beforeSwap(address, PoolKey calldata key, SwapParams calldata params, bytes calldata)
+    function beforeSwap(address, PoolKey calldata key, ICLPoolManager.SwapParams calldata params, bytes calldata)
         external
         onlyPoolManager
         returns (bytes4, BeforeSwapDelta, uint24)
@@ -239,36 +251,81 @@ contract CurveHook is IUnlockCallback {
         PoolId id = key.toId();
         uint256 f = _scheduleFee(_pools[id].launchedAt);
         if (f <= C.BASE_FEE || params.amountSpecified >= 0) {
-            return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, lpFee);
+            return (ICLHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, lpFee);
         }
         // Exact input X (the specified currency is the input). Total fee must be f·X, the LP fee is BASE on
         // what reaches the pool: s + BASE·(X − s) = f·X  ⇒  s = X·(f − BASE)/(1 − BASE).
         uint256 surcharge = (uint256(-params.amountSpecified) * (f - C.BASE_FEE)) / (PIPS - C.BASE_FEE);
-        if (surcharge == 0) return (IHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, lpFee);
+        if (surcharge == 0) return (ICLHooks.beforeSwap.selector, BeforeSwapDeltaLibrary.ZERO_DELTA, lpFee);
         Currency input = params.zeroForOne ? key.currency0 : key.currency1;
-        poolManager.mint(address(this), input.toId(), surcharge);
+        vault.mint(address(this), input, surcharge);
         emit SurchargeCharged(PoolId.unwrap(id), Currency.unwrap(input), surcharge, true);
-        return (IHooks.beforeSwap.selector, toBeforeSwapDelta(int128(int256(surcharge)), 0), lpFee);
+        return (ICLHooks.beforeSwap.selector, toBeforeSwapDelta(int128(int256(surcharge)), 0), lpFee);
     }
 
-    function afterSwap(address, PoolKey calldata key, SwapParams calldata params, BalanceDelta delta, bytes calldata)
-        external
-        onlyPoolManager
-        returns (bytes4, int128)
-    {
-        if (params.amountSpecified < 0) return (IHooks.afterSwap.selector, 0);
+    function afterSwap(
+        address,
+        PoolKey calldata key,
+        ICLPoolManager.SwapParams calldata params,
+        BalanceDelta delta,
+        bytes calldata
+    ) external onlyPoolManager returns (bytes4, int128) {
+        if (params.amountSpecified < 0) return (ICLHooks.afterSwap.selector, 0);
         PoolId id = key.toId();
         uint256 f = _scheduleFee(_pools[id].launchedAt);
-        if (f <= C.BASE_FEE) return (IHooks.afterSwap.selector, 0);
+        if (f <= C.BASE_FEE) return (ICLHooks.afterSwap.selector, 0);
         // Exact output: the unspecified currency is the input and A (what the pool took, LP fee included) is
         // only known now. Gross input T = A + s and total fee f·T = s + BASE·A  ⇒  s = A·(f − BASE)/(1 − f).
         int128 poolInput = params.zeroForOne ? delta.amount0() : delta.amount1();
         uint256 surcharge = (uint256(uint128(-poolInput)) * (f - C.BASE_FEE)) / (PIPS - f);
-        if (surcharge == 0) return (IHooks.afterSwap.selector, 0);
+        if (surcharge == 0) return (ICLHooks.afterSwap.selector, 0);
         Currency input = params.zeroForOne ? key.currency0 : key.currency1;
-        poolManager.mint(address(this), input.toId(), surcharge);
+        vault.mint(address(this), input, surcharge);
         emit SurchargeCharged(PoolId.unwrap(id), Currency.unwrap(input), surcharge, false);
-        return (IHooks.afterSwap.selector, int128(int256(surcharge)));
+        return (ICLHooks.afterSwap.selector, int128(int256(surcharge)));
+    }
+
+    // Callbacks this hook does not register (Infinity never calls them for our pools).
+    function afterInitialize(address, PoolKey calldata, uint160, int24) external pure returns (bytes4) {
+        revert HookNotImplemented();
+    }
+
+    function afterAddLiquidity(
+        address,
+        PoolKey calldata,
+        ICLPoolManager.ModifyLiquidityParams calldata,
+        BalanceDelta,
+        BalanceDelta,
+        bytes calldata
+    ) external pure returns (bytes4, BalanceDelta) {
+        revert HookNotImplemented();
+    }
+
+    function beforeRemoveLiquidity(address, PoolKey calldata, ICLPoolManager.ModifyLiquidityParams calldata, bytes calldata)
+        external
+        pure
+        returns (bytes4)
+    {
+        revert HookNotImplemented();
+    }
+
+    function afterRemoveLiquidity(
+        address,
+        PoolKey calldata,
+        ICLPoolManager.ModifyLiquidityParams calldata,
+        BalanceDelta,
+        BalanceDelta,
+        bytes calldata
+    ) external pure returns (bytes4, BalanceDelta) {
+        revert HookNotImplemented();
+    }
+
+    function beforeDonate(address, PoolKey calldata, uint256, uint256, bytes calldata) external pure returns (bytes4) {
+        revert HookNotImplemented();
+    }
+
+    function afterDonate(address, PoolKey calldata, uint256, uint256, bytes calldata) external pure returns (bytes4) {
+        revert HookNotImplemented();
     }
 
     // ===================================================================================== internals
@@ -288,7 +345,7 @@ contract CurveHook is IUnlockCallback {
             (int24 lo, int24 up) = CurveMath.bandTicks(tokenIs0, p.startTick, bands[i]);
             (BalanceDelta callerDelta,) = poolManager.modifyLiquidity(
                 key,
-                ModifyLiquidityParams({tickLower: lo, tickUpper: up, liquidityDelta: int256(liquidity), salt: bytes32(0)}),
+                ICLPoolManager.ModifyLiquidityParams({tickLower: lo, tickUpper: up, liquidityDelta: int256(liquidity), salt: bytes32(0)}),
                 ""
             );
             owed += uint256(uint128(-(tokenIs0 ? callerDelta.amount0() : callerDelta.amount1())));
@@ -299,10 +356,10 @@ contract CurveHook is IUnlockCallback {
             bool zeroForOne = !tokenIs0; // pay quote, receive token
             BalanceDelta d = poolManager.swap(
                 key,
-                SwapParams({
+                ICLPoolManager.SwapParams({
                     zeroForOne: zeroForOne,
                     amountSpecified: int256(p.devBuyTokens), // exact output
-                    sqrtPriceLimitX96: zeroForOne ? TickMath.MIN_SQRT_PRICE + 1 : TickMath.MAX_SQRT_PRICE - 1
+                    sqrtPriceLimitX96: zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1
                 }),
                 ""
             );
@@ -312,7 +369,7 @@ contract CurveHook is IUnlockCallback {
             quoteSpent = uint256(uint128(-quoteDelta));
             if (quoteSpent > p.maxDevBuyQuote) revert DevBuyTooExpensive(quoteSpent, p.maxDevBuyQuote);
             _settle(Currency.wrap(p.quote), quoteSpent);
-            poolManager.take(Currency.wrap(p.token), p.devBuyRecipient, received);
+            vault.take(Currency.wrap(p.token), p.devBuyRecipient, received);
         }
     }
 
@@ -325,7 +382,7 @@ contract CurveHook is IUnlockCallback {
         for (uint256 i; i < bands.length; ++i) {
             (BalanceDelta d,) = poolManager.modifyLiquidity(
                 key,
-                ModifyLiquidityParams({
+                ICLPoolManager.ModifyLiquidityParams({
                     tickLower: bands[i].tickLower,
                     tickUpper: bands[i].tickUpper,
                     liquidityDelta: 0,
@@ -339,8 +396,8 @@ contract CurveHook is IUnlockCallback {
         (uint256 tokenFees, uint256 quoteFees) =
             info.tokenIs0 ? (uint256(fees0), uint256(fees1)) : (uint256(fees1), uint256(fees0));
         address dist = address(distributor);
-        if (tokenFees != 0) poolManager.take(Currency.wrap(info.token), dist, tokenFees);
-        if (quoteFees != 0) poolManager.take(Currency.wrap(info.quote), dist, quoteFees);
+        if (tokenFees != 0) vault.take(Currency.wrap(info.token), dist, tokenFees);
+        if (quoteFees != 0) vault.take(Currency.wrap(info.quote), dist, quoteFees);
 
         // Surcharge claims: this pool's token → burn; quote (shared by all pools) → protocol.
         uint256 tokenSurcharge = _redeemClaims(Currency.wrap(info.token), DEAD);
@@ -351,20 +408,20 @@ contract CurveHook is IUnlockCallback {
     }
 
     function _redeemClaims(Currency currency, address to) internal returns (uint256 amount) {
-        amount = poolManager.balanceOf(address(this), currency.toId());
+        amount = vault.balanceOf(address(this), currency);
         if (amount == 0) return 0;
-        poolManager.burn(address(this), currency.toId(), amount);
-        poolManager.take(currency, to, amount);
+        vault.burn(address(this), currency, amount);
+        vault.take(currency, to, amount);
     }
 
     function _settle(Currency currency, uint256 amount) internal {
         if (amount == 0) return;
-        if (currency.isAddressZero()) {
-            poolManager.settle{value: amount}();
+        if (currency.isNative()) {
+            vault.settle{value: amount}();
         } else {
-            poolManager.sync(currency);
-            IERC20(Currency.unwrap(currency)).safeTransfer(address(poolManager), amount);
-            poolManager.settle();
+            vault.sync(currency);
+            IERC20(Currency.unwrap(currency)).safeTransfer(address(vault), amount);
+            vault.settle();
         }
     }
 
@@ -410,6 +467,6 @@ contract CurveHook is IUnlockCallback {
     function bandLiquidity(bytes32 poolId, uint256 index) external view returns (uint128 liquidity) {
         PoolId id = PoolId.wrap(poolId);
         BandTicks storage b = _bands[id][index];
-        (liquidity,,) = poolManager.getPositionInfo(id, address(this), b.tickLower, b.tickUpper, bytes32(0));
+        liquidity = poolManager.getLiquidity(id, address(this), b.tickLower, b.tickUpper, bytes32(0));
     }
 }

@@ -1,4 +1,4 @@
-// Third-party integrator, mode A: "Agora" deploys its own router (any HypelysRouter-like contract works),
+// Third-party integrator, mode A: "Agora" deploys its own router (any ProvenaltRouter-like contract works),
 // which registers itself in the IntegratorRegistry. Launches it forwards are attributed to Agora on-chain.
 //   npx hardhat run examples/agora-mode-a.js
 const hre = require("hardhat");

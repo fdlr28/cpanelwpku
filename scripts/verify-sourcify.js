@@ -21,15 +21,6 @@ function hardhatJob(source, name) {
   return { stdJsonInput: bi.input, compilerVersion: longVersion.replace(/\.Emscripten.*$/, ""), contractIdentifier: `${source}:${name}` };
 }
 
-function poolManagerJob() {
-  const art = require("@uniswap/v4-core/out/PoolManager.sol/PoolManager.json");
-  const metadata = JSON.parse(art.rawMetadata);
-  const base = path.dirname(require.resolve("@uniswap/v4-core/package.json"));
-  const sources = {};
-  for (const p of Object.keys(metadata.sources)) sources[p] = fs.readFileSync(path.join(base, p), "utf8");
-  return { metadataJob: true, metadata, sources };
-}
-
 async function api(method, url, body) {
   const r = await fetch(API + url, { method, headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   const text = await r.text();
@@ -45,8 +36,8 @@ async function status(chainId, address) {
 async function verify(chainId, label, address, job) {
   const already = await status(chainId, address);
   if (already) { console.log(`= ${label} ${address}: already ${already}`); return already; }
-  const url = job.metadataJob ? `/v2/verify/metadata/${chainId}/${address}` : `/v2/verify/${chainId}/${address}`;
-  const body = job.metadataJob ? { metadata: job.metadata, sources: job.sources } : job;
+  const url = `/v2/verify/${chainId}/${address}`;
+  const body = job;
   const res = await api("POST", url, body);
   if (res.status >= 300 || !res.j.verificationId) { console.log(`✗ ${label} ${address}: HTTP ${res.status} ${JSON.stringify(res.j).slice(0, 300)}`); return null; }
   for (let i = 0; i < 90; i++) {
@@ -65,16 +56,16 @@ async function verify(chainId, label, address, job) {
 async function main() {
   const chainId = d.chainId;
   const jobs = [
-    ["PoolManager", d.poolManager, poolManagerJob()],
+    ["Infinity Vault", d.infinityVault, hardhatJob("contracts/vendor/infinity/src/Vault.sol", "Vault")],
+    ["Infinity CLPoolManager", d.poolManager, hardhatJob("contracts/vendor/infinity/src/pool-cl/CLPoolManager.sol", "CLPoolManager")],
     ["EridanosTimelock", d.timelock, hardhatJob("contracts/v2/governance/EridanosTimelock.sol", "EridanosTimelock")],
     ["ProtocolConfig", d.config, hardhatJob("contracts/v2/ProtocolConfig.sol", "ProtocolConfig")],
     ["IntegratorRegistry", d.registry, hardhatJob("contracts/v2/IntegratorRegistry.sol", "IntegratorRegistry")],
     ["VestingVault", d.vault, hardhatJob("contracts/v2/VestingVault.sol", "VestingVault")],
-    ["HookDeployer", d.hookDeployer, hardhatJob("contracts/v2/utils/HookDeployer.sol", "HookDeployer")],
     ["CurveHook", d.hook, hardhatJob("contracts/v2/CurveHook.sol", "CurveHook")],
     ["FeeDistributor", d.distributor, hardhatJob("contracts/v2/FeeDistributor.sol", "FeeDistributor")],
     ["LaunchCore", d.core, hardhatJob("contracts/v2/LaunchCore.sol", "LaunchCore")],
-    ["HypelysRouter", d.router, hardhatJob("contracts/v2/app/HypelysRouter.sol", "HypelysRouter")],
+    ["ProvenaltRouter", d.router, hardhatJob("contracts/v2/app/ProvenaltRouter.sol", "ProvenaltRouter")],
   ];
   const provider = new ethers.JsonRpcProvider(RPC, chainId, { staticNetwork: true });
   const launches = await sdk.listLaunches(provider, d.core, { fromBlock: d.deployBlock || 0 });

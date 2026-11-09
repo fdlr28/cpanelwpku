@@ -1,5 +1,5 @@
-// Shared fixture for the Eridanos launch/attack suites: full stack on a canonical v4 PoolManager,
-// HYPE and USDC presets, integrator #1 ("Provenalt"), v4-core test routers.
+// Shared fixture for the Eridanos launch/attack suites: full stack on a PancakeSwap Infinity vault + CL pool
+// manager, HYPE and USDC presets, integrator #1 ("Provenalt"), minimal Infinity test routers.
 const hre = require("hardhat");
 const { ethers } = hre;
 const { deployEridanos } = require("../../scripts/lib/eridanos");
@@ -43,8 +43,8 @@ async function fixture() {
   await registry.setCore(await core.getAddress(), true);
   await registry.connect(app).register("Provenalt", "https://provenalt.example", appSigner.address, payout.address, MAX_POLICY);
 
-  const router = await ethers.deployContract("PoolSwapTest", [await pm.getAddress()]);
-  const lpRouter = await ethers.deployContract("PoolModifyLiquidityTest", [await pm.getAddress()]);
+  const router = await ethers.deployContract("CLSwapTestRouter", [await pm.getAddress()]);
+  const lpRouter = await ethers.deployContract("CLLiquidityTestRouter", [await pm.getAddress()]);
   for (const s of [alice, bob, user, creator]) {
     await usdc.transfer(s.address, 10n ** 24n);
     await usdc.connect(s).approve(await router.getAddress(), ethers.MaxUint256);
@@ -83,10 +83,8 @@ async function doLaunch(ctx, signer, p, value = 0n) {
 
 async function keyOf(ctx, poolId) {
   const [info, key] = await ctx.hook.poolInfo(poolId);
-  return { info, key: { currency0: key.currency0, currency1: key.currency1, fee: key.fee, tickSpacing: key.tickSpacing, hooks: key.hooks } };
+  return { info, key: { currency0: key.currency0, currency1: key.currency1, hooks: key.hooks, poolManager: key.poolManager, fee: key.fee, parameters: key.parameters } };
 }
-
-const SETTINGS = { takeClaims: false, settleUsingBurn: false };
 
 /** amount > 0: exact input of `amount`; amount < 0 handled by exactOut flag. */
 async function swap(ctx, signer, poolId, { buy, amount, exactOut = false }) {
@@ -95,7 +93,7 @@ async function swap(ctx, signer, poolId, { buy, amount, exactOut = false }) {
   const paysNative = buy && info.quote === ethers.ZeroAddress;
   const p = { zeroForOne, amountSpecified: exactOut ? amount : -amount, sqrtPriceLimitX96: zeroForOne ? MIN_SQRT : MAX_SQRT };
   const value = paysNative ? (exactOut ? E(1000) : amount) : 0n;
-  const tx = await ctx.router.connect(signer).swap(key, p, SETTINGS, "0x", { value });
+  const tx = await ctx.router.connect(signer).swap(key, p, "0x", { value });
   return tx.wait();
 }
 
@@ -105,6 +103,6 @@ function events(ctx, rc, contract, name) {
 
 
 module.exports = {
-  E, PIPS, BASE, START, DECAY, DEAD, MIN_SQRT, MAX_SQRT, USDC_START_TICK, SETTINGS,
+  E, PIPS, BASE, START, DECAY, DEAD, MIN_SQRT, MAX_SQRT, USDC_START_TICK,
   scheduleFee, surchargeRate, exactInSurcharge, fixture, params, clean, doLaunch, keyOf, swap, events,
 };

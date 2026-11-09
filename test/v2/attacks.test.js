@@ -4,8 +4,9 @@ const { ethers, network } = require("hardhat");
 const { loadFixture, time } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const { SUPPLY, MAX_POLICY, signIntent } = require("./helpers");
 const {
-  E, PIPS, BASE, START, DEAD, SETTINGS, MIN_SQRT, exactInSurcharge, fixture, params, clean, doLaunch, keyOf, swap, events,
+  E, PIPS, BASE, START, DEAD, MIN_SQRT, exactInSurcharge, fixture, params, clean, doLaunch, keyOf, swap, events,
 } = require("./launchFixture");
+const { clParameters, CURVE_HOOK_BITMAP } = require("../../scripts/lib/infinity");
 
 describe("v2 phase 4 · attacks", function () {
   describe("attribution", function () {
@@ -82,13 +83,14 @@ describe("v2 phase 4 · attacks", function () {
       const ctx = await loadFixture(fixture);
       const p = clean(params(ctx.creator.address));
       const tokenAddr = await ctx.core.predictToken(ctx.user.address, p);
-      const key = { currency0: ethers.ZeroAddress, currency1: tokenAddr, fee: 0x800000, tickSpacing: 200, hooks: await ctx.hook.getAddress() };
+      const key = { currency0: ethers.ZeroAddress, currency1: tokenAddr, hooks: await ctx.hook.getAddress(),
+        poolManager: await ctx.pm.getAddress(), fee: 0x800000, parameters: clParameters(CURVE_HOOK_BITMAP) };
       const amount = E(1);
       await network.provider.send("evm_setAutomine", [false]);
       try {
         const launchTx = await ctx.core.connect(ctx.user).launch(p, { gasLimit: 15_000_000 });
         const snipeTx = await ctx.router.connect(ctx.alice).swap(
-          key, { zeroForOne: true, amountSpecified: -amount, sqrtPriceLimitX96: MIN_SQRT }, SETTINGS, "0x", { value: amount, gasLimit: 2_000_000 }
+          key, { zeroForOne: true, amountSpecified: -amount, sqrtPriceLimitX96: MIN_SQRT }, "0x", { value: amount, gasLimit: 2_000_000 }
         );
         await network.provider.send("evm_mine", []);
         const [l, s] = [await launchTx.wait(), await snipeTx.wait()];
@@ -139,7 +141,7 @@ describe("v2 phase 4 · attacks", function () {
       const [, , bands] = await ctx.hook.poolInfo(poolId);
       const remove = { tickLower: bands[0].tickLower, tickUpper: bands[0].tickUpper, liquidityDelta: -1n, salt: ethers.ZeroHash };
       await expect(
-        ctx.lpRouter.connect(ctx.alice)["modifyLiquidity((address,address,uint24,int24,address),(int24,int24,int256,bytes32),bytes)"](key, remove, "0x")
+        ctx.lpRouter.connect(ctx.alice).modifyLiquidity(key, remove, "0x")
       ).to.be.reverted;
       expect(await ctx.hook.bandLiquidity(poolId, 0)).to.be.gt(0n);
     });
@@ -147,10 +149,26 @@ describe("v2 phase 4 · attacks", function () {
     it("the hook exposes no liquidity-removal or admin withdrawal function", async function () {
       const ctx = await loadFixture(fixture);
       const fns = ctx.hook.interface.fragments.filter((f) => f.type === "function").map((f) => f.name).sort();
+      // Callbacks the ICLHooks interface requires but CurveHook does not register: they always revert.
+      const stubs = ["afterAddLiquidity", "afterDonate", "afterInitialize", "afterRemoveLiquidity", "beforeDonate", "beforeRemoveLiquidity"];
       expect(fns).to.deep.equal([
         "afterSwap", "bandLiquidity", "beforeAddLiquidity", "beforeInitialize", "beforeSwap", "bind", "collect", "core",
-        "currentFee", "DEAD", "distributor", "poolInfo", "poolManager", "seed", "spot", "surchargeRate", "unlockCallback",
+        "currentFee", "DEAD", "distributor", "getHooksRegistrationBitmap", "lockAcquired", "poolInfo", "poolManager", "seed",
+        "spot", "surchargeRate", "vault", ...stubs,
       ].sort());
+      const key = { currency0: ethers.ZeroAddress, currency1: ethers.ZeroAddress, hooks: ethers.ZeroAddress, poolManager: ethers.ZeroAddress, fee: 0, parameters: ethers.ZeroHash };
+      const lp = { tickLower: 0, tickUpper: 0, liquidityDelta: 0, salt: ethers.ZeroHash };
+      const zero = 0n;
+      for (const call of [
+        ctx.hook.afterInitialize.staticCall(ctx.alice.address, key, 1n, 0),
+        ctx.hook.afterAddLiquidity.staticCall(ctx.alice.address, key, lp, zero, zero, "0x"),
+        ctx.hook.beforeRemoveLiquidity.staticCall(ctx.alice.address, key, lp, "0x"),
+        ctx.hook.afterRemoveLiquidity.staticCall(ctx.alice.address, key, lp, zero, zero, "0x"),
+        ctx.hook.beforeDonate.staticCall(ctx.alice.address, key, 1n, 1n, "0x"),
+        ctx.hook.afterDonate.staticCall(ctx.alice.address, key, 1n, 1n, "0x"),
+      ]) await expect(call).to.be.revertedWithCustomError(ctx.hook, "HookNotImplemented");
+      // lockAcquired only answers the vault.
+      await expect(ctx.hook.lockAcquired("0x")).to.be.revertedWithCustomError(ctx.hook, "NotVault");
     });
 
     it("bind can only happen once", async function () {
