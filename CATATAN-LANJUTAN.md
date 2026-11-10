@@ -110,8 +110,9 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
 
 Admin = `0x78DceE56aD39180adDed458B8D09D445aAbFAde1` (proposer/canceller Timelock 48 jam, treasury, guardian, owner +
 payout router). Dicek di chain 44/44, source 10/10 di Sourcify Conduit, **indexer Railway sudah melayani mainnet**,
-`frontend/config.js` sudah config mainnet dan diuji di browser. **Tinggal: deploy website dari Mac** (bagian 3b,
-`cd frontend && npx vercel --prod`) dari jaringan tepercaya (bukan Wi-Fi dengan firewall Fortinet yang menyadap HTTPS).
+dan **website https://provenalt.xyz sudah mainnet** (deploy Vercel dari Mac 10 Nov 2026; dicek di browser: chain 99901,
+tanpa badge Testnet, memakai indexer mainnet, tanpa error; `config.local.js` dan `.env` tidak terunggah). Deploy dari
+Mac sebaiknya dari jaringan tepercaya (bukan Wi-Fi dengan firewall Fortinet yang menyadap HTTPS).
 Testnet tetap ada di chain (`deployments/elysiumTestnet-v2.json`), tapi tidak lagi punya indexer maupun website.
 
 Riwayat persiapan (pilihan A: deploy dari Mac dengan dompet sendiri). Panduan:
@@ -131,8 +132,8 @@ Siapkan ≥ 0,05 HYPE di deployer (perkiraan biaya ±0,012 HYPE pada 0,5 gwei). 
   pemilik (seperti testnet: proposer/canceller Timelock, treasury, guardian, owner router). Saran yang tetap berlaku:
   dompet itu di hardware wallet, kunci tidak disimpan di `.env`/cloud, jeda Timelock mainnet 48 jam sesuai desain.
 * ✅ Penghalang lisensi selesai: mesin pool kini PancakeSwap Infinity CL (GPL-2.0-or-later), di-deploy sendiri.
-* Belum: deploy website mainnet ke Vercel (pemilik), audit eksternal (disarankan sebelum dana publik masuk), RPC
-  Alchemy untuk indexer (`RPC_URL` di Railway) bila RPC publik membatasi.
+* Belum: audit eksternal (disarankan sebelum dana publik masuk); RPC Alchemy untuk indexer (`RPC_URL` di Railway) bila
+  RPC publik membatasi; peluncuran pertama di mainnet sebagai uji nyata.
 * Indexer testnet sengaja **tidak dihapus**: provenalt.xyz bergantung padanya. Saat kontrak mainnet ada, service
   Railway yang sama diarahkan ke mainnet (`indexer/deployment.json` mainnet + `RESET_DB_FOR_DEPLOYMENT`, atau database
   baru). Website mengabaikan indexer yang melayani chain/core lain, jadi urutan peralihan aman: indexer dulu, lalu

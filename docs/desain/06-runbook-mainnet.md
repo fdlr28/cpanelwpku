@@ -205,7 +205,9 @@ Diperiksa setelah deploy (sesi Claude, hanya membaca):
 * indexer Railway dipindah ke mainnet (`RESET_DB_FOR_DEPLOYMENT=99901:0x837ac78d…0cae`), `/health` chain 99901 tanpa
   error;
 * website dengan config mainnet (`frontend/config.js`) diuji di browser terhadap RPC resmi dan indexer mainnet: tanpa
-  error, badge Testnet hilang, estimasi dev buy 1% ≈ 0,309 HYPE. RPC resmi mengizinkan CORS (`*`).
+  error, badge Testnet hilang, estimasi dev buy 1% ≈ 0,309 HYPE. RPC resmi mengizinkan CORS (`*`);
+* website live: pemilik deploy ke Vercel (10 Nov 2026); https://provenalt.xyz menyajikan config mainnet, dicek di
+  browser tanpa error.
 
 ## Uji skrip (10 Nov 2026, sesi Claude, tanpa kunci)
 
