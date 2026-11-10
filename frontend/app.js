@@ -350,15 +350,17 @@
       <h2 style="margin-top:0">Launch a token</h2>
       <p class="muted small">1,000,000,000 supply. No owner, no minting. 1% trading fee forever: protocol 20%,
       ${esc(OUR_APP)} ${pct(policy.integratorBps)}, creator ${pct(8000n - BigInt(policy.integratorBps))}.</p>
-      <form id="f">
+      <form id="f" novalidate>
         <div class="row"><div><label>Name</label><input name="name" maxlength="32" required /></div>
         <div><label>Ticker</label><input name="symbol" maxlength="12" required style="text-transform:uppercase" /></div></div>
         <label>Image</label>
         <div class="imgpick">
           <div id="imgPreview" class="avatar">?</div>
           <div class="imgpick-body">
-            ${canUpload ? `<input id="imgFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif" />
-            <div class="muted small" id="imgStatus">PNG, JPEG, WebP or GIF. Resized to 512 px.</div>
+            ${canUpload ? `<input id="imgFile" type="file" class="visually-hidden" tabindex="-1" accept="image/png,image/jpeg,image/webp,image/gif" />
+            <div class="filepick"><button type="button" class="btn" id="imgChoose">Choose image</button>
+            <span class="muted small filename" id="imgName">No file chosen</span></div>
+            <div class="muted small" id="imgStatus">PNG, JPEG, WebP or GIF, or drop a file here. Resized to 512 px.</div>
             <a href="#" id="imgUrlToggle" class="small link">Paste an image URL instead</a>` : ""}
             <input name="image" id="imgUrl" placeholder="https://… or ipfs://…" class="${canUpload ? "hidden" : ""}" />
           </div>
@@ -386,11 +388,29 @@
         ev.preventDefault();
         $("#imgUrl").classList.toggle("hidden");
       };
-      $("#imgFile").onchange = async () => {
-        const file = $("#imgFile").files[0];
+      // The browser's own file button is hidden (it is labelled in the browser's language); ours is in English.
+      $("#imgChoose").onclick = () => $("#imgFile").click();
+      const pick = $(".imgpick");
+      pick.ondragover = (ev) => { ev.preventDefault(); pick.classList.add("drop"); };
+      pick.ondragleave = () => pick.classList.remove("drop");
+      pick.ondrop = (ev) => {
+        ev.preventDefault();
+        pick.classList.remove("drop");
+        const file = ev.dataTransfer?.files?.[0];
+        if (file) handleFile(file);
+      };
+      $("#imgFile").onchange = () => handleFile($("#imgFile").files[0]);
+      const handleFile = async (file) => {
         const status = $("#imgStatus");
         imageUrl = "";
+        $("#imgName").textContent = file ? file.name : "No file chosen";
         if (!file) return showPreview("");
+        if (!/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
+          status.textContent = "Use a PNG, JPEG, WebP or GIF image.";
+          $("#imgName").textContent = "No file chosen";
+          $("#imgFile").value = "";
+          return showPreview("");
+        }
         showPreview(URL.createObjectURL(file));
         uploading = true;
         status.textContent = "Uploading…";
@@ -401,6 +421,7 @@
           status.textContent = errMsg(e);
           showPreview("");
           $("#imgFile").value = "";
+          $("#imgName").textContent = "No file chosen";
         } finally { uploading = false; }
       };
     }
@@ -439,6 +460,9 @@
       ev.preventDefault();
       const btn = f.querySelector("button[type=submit]");
       try {
+        // Checked here, in English: the browser's own "required" bubbles use the browser's language.
+        if (!f.name.value.trim()) { f.name.focus(); throw new Error("Enter a token name."); }
+        if (!f.symbol.value.trim()) { f.symbol.focus(); throw new Error("Enter a ticker."); }
         const s = need();
         if (uploading) throw new Error("Wait for the image upload to finish.");
         const pr = selectedPreset();

@@ -56,5 +56,9 @@ h3 { font-size:15px; margin:8px 0; }
 .link { color:var(--accent2); }
 .imgpick { display:flex; gap:14px; align-items:flex-start; }
 .imgpick-body { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
-.imgpick input[type=file] { padding:8px; }
+.imgpick { border-radius:12px; }
+.imgpick.drop { outline:2px dashed var(--accent2); outline-offset:6px; }
+.filepick { display:flex; align-items:center; gap:10px; min-width:0; }
+.filepick .filename { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+.visually-hidden { position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
 #devSeg { margin-top:4px; }
