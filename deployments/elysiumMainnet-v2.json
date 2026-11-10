@@ -1,0 +1,102 @@
+{
+  "network": "elysiumMainnet",
+  "chainId": 99901,
+  "startedAt": "2026-11-10T16:02:21.669Z",
+  "deployer": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+  "poolEngine": "PancakeSwap Infinity CL (GPL-2.0-or-later)",
+  "infinityVault": "0xB717E028b28bEfF5772F302b62fce8F7B6d181AA",
+  "poolManager": "0x55AE3f252A33b9B2bc2B895aD9cA6EFf7E5FFe41",
+  "deployBlock": 4121634,
+  "timelock": "0xEd92c2C1E00B8B1Cb29e0A674a29CDE2D779956F",
+  "config": "0x8d87a79dbFB6C25999f534e52f6e037519Ca5221",
+  "registry": "0x19f01283336114CCe15119D1CA9016816C33633B",
+  "core": "0x837Ac78d09bC0F4A9DcbEd3d849Cbc3A81C30CAE",
+  "hook": "0xa4c1EfD7Ff0c1346e83ca7473F86B905A6521f96",
+  "distributor": "0x36601E2d58D9e8a8f232d840C0d2199651Ba01be",
+  "vault": "0x19F47fc151f8703e6ac55dafdd0896c062219f3D",
+  "usdc": "0xb47c4C8F73F009CC0C0d3f92B388d13E293F0B65",
+  "router": "0xef144c913834F3e1977e9E387cf50ad600c31E7e",
+  "bootstrap": {
+    "targets": [
+      "0x8d87a79dbFB6C25999f534e52f6e037519Ca5221",
+      "0x19f01283336114CCe15119D1CA9016816C33633B",
+      "0x837Ac78d09bC0F4A9DcbEd3d849Cbc3A81C30CAE",
+      "0xB717E028b28bEfF5772F302b62fce8F7B6d181AA",
+      "0xEd92c2C1E00B8B1Cb29e0A674a29CDE2D779956F"
+    ],
+    "data": [
+      "0x79ba5097",
+      "0x79ba5097",
+      "0x79ba5097",
+      "0x79ba5097",
+      "0x64d62353000000000000000000000000000000000000000000000000000000000002a300"
+    ],
+    "salt": "0x93746e0b69e41eba4bc22f80f5ffe970117f43e8a9676f1d5253d97599a7e7e8",
+    "executed": true
+  },
+  "deployedAt": "2026-11-10T16:02:50.518Z",
+  "timelockDelay": 172800,
+  "timelockAdmin": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+  "treasury": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+  "guardian": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+  "provenaltOwner": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+  "provenaltPayout": "0x78DceE56aD39180adDed458B8D09D445aAbFAde1",
+  "appUri": "https://provenalt.xyz",
+  "presets": {
+    "1": {
+      "quote": "HYPE",
+      "startTick": -173200
+    },
+    "2": {
+      "quote": "USDC",
+      "startTick": -393800
+    }
+  },
+  "hiddenTokens": [],
+  "verification": {
+    "server": "https://contracts.conduit.xyz",
+    "checkedAt": "2026-11-10T16:10:31.047Z",
+    "contracts": {
+      "0xB717E028b28bEfF5772F302b62fce8F7B6d181AA": {
+        "label": "Infinity Vault",
+        "match": "exact_match"
+      },
+      "0x55AE3f252A33b9B2bc2B895aD9cA6EFf7E5FFe41": {
+        "label": "Infinity CLPoolManager",
+        "match": "exact_match"
+      },
+      "0xEd92c2C1E00B8B1Cb29e0A674a29CDE2D779956F": {
+        "label": "EridanosTimelock",
+        "match": "exact_match"
+      },
+      "0x8d87a79dbFB6C25999f534e52f6e037519Ca5221": {
+        "label": "ProtocolConfig",
+        "match": "exact_match"
+      },
+      "0x19f01283336114CCe15119D1CA9016816C33633B": {
+        "label": "IntegratorRegistry",
+        "match": "exact_match"
+      },
+      "0x19F47fc151f8703e6ac55dafdd0896c062219f3D": {
+        "label": "VestingVault",
+        "match": "exact_match"
+      },
+      "0xa4c1EfD7Ff0c1346e83ca7473F86B905A6521f96": {
+        "label": "CurveHook",
+        "match": "exact_match"
+      },
+      "0x36601E2d58D9e8a8f232d840C0d2199651Ba01be": {
+        "label": "FeeDistributor",
+        "match": "exact_match"
+      },
+      "0x837Ac78d09bC0F4A9DcbEd3d849Cbc3A81C30CAE": {
+        "label": "LaunchCore",
+        "match": "exact_match"
+      },
+      "0xef144c913834F3e1977e9E387cf50ad600c31E7e": {
+        "label": "ProvenaltRouter",
+        "match": "exact_match"
+      }
+    }
+  }
+}

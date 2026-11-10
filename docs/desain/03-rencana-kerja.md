@@ -275,7 +275,8 @@ Alasan: lisensi BUSL-1.1 Uniswap v4-core menghalangi mainnet (`02 §5.1`, revisi
 
 ## Fase 7 · Mainnet
 
-**10 Nov 2026: skrip siap** (`scripts/deploy-mainnet-v2.js`, runbook `06-runbook-mainnet.md`), dijalankan pemilik
+**10 Nov 2026: ter-deploy di mainnet** oleh pemilik proyek (alamat di `06-runbook-mainnet.md`; dicek di chain 44/44,
+source 10/10, indexer Railway dipindah ke mainnet). Skrip `scripts/deploy-mainnet-v2.js`, dijalankan pemilik
 proyek dari Mac dengan dompetnya sendiri. Timelock dimulai dengan jeda 0 lalu dinaikkan ke 48 jam di batch yang sama,
 sehingga serah terima admin selesai dalam satu run. Diuji: latihan lokal, fork mainnet (USDC asli), uji asap
 33/33 + 15/15 dan e2e indexer 26/26 di atas output skrip, semua pagar mode live di chain tiruan 99901.

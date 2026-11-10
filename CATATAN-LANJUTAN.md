@@ -90,10 +90,32 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
   `config.local.js` tidak terunggah (404); daftar token, grafik, trade dan holder tampil tanpa error di browser.
 * Berikutnya: domain `provenalt.xyz` di Vercel (*Settings → Domains*) lalu DNS di registrar.
 
-### 3d. Mainnet (status 10 Nov 2026)
+### 3d. Mainnet (status 10 Nov 2026) ✅ ter-deploy
 
-**Skrip siap, belum dijalankan.** Pemilik proyek memilih pilihan A: deploy dari Mac dengan dompet sendiri. Panduan
-lengkap: **`docs/desain/06-runbook-mainnet.md`**. Ringkasnya, dari folder repo di Mac:
+**Kontrak mainnet live** (deploy pemilik dari Mac, 10 Nov 2026, blok 4121634, biaya 0,01155 HYPE):
+
+| Kontrak | Alamat |
+|---|---|
+| Infinity Vault | `0xB717E028b28bEfF5772F302b62fce8F7B6d181AA` |
+| Infinity CLPoolManager | `0x55AE3f252A33b9B2bc2B895aD9cA6EFf7E5FFe41` |
+| Timelock (jeda 48 jam) | `0xEd92c2C1E00B8B1Cb29e0A674a29CDE2D779956F` |
+| LaunchCore | `0x837Ac78d09bC0F4A9DcbEd3d849Cbc3A81C30CAE` |
+| CurveHook | `0xa4c1EfD7Ff0c1346e83ca7473F86B905A6521f96` |
+| IntegratorRegistry | `0x19f01283336114CCe15119D1CA9016816C33633B` |
+| ProtocolConfig | `0x8d87a79dbFB6C25999f534e52f6e037519Ca5221` |
+| FeeDistributor | `0x36601E2d58D9e8a8f232d840C0d2199651Ba01be` |
+| VestingVault | `0x19F47fc151f8703e6ac55dafdd0896c062219f3D` |
+| `ProvenaltRouter` (integrator #1) | `0xef144c913834F3e1977e9E387cf50ad600c31E7e` |
+| USDC (quote, kanonik) | `0xb47c4C8F73F009CC0C0d3f92B388d13E293F0B65` |
+
+Admin = `0x78DceE56aD39180adDed458B8D09D445aAbFAde1` (proposer/canceller Timelock 48 jam, treasury, guardian, owner +
+payout router). Dicek di chain 44/44, source 10/10 di Sourcify Conduit, **indexer Railway sudah melayani mainnet**,
+`frontend/config.js` sudah config mainnet dan diuji di browser. **Tinggal: deploy website dari Mac** (bagian 3b,
+`cd frontend && npx vercel --prod`) dari jaringan tepercaya (bukan Wi-Fi dengan firewall Fortinet yang menyadap HTTPS).
+Testnet tetap ada di chain (`deployments/elysiumTestnet-v2.json`), tapi tidak lagi punya indexer maupun website.
+
+Riwayat persiapan (pilihan A: deploy dari Mac dengan dompet sendiri). Panduan:
+**`docs/desain/06-runbook-mainnet.md`**. Ringkasnya, dari folder repo di Mac:
 
 1. `git pull origin claude/hopeful-pascal-icu4bu && npm install`
 2. latihan: `ADMIN=0x... npx hardhat run scripts/deploy-mainnet-v2.js`
@@ -109,8 +131,8 @@ Siapkan ≥ 0,05 HYPE di deployer (perkiraan biaya ±0,012 HYPE pada 0,5 gwei). 
   pemilik (seperti testnet: proposer/canceller Timelock, treasury, guardian, owner router). Saran yang tetap berlaku:
   dompet itu di hardware wallet, kunci tidak disimpan di `.env`/cloud, jeda Timelock mainnet 48 jam sesuai desain.
 * ✅ Penghalang lisensi selesai: mesin pool kini PancakeSwap Infinity CL (GPL-2.0-or-later), di-deploy sendiri.
-* Belum: deploy mainnet itu sendiri (dijalankan pemilik), indexer + website mainnet (runbook 06 langkah 6–7), audit
-  eksternal (disarankan sebelum dana publik masuk).
+* Belum: deploy website mainnet ke Vercel (pemilik), audit eksternal (disarankan sebelum dana publik masuk), RPC
+  Alchemy untuk indexer (`RPC_URL` di Railway) bila RPC publik membatasi.
 * Indexer testnet sengaja **tidak dihapus**: provenalt.xyz bergantung padanya. Saat kontrak mainnet ada, service
   Railway yang sama diarahkan ke mainnet (`indexer/deployment.json` mainnet + `RESET_DB_FOR_DEPLOYMENT`, atau database
   baru). Website mengabaikan indexer yang melayani chain/core lain, jadi urutan peralihan aman: indexer dulu, lalu

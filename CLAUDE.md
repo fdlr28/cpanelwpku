@@ -18,9 +18,10 @@ Desain dan keputusan: `docs/desain/` (02 arsitektur, 03 rencana kerja + status, 
 
 ## Batasan dari pemilik proyek
 
-* Testnet **99801** aktif. Mainnet (**99901**) diminta pemilik proyek 9 Nov 2026, admin satu dompet miliknya (tanpa
-  Safe multisig). Deploy mainnet dijalankan **pemilik sendiri dari Mac** dengan `scripts/deploy-mainnet-v2.js`
-  (`docs/desain/06-runbook-mainnet.md`); skrip lain menolak chain selain 99801/31337/998. Setiap transaksi mainnet
+* **Mainnet 99901 ter-deploy 10 Nov 2026** oleh pemilik dari Mac (`deployments/elysiumMainnet-v2.json`,
+  `docs/desain/06-runbook-mainnet.md`), admin satu dompet miliknya (tanpa Safe multisig), Timelock 48 jam. Indexer
+  dan `frontend/config.js` sekarang mainnet. Testnet 99801 tetap ada untuk uji; skrip selain
+  `deploy-mainnet-v2.js` menolak chain selain 99801/31337/998. Setiap transaksi mainnet
   tetap butuh konfirmasi eksplisit pemilik untuk langkah itu.
 * **Jangan pakai, minta, cetak, atau commit private key.** `.env` (berisi `PRIVATE_KEY` milik pemilik proyek) tidak
   di-commit dan jangan ditampilkan isinya. Transaksi on-chain dari dompet pemilik dijalankan oleh pemilik sendiri.

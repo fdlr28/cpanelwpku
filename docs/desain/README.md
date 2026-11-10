@@ -10,7 +10,7 @@ dengan launchpad kita sebagai integrator pertama. Mesin pool mengikuti model Asc
 | [03-rencana-kerja.md](03-rencana-kerja.md) | Fase kerja dengan kriteria selesai, status, dan keputusan |
 | [04-review-fase4.md](04-review-fase4.md) | Review internal: skenario serangan, temuan, checklist keamanan, gas (versi Uniswap v4) |
 | [05-runbook-testnet.md](05-runbook-testnet.md) | Langkah deploy testnet (fase 6) untuk pemilik proyek |
-| [06-runbook-mainnet.md](06-runbook-mainnet.md) | Langkah deploy mainnet (99901) dari Mac pemilik proyek; skrip siap, belum dijalankan |
+| [06-runbook-mainnet.md](06-runbook-mainnet.md) | Langkah deploy mainnet (99901) dari Mac pemilik proyek; ter-deploy 10 Nov 2026, alamat aktif |
 
 Status (9 Nov 2026): desain revisi 2 disetujui; **fase 1–6 selesai**; mesin pool diganti dari Uniswap v4 (BUSL-1.1) ke
 **PancakeSwap Infinity CL** (GPL-2.0-or-later) dan testnet di-deploy ulang (fase 6b, `02 §5.1`). Eridanos v2 + Provenalt ter-deploy di Elysium

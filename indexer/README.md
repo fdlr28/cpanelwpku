@@ -7,7 +7,9 @@ dan dicari, grafik harga (candle), riwayat trade dengan alamat trader, holder, v
 Kontrak tidak perlu diubah: indexer hanya membaca event yang sudah ada. Satu proses Node menjalankan sinkronisasi
 dan API sekaligus. Dependensi: `ethers` dan `pg`; tanpa langkah build.
 
-Deployment aktif (testnet): **https://provenalt-indexer-production.up.railway.app** — project Railway `provenalt-indexer`.
+Deployment aktif (**mainnet 99901** sejak 10 Nov 2026; sebelumnya testnet): **https://provenalt-indexer-production.up.railway.app**
+— project Railway `provenalt-indexer`. Untuk indexer testnet lagi, buat service terpisah dengan
+`deployment.json` testnet (`node indexer/scripts/copy-deployment.js elysiumTestnet`) dan database sendiri.
 
 ## Yang diindeks
 

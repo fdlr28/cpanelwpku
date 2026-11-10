@@ -2,7 +2,7 @@
 
 Untuk pemilik proyek: deploy dijalankan **dari Mac dengan dompet sendiri** (pilihan A, 10 Nov 2026). Skripnya
 `scripts/deploy-mainnet-v2.js`; skrip tidak membaca, meminta, atau mencetak kunci (Hardhat menandatangani dengan
-`PRIVATE_KEY` di `.env`). Status: **belum dijalankan**.
+`PRIVATE_KEY` di `.env`). Status: **sudah dijalankan 10 Nov 2026** (lihat §Deployment aktif).
 
 ## Apa yang dilakukan skrip
 
@@ -175,6 +175,37 @@ Sumber: `elysium.kinetiq.xyz/docs` (Connecting to Elysium, Contract addresses; d
 | USDC | `0xb47c4C8F73F009CC0C0d3f92B388d13E293F0B65` (6 desimal; `l1Address` = USDC Circle HyperEVM `0xb88339CB7199b77E23DB6E890353E22632Ba630f`) |
 | WHYPE | `0xbA876237B0F021A6c6D852d6c26E107997cC5E81` |
 | Gas | ±0,5 gwei (10 Nov 2026) |
+
+## Deployment aktif (Elysium mainnet, 10 Nov 2026)
+
+Dijalankan pemilik proyek dari Mac, deployer = admin = `0x78DceE56aD39180adDed458B8D09D445aAbFAde1`, blok deploy
+4121634, biaya **0,01155 HYPE**. Catatan: `deployments/elysiumMainnet-v2.json`.
+
+| Kontrak | Alamat |
+|---|---|
+| Infinity Vault | `0xB717E028b28bEfF5772F302b62fce8F7B6d181AA` |
+| Infinity CLPoolManager | `0x55AE3f252A33b9B2bc2B895aD9cA6EFf7E5FFe41` |
+| Timelock (jeda 48 jam) | `0xEd92c2C1E00B8B1Cb29e0A674a29CDE2D779956F` |
+| LaunchCore | `0x837Ac78d09bC0F4A9DcbEd3d849Cbc3A81C30CAE` |
+| CurveHook | `0xa4c1EfD7Ff0c1346e83ca7473F86B905A6521f96` |
+| IntegratorRegistry | `0x19f01283336114CCe15119D1CA9016816C33633B` |
+| ProtocolConfig | `0x8d87a79dbFB6C25999f534e52f6e037519Ca5221` |
+| FeeDistributor | `0x36601E2d58D9e8a8f232d840C0d2199651Ba01be` |
+| VestingVault | `0x19F47fc151f8703e6ac55dafdd0896c062219f3D` |
+| `ProvenaltRouter` (integrator #1) | `0xef144c913834F3e1977e9E387cf50ad600c31E7e` |
+| USDC (quote, kanonik) | `0xb47c4C8F73F009CC0C0d3f92B388d13E293F0B65` |
+
+Diperiksa setelah deploy (sesi Claude, hanya membaca):
+
+* di chain: 44/44 (owner semua kontrak = Timelock tanpa pending owner, jeda 48 jam, admin = satu-satunya
+  proposer/canceller, eksekusi terbuka, Timelock mengatur dirinya sendiri, treasury/guardian, quote HYPE + USDC,
+  preset 1 dan 2, integrator #1 "Provenalt" `https://provenalt.xyz`, hook/distributor terikat ke core, pool manager
+  tidak di-pause dan tanpa protocol fee controller). Riwayat role Timelock hanya berisi pemberian role yang diharapkan;
+* source: 10/10 `exact_match` di Sourcify Conduit (chain 99901);
+* indexer Railway dipindah ke mainnet (`RESET_DB_FOR_DEPLOYMENT=99901:0x837ac78d…0cae`), `/health` chain 99901 tanpa
+  error;
+* website dengan config mainnet (`frontend/config.js`) diuji di browser terhadap RPC resmi dan indexer mainnet: tanpa
+  error, badge Testnet hilang, estimasi dev buy 1% ≈ 0,309 HYPE. RPC resmi mengizinkan CORS (`*`).
 
 ## Uji skrip (10 Nov 2026, sesi Claude, tanpa kunci)
 
