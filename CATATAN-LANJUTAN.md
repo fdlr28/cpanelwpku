@@ -145,8 +145,11 @@ Siapkan ≥ 0,05 HYPE di deployer (perkiraan biaya ±0,012 HYPE pada 0,5 gwei). 
 Logo dari pemilik proyek (monogram P merah marun di atas krem) disimpan di `docs/brand/provenalt-logo.jpg`. Dari situ
 dibuat: logo header `frontend/logo.png`, `favicon.ico` (16/32/48), `icon-192.png`, `apple-touch-icon.png`, dan
 gambar pratinjau link `og-image.png` (1200×630, meta Open Graph + kartu X). Teks "Provenalt" di header kini putih
-agar logo menonjol. `docs/brand/provenalt-icon-512.png` bisa dipakai untuk foto profil (mis. X). Butuh deploy
-ulang Vercel dari Mac agar tampil di provenalt.xyz.
+agar logo menonjol. `docs/brand/provenalt-icon-512.png` bisa dipakai untuk foto profil (mis. X).
+
+Pemilih gambar di form peluncuran kini tombol sendiri "Choose image" (tombol file bawaan browser memakai bahasa
+browser, mis. "Pilih File"), bisa drag-and-drop, dan menolak file bukan gambar; validasi Name/Ticker juga pesan
+Inggris sendiri. **Live di provenalt.xyz** (deploy Vercel dari Mac 10 Nov 2026), dicek di browser berbahasa Indonesia.
 
 ### 3c. Pembaruan website (9 Nov 2026)
 
