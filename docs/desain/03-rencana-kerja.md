@@ -273,9 +273,14 @@ Alasan: lisensi BUSL-1.1 Uniswap v4-core menghalangi mainnet (`02 §5.1`, revisi
   Timelock (`ADMIN=`), uji asap 33/33, Sourcify 14/14, indexer Railway dipindah, website diuji di browser. Alamat di
   `05-runbook-testnet.md`; deployment Uniswap v4 lama di `deployments/legacy-uniswapv4/`.
 
-## Fase 7 · Sebelum mainnet (di luar cakupan sekarang)
+## Fase 7 · Mainnet
 
-Butuh persetujuan terpisah:
+**10 Nov 2026: skrip siap** (`scripts/deploy-mainnet-v2.js`, runbook `06-runbook-mainnet.md`), dijalankan pemilik
+proyek dari Mac dengan dompetnya sendiri. Timelock dimulai dengan jeda 0 lalu dinaikkan ke 48 jam di batch yang sama,
+sehingga serah terima admin selesai dalam satu run. Diuji: latihan lokal, fork mainnet (USDC asli), uji asap
+33/33 + 15/15 dan e2e indexer 26/26 di atas output skrip, semua pagar mode live di chain tiruan 99901.
+
+Sisa:
 * audit eksternal;
 * ~~pilihan PoolManager~~ — **diputuskan 9 Nov 2026: Vault + CLPoolManager PancakeSwap Infinity sendiri (GPL)**;
 * nyalakan mode allowlist bila diperlukan;

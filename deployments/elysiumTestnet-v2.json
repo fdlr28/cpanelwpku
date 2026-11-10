@@ -55,7 +55,7 @@
   "deployBlock": 26697151,
   "verification": {
     "server": "https://contracts.conduit.xyz",
-    "checkedAt": "2026-11-09T13:11:43.921Z",
+    "checkedAt": "2026-11-10T01:46:55.287Z",
     "contracts": {
       "0x88e40DB361BF4502c0d323e6e607F8FF22C90D15": {
         "label": "Infinity Vault",

@@ -42,7 +42,13 @@ module.exports = {
     ],
   },
   networks: {
-    hardhat: { hardfork: "cancun" },
+    // FORK_URL=<Elysium RPC> runs the in-process network (and `npx hardhat node`) on a copy of that chain's
+    // current state, for rehearsing a mainnet deploy against the real USDC without sending anything. Calls only
+    // work once a local block is mined on top of the fork (scripts/deploy-mainnet-v2.js mines one first).
+    hardhat: {
+      hardfork: "cancun",
+      ...(process.env.FORK_URL ? { forking: { url: process.env.FORK_URL, ...(process.env.FORK_BLOCK ? { blockNumber: Number(process.env.FORK_BLOCK) } : {}) } } : {}),
+    },
     localhost: { url: "http://127.0.0.1:8545" },
     elysiumTestnet: {
       // Public RPC from the docs; Alchemy (https://elysium-testnet.g.alchemy.com/v2/KEY) is recommended.
@@ -56,10 +62,11 @@ module.exports = {
       chainId: 998,
       accounts,
     },
-    elysium: {
-      // Mainnet chain ID is published at launch (https://elysium.kinetiq.xyz/docs/connecting-to-elysium).
-      url: process.env.ELYSIUM_RPC || "",
-      chainId: process.env.ELYSIUM_CHAIN_ID ? Number(process.env.ELYSIUM_CHAIN_ID) : undefined,
+    elysiumMainnet: {
+      // Public RPC from the docs (shared, rate-limited); an Alchemy URL
+      // (https://elysium-mainnet.g.alchemy.com/v2/KEY) is recommended for the deploy.
+      url: process.env.ELYSIUM_MAINNET_RPC || "https://rpc.elysium.kinetiq.xyz",
+      chainId: 99901,
       accounts,
     },
   },

@@ -8,6 +8,8 @@
   const SLIPPAGE_BPS = 200n; // 2%
   const $ = (sel, root = document) => root.querySelector(sel);
   const app = $("#app");
+  // The "Testnet" badge in the header only belongs on the testnet build (chain 99801).
+  if (Number(CFG.chainId) !== 99801) $("#netBadge")?.remove();
 
   // The public Elysium RPC rate-limits bursts (error -32017). Send one request at a time-ish: no JSON-RPC
   // batching, at most 3 in flight, spaced out, and retry rate-limited calls with backoff.
@@ -103,10 +105,23 @@
 
   // ------------------------------------------------------------------ indexer (optional, see indexer/)
   // With CFG.indexerUrl set, lists, charts, trades and holders come from the indexer's API; if it is
-  // unreachable the pages fall back to reading the chain directly.
+  // unreachable, or serves another chain or deployment (e.g. still testnet while the site is on mainnet),
+  // the pages fall back to reading the chain directly.
   const IDX = (CFG.indexerUrl || "").replace(/\/+$/, "");
+  let idxCheck = null; // one shared /health check: resolves true (same deployment), false, or null (unreachable)
   async function idx(path) {
     if (!IDX) return null;
+    if (!idxCheck) {
+      idxCheck = idxFetch("/health").then((h) => {
+        if (!h || !h.sync) { idxCheck = null; return null; } // unreachable: ask again next time
+        const same = Number(h.sync.chainId) === Number(CFG.chainId) && (!h.sync.core || String(h.sync.core).toLowerCase() === String(CFG.core).toLowerCase());
+        if (!same) console.warn("indexer serves another deployment; reading the chain directly");
+        return same;
+      });
+    }
+    return (await idxCheck) ? idxFetch(path) : null;
+  }
+  async function idxFetch(path) {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 8000);
     try {

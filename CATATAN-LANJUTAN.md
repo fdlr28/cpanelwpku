@@ -90,18 +90,31 @@ Live: **https://cpanelwpku.vercel.app** — Vercel team "provenalt's projects" (
   `config.local.js` tidak terunggah (404); daftar token, grafik, trade dan holder tampil tanpa error di browser.
 * Berikutnya: domain `provenalt.xyz` di Vercel (*Settings → Domains*) lalu DNS di registrar.
 
-### 3d. Rencana mainnet (status 9 Nov 2026)
+### 3d. Mainnet (status 10 Nov 2026)
+
+**Skrip siap, belum dijalankan.** Pemilik proyek memilih pilihan A: deploy dari Mac dengan dompet sendiri. Panduan
+lengkap: **`docs/desain/06-runbook-mainnet.md`**. Ringkasnya, dari folder repo di Mac:
+
+1. `git pull origin claude/hopeful-pascal-icu4bu && npm install`
+2. latihan: `ADMIN=0x... npx hardhat run scripts/deploy-mainnet-v2.js`
+3. live: `ADMIN=0x... CONFIRM=mainnet-99901 npx hardhat run scripts/deploy-mainnet-v2.js --network elysiumMainnet`
+4. commit `deployments/elysiumMainnet-v2.json`, lalu verifikasi source, indexer, website (runbook langkah 4–7).
+
+Siapkan ≥ 0,05 HYPE di deployer (perkiraan biaya ±0,012 HYPE pada 0,5 gwei). Dompet pemilik di mainnet: 0,029 HYPE
+(10 Nov 2026). Serah terima admin selesai dalam run yang sama (Timelock mulai dengan jeda 0, lalu dinaikkan ke
+48 jam di batch yang sama). Data mainnet (RPC, explorer, USDC kanonik) ada di `scripts/lib/networks.js`.
+
 
 * Pemilik proyek meminta mainnet (99901). Keputusan: **tanpa Safe multisig**; admin mainnet = satu dompet milik
   pemilik (seperti testnet: proposer/canceller Timelock, treasury, guardian, owner router). Saran yang tetap berlaku:
   dompet itu di hardware wallet, kunci tidak disimpan di `.env`/cloud, jeda Timelock mainnet 48 jam sesuai desain.
 * ✅ Penghalang lisensi selesai: mesin pool kini PancakeSwap Infinity CL (GPL-2.0-or-later), di-deploy sendiri.
-* Belum: skrip deploy mainnet (chain 99901, USDC kanonik mainnet, RPC mainnet, Timelock 48 jam), deployer mainnet
-  berisi HYPE sungguhan (dijalankan dari dompet pemilik di Mac, kunci tidak pernah dibagikan), indexer + website
-  mainnet, dan audit eksternal (disarankan sebelum dana publik masuk).
+* Belum: deploy mainnet itu sendiri (dijalankan pemilik), indexer + website mainnet (runbook 06 langkah 6–7), audit
+  eksternal (disarankan sebelum dana publik masuk).
 * Indexer testnet sengaja **tidak dihapus**: provenalt.xyz bergantung padanya. Saat kontrak mainnet ada, service
   Railway yang sama diarahkan ke mainnet (`indexer/deployment.json` mainnet + `RESET_DB_FOR_DEPLOYMENT`, atau database
-  baru).
+  baru). Website mengabaikan indexer yang melayani chain/core lain, jadi urutan peralihan aman: indexer dulu, lalu
+  website (`node scripts/make-frontend-config.js deployments/elysiumMainnet-v2.json`).
 * Kontrak Safe 1.3.0 ada di Elysium mainnet dan testnet (dicek on-chain), bila kelak berubah pikiran.
 
 ### 3c. Pembaruan website (9 Nov 2026)

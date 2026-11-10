@@ -1,17 +1,20 @@
-// Verifies the Eridanos v2 deployment on Conduit's Sourcify server (what the Elysium testnet explorer reads).
-//   node scripts/verify-sourcify.js [deployments/elysiumTestnet-v2.json]
+// Verifies the Eridanos v2 deployment on Conduit's Sourcify server (what the Elysium testnet explorer reads;
+// the server also covers mainnet 99901).
+//   node scripts/verify-sourcify.js [deployments/elysiumTestnet-v2.json | deployments/elysiumMainnet-v2.json]
 // Behind an HTTP proxy: NODE_USE_ENV_PROXY=1. Needs `npx hardhat compile` artifacts matching the deployment.
 // Also verifies every EridanosToken launched through the deployment's LaunchCore.
 const fs = require("fs");
 const path = require("path");
 const { ethers } = require("ethers");
 const sdk = require("../sdk/eridanos-sdk.js");
+const { rpcOf } = require("./lib/networks");
 
 const API = process.env.SOURCIFY_URL || "https://contracts.conduit.xyz";
 const ROOT = path.join(__dirname, "..");
 const file = process.argv[2] || path.join(ROOT, "deployments", "elysiumTestnet-v2.json");
 const d = JSON.parse(fs.readFileSync(file, "utf8"));
-const RPC = process.env.ELYSIUM_TESTNET_RPC || "https://testnet-rpc.elysium.kinetiq.xyz";
+const RPC = rpcOf(d.chainId); // ELYSIUM_TESTNET_RPC / ELYSIUM_MAINNET_RPC override the public endpoints
+if (!RPC) throw new Error(`no RPC known for chain ${d.chainId}`);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function hardhatJob(source, name) {

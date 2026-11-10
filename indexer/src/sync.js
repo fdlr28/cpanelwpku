@@ -347,7 +347,8 @@ class Indexer {
 
   status() {
     return {
-      chainId: this.cfg.chainId, network: this.cfg.network, headBlock: this.head, indexedBlock: this.cursor,
+      chainId: this.cfg.chainId, network: this.cfg.network, core: this.cfg.addresses.core,
+      headBlock: this.head, indexedBlock: this.cursor,
       lagBlocks: this.head != null ? Math.max(0, this.head - this.cursor) : null,
       lastSyncAt: this.lastSyncAt, lastError: this.lastError,
     };
