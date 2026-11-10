@@ -32,8 +32,10 @@ Hasil: `deployments/elysiumMainnet-v2.json` (alamat saja, tanpa rahasia).
 | Chain selain 99901 (atau 31337 untuk latihan) | ditolak |
 | Tanpa `CONFIRM=mainnet-99901` | ditolak (`CONFIRM=yes` tidak cukup) |
 | Tanpa `ADMIN`, alamat nol, atau checksum alamat salah | ditolak |
-| `TIMELOCK_DELAY` < 172800 (48 jam) | ditolak |
-| USDC bukan token kanonik (simbol, 6 desimal, `l1Address` = USDC Circle di HyperEVM) | ditolak |
+| `MAINNET_TIMELOCK_DELAY` < 172800 (48 jam) | ditolak (default 48 jam; `TIMELOCK_DELAY` testnet di `.env` diabaikan) |
+| `APP_URI` kosong | memakai `https://provenalt.xyz` |
+| USDC bukan token kanonik `0xb47c…0B65` (dicek juga simbol, 6 desimal, `l1Address` = USDC Circle di HyperEVM) | ditolak |
+| `TREASURY`, `GUARDIAN`, `PROVENALT_OWNER` atau `PROVENALT_PAYOUT` berbeda dari `ADMIN` | ditandai di rencana yang dicetak |
 | Saldo deployer < 1,5× perkiraan biaya | ditolak |
 | `deployments/elysiumMainnet-v2.json` atau `.partial.json` sudah ada | ditolak (mencegah deploy ganda) |
 | Sebelum transaksi pertama | rencana dicetak, lalu 15 detik untuk batal (Ctrl+C) |
@@ -75,7 +77,9 @@ npx hardhat test
 ADMIN=0x... npx hardhat run scripts/deploy-mainnet-v2.js
 ```
 
-   Periksa rencana yang dicetak (admin, treasury, guardian, harga awal) dan baris `end state checked ✓`.
+   Periksa rencana yang dicetak (admin, treasury, guardian, `timelock delay 172800 s (48.0 h)`,
+   `app uri https://provenalt.xyz`, harga awal) dan baris `end state checked ✓`. Deployer di latihan adalah akun uji
+   Hardhat; saat live, dompet dari `PRIVATE_KEY`.
 
    Opsional, latihan di salinan mainnet (USDC asli). Butuh RPC **archive** (Alchemy); RPC komunitas hanya menyimpan state
    beberapa detik sehingga fork berhenti di tengah jalan. Terminal 1:

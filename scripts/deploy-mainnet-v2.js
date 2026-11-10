@@ -12,18 +12,19 @@
 // protocol for 48 hours: the Timelock starts with delay 0 and the deployer as its only proposer (the deployer
 // owns everything at that point anyway). One batch then makes the Timelock accept ownership of config, registry,
 // core and the Infinity vault, gives ADMIN the proposer + canceller roles (taken from the deployer when they
-// differ) and raises the delay to TIMELOCK_DELAY (48 h). The CL pool manager (single-step Ownable) goes to the
+// differ) and raises the delay to MAINNET_TIMELOCK_DELAY (48 h). The CL pool manager (single-step Ownable) goes to the
 // Timelock directly. The script then checks every owner and role and stops with an error if one is wrong.
 //
-// Environment:
+// Environment (values left in .env from the testnet template must not leak into mainnet: TIMELOCK_DELAY and
+// POOL_MANAGER are ignored here, an empty APP_URI means the default, and live runs accept only the canonical USDC):
 //   ADMIN             required live: the admin wallet (Timelock proposer + canceller; default for the next four)
 //   TREASURY          protocol treasury                      (default ADMIN)
 //   GUARDIAN          may pause new launches/registrations   (default ADMIN)
 //   PROVENALT_OWNER   owner of the ProvenaltRouter           (default ADMIN)
 //   PROVENALT_PAYOUT  receives Provenalt's integrator share  (default ADMIN)
-//   TIMELOCK_DELAY    seconds, at least 172800 live          (default 172800 = 48 h)
+//   MAINNET_TIMELOCK_DELAY  seconds, at least 172800 live    (default 172800 = 48 h)
 //   APP_URI           website in the integrator registry    (default https://provenalt.xyz)
-//   USDC              quote token                            (default: canonical Elysium USDC; checked on chain)
+//   USDC              quote token for rehearsals            (default and only live value: canonical Elysium USDC)
 //   HYPE_START_TICK / USDC_START_TICK   curve start ticks    (default: the testnet presets, scripts/lib/presets.js)
 const fs = require("fs");
 const path = require("path");
@@ -70,16 +71,18 @@ async function main() {
   const guardian = addr("GUARDIAN", admin);
   const provenaltOwner = addr("PROVENALT_OWNER", admin);
   const provenaltPayout = addr("PROVENALT_PAYOUT", admin);
-  const delay = Number(process.env.TIMELOCK_DELAY || MIN_DELAY);
-  if (!Number.isInteger(delay) || delay <= 0) throw new Error("TIMELOCK_DELAY must be a positive whole number of seconds");
-  if (live && delay < MIN_DELAY) throw new Error(`TIMELOCK_DELAY ${delay}s is below the 48-hour mainnet minimum (${MIN_DELAY}s)`);
-  const appUri = process.env.APP_URI === undefined ? "https://provenalt.xyz" : process.env.APP_URI;
+  const delay = Number(process.env.MAINNET_TIMELOCK_DELAY || MIN_DELAY);
+  if (!Number.isInteger(delay) || delay <= 0) throw new Error("MAINNET_TIMELOCK_DELAY must be a positive whole number of seconds");
+  if (live && delay < MIN_DELAY) throw new Error(`MAINNET_TIMELOCK_DELAY ${delay}s is below the 48-hour mainnet minimum (${MIN_DELAY}s)`);
+  const ignored = ["TIMELOCK_DELAY", "POOL_MANAGER", "TIMELOCK_PROPOSER"].filter((k) => process.env[k]);
+  const appUri = process.env.APP_URI || "https://provenalt.xyz";
   const hypeTick = Number(process.env.HYPE_START_TICK || HYPE_START_TICK);
   const usdcTick = Number(process.env.USDC_START_TICK || USDC_START_TICK);
 
   // USDC: the canonical token, checked on chain (live, or a rehearsal on a mainnet fork); a 6-decimal mock otherwise.
   const mainnet = NETWORKS[99901];
   let usdc = addr("USDC", mainnet.usdc);
+  if (live && usdc !== mainnet.usdc) throw new Error(`USDC ${usdc} is not the canonical Elysium USDC ${mainnet.usdc}; remove USDC from .env`);
   let usdcMock = false;
   if ((await ethers.provider.getCode(usdc)) === "0x") {
     if (live) throw new Error(`no contract at USDC ${usdc}`);
@@ -112,6 +115,10 @@ async function main() {
   line("HYPE preset", `tick ${hypeTick}: ${pricePerToken(hypeTick, 18).toExponential(3)} HYPE/token, start market cap ≈ ${(pricePerToken(hypeTick, 18) * 1e9).toFixed(1)} HYPE`);
   line("USDC preset", `tick ${usdcTick}: ${pricePerToken(usdcTick, 6).toExponential(3)} USDC/token, start market cap ≈ $${Math.round(pricePerToken(usdcTick, 6) * 1e9).toLocaleString("en-US")}`);
   line("balance", `${ethers.formatEther(balance)} HYPE`);
+  if (ignored.length) line("ignored", `${ignored.join(", ")} (testnet settings, not used here)`);
+  const notAdmin = [["TREASURY", treasury], ["GUARDIAN", guardian], ["PROVENALT_OWNER", provenaltOwner], ["PROVENALT_PAYOUT", provenaltPayout]]
+    .filter(([, v]) => v !== admin).map(([k]) => k);
+  if (notAdmin.length) line("check", `${notAdmin.join(", ")} ${notAdmin.length > 1 ? "differ" : "differs"} from ADMIN (set in the environment or .env)`);
   line("expected cost", `≈ ${ethers.formatEther(estCost)} HYPE at ${ethers.formatUnits(gasPrice, "gwei")} gwei`);
   if (live) {
     if (balance < (estCost * 3n) / 2n) throw new Error(`balance too low: keep at least ${ethers.formatEther((estCost * 3n) / 2n)} HYPE (1.5× the expected cost) on the deployer`);
