@@ -140,6 +140,14 @@ Siapkan ≥ 0,05 HYPE di deployer (perkiraan biaya ±0,012 HYPE pada 0,5 gwei). 
   website (`node scripts/make-frontend-config.js deployments/elysiumMainnet-v2.json`).
 * Kontrak Safe 1.3.0 ada di Elysium mainnet dan testnet (dicek on-chain), bila kelak berubah pikiran.
 
+### 3e. Logo (10 Nov 2026)
+
+Logo dari pemilik proyek (monogram P merah marun di atas krem) disimpan di `docs/brand/provenalt-logo.jpg`. Dari situ
+dibuat: logo header `frontend/logo.png`, `favicon.ico` (16/32/48), `icon-192.png`, `apple-touch-icon.png`, dan
+gambar pratinjau link `og-image.png` (1200×630, meta Open Graph + kartu X). Teks "Provenalt" di header kini putih
+agar logo menonjol. `docs/brand/provenalt-icon-512.png` bisa dipakai untuk foto profil (mis. X). Butuh deploy
+ulang Vercel dari Mac agar tampil di provenalt.xyz.
+
 ### 3c. Pembaruan website (9 Nov 2026)
 
 Permintaan pemilik proyek, sudah dikerjakan dan **live di https://provenalt.xyz** (deploy dari Mac 9 Nov 2026; domain

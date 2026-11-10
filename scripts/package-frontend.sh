@@ -17,6 +17,8 @@ trap 'rm -rf "$STAGE"' EXIT
 SITE="$STAGE/provenalt"
 mkdir -p "$SITE/vendor" "$(dirname "$OUT")"
 cp frontend/app.js frontend/style.css frontend/config.js frontend/eridanos-sdk.js "$SITE/"
+# Logo and icons (made from docs/brand/provenalt-logo.jpg).
+cp frontend/logo.png frontend/favicon.ico frontend/icon-192.png frontend/apple-touch-icon.png frontend/og-image.png "$SITE/"
 # INDEXER_URL=https://... fills config.js's indexerUrl in the package (frontend/config.js itself is untouched).
 if [ -n "${INDEXER_URL:-}" ]; then
   case "$INDEXER_URL" in https://*|http://localhost*|http://127.0.0.1*) ;; *) echo "INDEXER_URL must start with https://" >&2; exit 1 ;; esac
